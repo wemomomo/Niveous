@@ -127,25 +127,15 @@
     <div class="tab-bar-capsule">
 <div class="tab-item" data-tab="wechat">
   <div class="tab-icon">
-    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <defs>
-        <mask id="wx-mask">
-          <rect width="32" height="32" fill="white"/>
-          <path d="M22 12.5 C26.5 12.5 29.5 15 29.5 18 C29.5 21 26.5 23.5 22 23.5 C21.2 23.5 20.5 23.4 19.8 23.2 L19.5 24.5 L20.5 22.8 C18 21.5 16.5 19.7 16.5 18 C16.5 15 19.5 12.5 22 12.5 Z" fill="black" stroke="black" stroke-width="3"/>
-        </mask>
-      </defs>
-      
-      <!-- 左边大气泡，尾巴在左下 -->
-      <path d="M12 4.5 C17.5 4.5 21 7.5 21 11 C21 14.5 17.5 17.5 12 17.5 C10.8 17.5 9.7 17.3 8.6 17 L5 19 L5.8 15.5 C3.5 14 2 12.3 2 11 C2 7.5 6.5 4.5 12 4.5 Z" mask="url(#wx-mask)"/>
-      
-      <!-- 右边小气泡，尾巴在右下 -->
-      <path d="M22 12.5 C26.5 12.5 29.5 15 29.5 18 C29.5 21 26.5 23.5 22 23.5 C21.2 23.5 20.5 23.4 19.8 23.2 L20.5 22.8 C18 21.5 16.5 19.7 16.5 18 C16.5 15 19.5 12.5 22 12.5 Z"/>
-      <path d="M24.8 23 L25.5 26 L23.5 23.5"/>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <!-- 右边小气泡（底层） -->
+      <path d="M15.5 11c2.8 0 5 1.7 5 3.8 0 1.4-1 2.6-2.5 3.3l.3 2-1.8-1.1c-.5.1-1.1.2-1.7.2-2.8 0-5-1.7-5-3.8 0-.2 0-.5.1-.7"/>
+      <!-- 左边大气泡（上层，白色填充遮住） -->
+      <path d="M9 3.5C5 3.5 2 6 2 9c0 1.7 1 3.2 2.7 4.3L4 16l2.8-1.4c.7.2 1.5.3 2.2.3 4 0 7-2.5 7-5.5S13 3.5 9 3.5z" fill="white"/>
     </svg>
   </div>
   <div class="tab-label">微信</div>
 </div>
-
       <div class="tab-item" data-tab="offline">
         <div class="tab-icon">
           <svg viewBox="0 0 24 24">
