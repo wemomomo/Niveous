@@ -9,7 +9,6 @@
   display: none;
   flex-direction: column;
   padding: 0;  /* 覆盖 .page 的 95px 底部 padding */
-  overflow: hidden;  /* 防止内容溢出 */
 }
 .app-page.active {
   display: flex;
