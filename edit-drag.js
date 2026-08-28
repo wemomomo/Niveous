@@ -42,7 +42,7 @@
         } else {
           exitEditMode();
         }
-      }, 700);
+      }, 150);
     }
   }, {passive: false});
 
