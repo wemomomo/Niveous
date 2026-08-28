@@ -16,24 +16,29 @@
     var content = document.getElementById('wechatContent');
     if (!content) return;
 
-    content.style.display = 'flex';
-    content.style.flexDirection = 'column';
-    content.style.height = '100%';
-    content.style.padding = '0';
-    content.style.overflow = 'hidden';
-
     var bodyHtml = '<div class="wx-body" id="wxBody"></div>';
 
     var tabbarHtml = '<div class="wx-tabbar">'
-      + wxTabItem('chats', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', '聊天')
-      + wxTabItem('contacts', 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2|M9 7a4 4 0 1 0 0-0.01|M23 21v-2a4 4 0 0 0-3-3.87|M16 3.13a4 4 0 0 1 0 7.75', '通讯录')
-      + wxTabItem('discover', 'M12 2L2 7l10 5 10-5-10-5z|M2 17l10 5 10-5|M2 12l10 5 10-5', '发现')
-      + wxTabItem('me', 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2|M12 7a4 4 0 1 0 0-0.01', '我')
+      + '<div class="wx-tab-item" data-tab="chats">'
+      +   '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+      +   '<div class="wx-tab-label">聊天</div>'
+      + '</div>'
+      + '<div class="wx-tab-item" data-tab="contacts">'
+      +   '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+      +   '<div class="wx-tab-label">通讯录</div>'
+      + '</div>'
+      + '<div class="wx-tab-item" data-tab="discover">'
+      +   '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>'
+      +   '<div class="wx-tab-label">发现</div>'
+      + '</div>'
+      + '<div class="wx-tab-item" data-tab="me">'
+      +   '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+      +   '<div class="wx-tab-label">我</div>'
+      + '</div>'
       + '</div>';
 
     content.innerHTML = bodyHtml + tabbarHtml;
 
-    // 绑定 tab 切换
     content.querySelectorAll('.wx-tab-item').forEach(function(tab) {
       tab.addEventListener('click', function() {
         wxCurrentTab = this.dataset.tab;
@@ -43,26 +48,10 @@
       });
     });
 
-    // 设置初始激活
     var activeTab = content.querySelector('[data-tab="' + wxCurrentTab + '"]');
     if (activeTab) activeTab.classList.add('active');
 
     renderWxBody();
-  }
-
-  function wxTabItem(name, paths, label) {
-    var pathsArr = paths.split('|');
-    var svgContent = pathsArr.map(function(d) {
-      if (d.indexOf('a4 4') > -1 && d.indexOf('M') === 0 && d.length < 25) {
-        return '<circle cx="' + d.match(/M(\d+)/)[1] + '" cy="' + d.match(/(\d+) a/)[1] + '" r="4"/>';
-      }
-      return '<path d="' + d + '"/>';
-    }).join('');
-
-    return '<div class="wx-tab-item" data-tab="' + name + '">'
-      + '<svg viewBox="0 0 24 24">' + svgContent + '</svg>'
-      + '<div class="wx-tab-label">' + label + '</div>'
-      + '</div>';
   }
 
   function renderWxBody() {
@@ -137,27 +126,22 @@
     }
     body.innerHTML = html;
 
-    // 绑定添加按钮
     var addBtn = body.querySelector('#wxAddContactBtn');
     if (addBtn) addBtn.addEventListener('click', function() { showCreateContact(); });
 
-    // 绑定删除
     body.querySelectorAll('.wx-contact-act.delete').forEach(function(btn) {
       btn.addEventListener('click', function(e) {
         e.stopPropagation();
-        var idx = parseInt(this.dataset.idx);
-        wxContacts.splice(idx, 1);
+        wxContacts.splice(parseInt(this.dataset.idx), 1);
         saveWxData();
         renderContacts(body);
       });
     });
 
-    // 绑定编辑
     body.querySelectorAll('.wx-contact-act.edit').forEach(function(btn) {
       btn.addEventListener('click', function(e) {
         e.stopPropagation();
-        var idx = parseInt(this.dataset.idx);
-        showCreateContact(idx);
+        showCreateContact(parseInt(this.dataset.idx));
       });
     });
   }
@@ -214,7 +198,6 @@
 
     body.innerHTML = html;
 
-    // 头像点击
     var avatarBtn = body.querySelector('#wxMeAvatarBtn');
     if (avatarBtn) {
       avatarBtn.addEventListener('click', function() {
@@ -230,7 +213,6 @@
       });
     }
 
-    // 名称/ID/签名编辑
     bindMeEditable(body, 'wxMeName', 'name');
     bindMeEditable(body, 'wxMeId', 'id');
     bindMeEditable(body, 'wxMeSign', 'sign');
@@ -287,7 +269,6 @@
 
     var tempAvatar = contact.avatar;
 
-    // 头像选择
     overlay.querySelector('#wxCreateAvatarBtn').addEventListener('click', function() {
       var self = this;
       var input = document.createElement('input');
@@ -307,12 +288,10 @@
       input.click();
     });
 
-    // 取消
     overlay.querySelector('#wxCreateCancel').addEventListener('click', function() {
       document.body.removeChild(overlay);
     });
 
-    // 确认
     overlay.querySelector('#wxCreateConfirm').addEventListener('click', function() {
       var name = overlay.querySelector('#wxCreateName').value.trim();
       if (!name) { AppNav.showToast('请输入名称'); return; }
@@ -329,7 +308,6 @@
       renderWxBody();
     });
 
-    // 点遮罩关闭
     overlay.addEventListener('click', function(e) {
       if (e.target === overlay) document.body.removeChild(overlay);
     });
