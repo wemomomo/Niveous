@@ -1,4 +1,14 @@
+
 /* ========== 微信页面样式 ========== */
+
+/* 微信内容区特殊布局 */
+#wechatContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
 
 /* 微信内部底部栏 */
 .wx-tabbar {
@@ -223,13 +233,16 @@
 .wx-me-info { flex: 1; min-width: 0; }
 .wx-me-name {
   font-size: 18px; font-weight: 700; color: #1c1c1e;
+  outline: none;
 }
 .wx-me-id {
   font-size: 13px; color: #8e8e93; margin-top: 3px;
 }
+.wx-me-id span { outline: none; }
 .wx-me-sign {
   font-size: 12px; color: #8e8e93; margin-top: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  outline: none;
 }
 
 .wx-me-list {
