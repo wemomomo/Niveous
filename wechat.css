@@ -1,18 +1,16 @@
 
 /* ========== 微信 (Chat) 页面样式 ========== */
-
-/* 修复全局层级：裁剪器和照片操作卡必须盖住 app-page(z-500) */
 .crop-overlay {
-  z-index: 1300 !important;
+  z-index: 600 !important;
 }
 .photo-action-mask {
-  z-index: 1150 !important;
+  z-index: 600 !important;
 }
 .photo-action-card {
-  z-index: 1200 !important;
+  z-index: 600 !important;
 }
 .toast-message {
-  z-index: 2000 !important;
+  z-index: 600 !important;
 }
 
 #wechatContent {
@@ -51,7 +49,7 @@
   width: 36px;
   height: 36px;
   padding: 0;
-  z-index: 2;
+  z-index: 20;
 }
 .wx-header-back { margin-left: -6px; }
 .wx-header-add { margin-right: -6px; }
@@ -425,7 +423,7 @@
   background: rgba(0,0,0,0.4);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: 500;
   display: none;
   align-items: center; justify-content: center;
   padding: 20px;
