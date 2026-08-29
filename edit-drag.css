@@ -1,3 +1,4 @@
+
 /* ========== 编辑按钮（统一样式） ========== */
 .edit-btn {
   position: absolute;
@@ -14,7 +15,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.15s ease;
-  z-index: 5;
+  z-index: 10;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   font-family: inherit;
   white-space: nowrap;
@@ -36,7 +37,7 @@
   right: 24px;
 }
 
-/* ========== 拖拽状态（极速跟手与平滑归位） ========== */
+/* ========== 拖拽状态（极速跟手与100%触摸响应） ========== */
 .draggable {
   touch-action: none;
   position: relative;
@@ -44,11 +45,22 @@
 }
 .edit-mode .draggable {
   cursor: move;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
 }
+
+/* 编辑模式下彻底禁用内部文本选择，防止 iOS 弹出长按复制放大镜 */
+.edit-mode .draggable * {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
 .draggable.dragging {
-  opacity: 0.9;
+  opacity: 0.92;
   z-index: 100;
-  transition: none !important; /* 拖动中坚决不加动画，保证丝滑跟手 */
+  transition: none !important; /* 拖拽中完全无延迟跟手 */
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
 }
 
@@ -71,7 +83,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.15s ease;
-  z-index: 5;
+  z-index: 10;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   font-family: inherit;
   width: auto;
