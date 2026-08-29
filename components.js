@@ -141,10 +141,12 @@
     function positionCardPopup() {
       var cardRect = document.getElementById('profileCard').getBoundingClientRect();
       var windowW = window.innerWidth;
+      var windowH = window.innerHeight;
 
       cardPopup.style.visibility = 'hidden';
-      cardPopup.style.display = 'block';
+      cardPopup.style.display = 'flex';
       var popupW = cardPopup.offsetWidth;
+      var popupH = cardPopup.offsetHeight;
       cardPopup.style.visibility = '';
       cardPopup.style.display = '';
 
@@ -153,6 +155,9 @@
 
       if (left < 12) left = 12;
       if (left + popupW > windowW - 12) left = windowW - popupW - 12;
+      if (top + popupH > windowH - 20) {
+        top = cardRect.top - popupH - 10;
+      }
 
       cardPopup.style.left = left + 'px';
       cardPopup.style.top = top + 'px';
