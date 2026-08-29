@@ -3,7 +3,7 @@
 .couple-icons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  row-gap: 20px;    /* 上下间距 */
+  row-gap: 25px;    /* 上下间距 */
   column-gap: 10px; /* 左右间距 */
   justify-items: center; /* 确保每个格子里的内容在网格中居中 */
 }
