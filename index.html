@@ -79,7 +79,7 @@
 
       <!-- 情侣展示区 -->
       <div class="couple-section draggable" id="coupleSection" data-component="couple">
-        <div class="couple-top">
+        <div class="couple-left">
           <div class="couple-icons">
             <div class="couple-icon-item" data-action="beautify">
               <div class="couple-icon-circle">
@@ -121,6 +121,8 @@
               <span>情侣空间</span>
             </div>
           </div>
+        </div>
+        <div class="couple-right">
           <div class="couple-avatars">
             <div class="couple-avatar-item">
               <div class="couple-speech" contenteditable="true" id="coupleSpeech1">♡</div>
@@ -139,19 +141,19 @@
               <div class="couple-name" contenteditable="true" id="coupleName2">我</div>
             </div>
           </div>
-        </div>
-        <div class="couple-date-card" id="coupleDateCard">
-          <div class="date-card-header">
-            <span class="date-card-text">和<span class="date-card-name" id="datePartnerName">TA</span>在一起 已经</span>
-            <span class="date-card-days" id="dateDaysCount">0</span>
-            <span class="date-card-text">天</span>
-            <input type="date" id="dateStartInput" class="date-hidden-input">
-          </div>
-          <div class="date-card-calendar">
-            <div class="date-card-labels">
-              <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+          <div class="couple-date-card" id="coupleDateCard">
+            <div class="date-card-header">
+              <span class="date-card-text">和<span class="date-card-name" id="datePartnerName">TA</span>在一起</span>
+              <span class="date-card-days" id="dateDaysCount">0</span>
+              <span class="date-card-unit">天</span>
+              <input type="date" id="dateStartInput" class="date-hidden-input">
             </div>
-            <div class="date-card-dates" id="dateWeekDates"></div>
+            <div class="date-card-calendar">
+              <div class="date-card-labels">
+                <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+              </div>
+              <div class="date-card-dates" id="dateWeekDates"></div>
+            </div>
           </div>
         </div>
       </div>
