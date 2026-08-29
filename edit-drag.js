@@ -1,4 +1,3 @@
-
 (function(){
   'use strict';
 
@@ -32,7 +31,7 @@
       longPressTimer = setTimeout(function() {
         if (!isEditMode) enterEditMode();
         else exitEditMode();
-      }, 150);
+      }, 200);
     }
   }, { passive: true });
 
@@ -48,6 +47,10 @@
   function enterEditMode() {
     isEditMode = true;
     appShell.classList.add('edit-mode');
+    // 在编辑模式下失焦任何输入框，避免软键盘挡住
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
   }
 
   function exitEditMode() {
@@ -78,7 +81,7 @@
     });
   }
 
-  // ============ 丝滑跟手拖拽与排序 ============
+  // ============ 丝滑跟手拖拽（全卡片任意位置响应） ============
   var draggables = document.querySelectorAll('.draggable');
 
   draggables.forEach(function(el) {
@@ -86,12 +89,11 @@
       if (!isEditMode) return;
 
       var target = e.target;
+      // 只有点在【编辑按钮】或【恢复初始按钮】上时才不触发拖拽
       if (target.classList.contains('edit-btn') ||
           target.closest('.edit-btn') ||
           target.classList.contains('reset-layout-btn') ||
-          target.closest('.reset-layout-btn') ||
-          target.contentEditable === 'true' ||
-          target.closest('[contenteditable="true"]')) {
+          target.closest('.reset-layout-btn')) {
         return;
       }
 
@@ -107,7 +109,7 @@
 
   document.addEventListener('touchmove', function(e) {
     if (!dragElement) return;
-    e.preventDefault(); // 拖拽时防止页面整体滑动
+    if (e.cancelable) e.preventDefault(); // 拖拽时完全接管，禁止 iOS 滚动或手势干扰
 
     var y = e.touches[0].clientY;
     dragCurrentY = y - dragStartY;
@@ -183,4 +185,3 @@
   };
 
 })();
-
