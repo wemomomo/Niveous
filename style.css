@@ -23,7 +23,6 @@ html, body { height:100vh; background:#ffffff; color:#1c1c1e; overflow:hidden; }
   flex:1; 
   overflow:hidden; 
   padding:0; 
-  padding-top:env(safe-area-inset-top, 0); 
   display:flex; 
   flex-direction:column; 
 }
@@ -34,7 +33,7 @@ html, body { height:100vh; background:#ffffff; color:#1c1c1e; overflow:hidden; }
   gap:20px; 
   height:100%; 
   overflow:hidden; 
-  padding:16px 16px calc(env(safe-area-inset-bottom, 0px) + 95px); 
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(env(safe-area-inset-bottom, 0px) + 95px); 
   position:relative; 
 }
 .page.active { display:flex; }
