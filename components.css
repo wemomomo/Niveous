@@ -533,8 +533,8 @@ input:checked + label:before {
   height: 58px;
   border-radius: 50%;
   background: #ffffff;
-  border: 1.5px solid #ffffff;
-  box-shadow: 0 0 0 1.5px #d1d1d6;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px #d1d1d6;
   overflow: hidden;
   display: flex;
   align-items: center;
