@@ -1,6 +1,20 @@
 
 /* ========== 微信 (Chat) 页面样式 ========== */
 
+/* 修复全局层级：裁剪器和照片操作卡必须盖住 app-page(z-500) */
+.crop-overlay {
+  z-index: 1300 !important;
+}
+.photo-action-mask {
+  z-index: 1150 !important;
+}
+.photo-action-card {
+  z-index: 1200 !important;
+}
+.toast-message {
+  z-index: 2000 !important;
+}
+
 #wechatContent {
   display: flex;
   flex-direction: column;
