@@ -73,12 +73,12 @@ body {
 }
 
 .couple-left {
-  flex: 4;
+  flex: 4.5;
   min-width: 0;
 }
 
 .couple-right {
-  flex: 6;
+  flex: 5.5;
   display: flex;
   flex-direction: column;
   align-items: center;
