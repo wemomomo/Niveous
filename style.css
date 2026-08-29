@@ -75,6 +75,7 @@ body {
 .couple-left {
   flex: 5;
   min-width: 0;
+  padding-top: 12px; 
 }
 
 .couple-right {
