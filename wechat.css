@@ -16,9 +16,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #ffffff;
+  background-color: #ffffff;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   flex-shrink: 0;
   position: relative;
   border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
@@ -136,9 +137,10 @@
   align-items: center;
   justify-content: space-around;
   padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
-  background: rgba(250, 250, 250, 0.95);
+  background-color: rgba(250, 250, 250, 0.95);
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 0.5px solid rgba(0, 0, 0, 0.08);
@@ -409,7 +411,7 @@
   background: rgba(0,0,0,0.4);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 600;
+  z-index: 1000;
   display: none;
   align-items: center; justify-content: center;
   padding: 20px;
