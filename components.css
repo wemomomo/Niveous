@@ -1,8 +1,9 @@
+
 /* ========== 个人卡片 ========== */
 .profile-card {
   width: 100%;
   aspect-ratio: 16 / 11;
-  border-radius: 24px;
+  border-radius: 20px;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
@@ -13,7 +14,7 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  background-color: #transparent;
+  background-color: transparent;
   z-index: 0;
 }
 .card-bg:not(.has-bg)::after {
@@ -43,10 +44,12 @@
   align-items: center;
 }
 
+/* 下半部分遮罩层：顶部改成优雅的弧形曲角 */
 .lower-overlay {
   position: absolute;
   inset: 0;
   background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 24px 24px 0 0;
   z-index: 0;
   transition: background-color 0.3s ease;
 }
