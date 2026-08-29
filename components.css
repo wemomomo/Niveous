@@ -480,7 +480,7 @@ input:checked + label:before {
   display: block;
 }
 
-/* ========== 情侣展示区 ========== */
+/* ========== 头像展示区 ========== */
 .couple-section {
   display: flex;
   align-items: flex-start;
