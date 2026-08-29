@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -13,7 +12,7 @@
 <link rel="stylesheet" href="tabbar.css">
 <link rel="stylesheet" href="edit-drag.css">
 <link rel="stylesheet" href="settings.css">
-  <link rel="stylesheet" href="wechat.css">
+<link rel="stylesheet" href="wechat.css">
 </head>
 <body>
 
@@ -77,36 +76,32 @@
         </div>
       </div>
 
-      <div class="icons-row draggable" data-component="icons">
-        <div class="app-icon-item" id="iconPlot">
-          <div class="app-icon-glass" id="iconPlotImg">
-            <div class="icon-image" data-icon="plot"></div>
-            <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M8 6V4"/><path d="M16 6V4"/><path d="M12 6V3"/></svg>
-          </div>
-          <div class="app-icon-label" id="iconPlotLabel">剧情</div>
+      <!-- 情侣展示区（替代原icons-row） -->
+      <div class="couple-section draggable" id="coupleSection" data-component="couple">
+        <div class="couple-bubbles">
+          <div class="couple-bubble" contenteditable="true" id="coupleBubble1">在想你...</div>
+          <div class="couple-bubble" contenteditable="true" id="coupleBubble2">我也是 ♡</div>
         </div>
-        <div class="app-icon-item" id="iconMessage">
-          <div class="app-icon-glass" id="iconMessageImg">
-            <div class="icon-image" data-icon="message"></div>
-            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <div class="couple-avatars">
+          <div class="couple-avatar-item">
+            <div class="couple-speech" contenteditable="true" id="coupleSpeech1">♡</div>
+            <div class="couple-avatar-circle" id="coupleAvatar1">
+              <img id="coupleAvatarImg1" alt="">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            </div>
+            <div class="couple-name" contenteditable="true" id="coupleName1">TA</div>
           </div>
-          <div class="app-icon-label" id="iconMessageLabel">传讯</div>
-        </div>
-        <div class="app-icon-item" id="iconExplore">
-          <div class="app-icon-glass" id="iconExploreImg">
-            <div class="icon-image" data-icon="explore"></div>
-            <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3"/><path d="M12 18v3"/><path d="M3 12h3"/><path d="M18 12h3"/></svg>
+          <div class="couple-avatar-item">
+            <div class="couple-speech" contenteditable="true" id="coupleSpeech2">♡</div>
+            <div class="couple-avatar-circle" id="coupleAvatar2">
+              <img id="coupleAvatarImg2" alt="">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            </div>
+            <div class="couple-name" contenteditable="true" id="coupleName2">我</div>
           </div>
-          <div class="app-icon-label" id="iconExploreLabel">万象</div>
-        </div>
-        <div class="app-icon-item" id="iconVault">
-          <div class="app-icon-glass" id="iconVaultImg">
-            <div class="icon-image" data-icon="vault"></div>
-            <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 12h18"/><circle cx="12" cy="14" r="1.5"/><path d="M7 8V6a5 5 0 0 1 10 0v2"/></svg>
-          </div>
-          <div class="app-icon-label" id="iconVaultLabel">宝阁</div>
         </div>
       </div>
+
     </div>
 
     <!-- ========================================== -->
@@ -125,17 +120,15 @@
   <!-- 桌面 Dock 栏 -->
   <div class="tab-bar">
     <div class="tab-bar-capsule">
-<div class="tab-item" data-tab="wechat">
-  <div class="tab-icon">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <!-- 右边小气泡（底层） -->
-      <path d="M15.5 11c2.8 0 5 1.7 5 3.8 0 1.4-1 2.6-2.5 3.3l.3 2-1.8-1.1c-.5.1-1.1.2-1.7.2-2.8 0-5-1.7-5-3.8 0-.2 0-.5.1-.7"/>
-      <!-- 左边大气泡（上层，白色填充遮住） -->
-      <path d="M9 3.5C5 3.5 2 6 2 9c0 1.7 1 3.2 2.7 4.3L4 16l2.8-1.4c.7.2 1.5.3 2.2.3 4 0 7-2.5 7-5.5S13 3.5 9 3.5z" fill="white"/>
-    </svg>
-  </div>
-  <div class="tab-label">微信</div>
-</div>
+      <div class="tab-item" data-tab="wechat">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15.5 11c2.8 0 5 1.7 5 3.8 0 1.4-1 2.6-2.5 3.3l.3 2-1.8-1.1c-.5.1-1.1.2-1.7.2-2.8 0-5-1.7-5-3.8 0-.2 0-.5.1-.7"/>
+            <path d="M9 3.5C5 3.5 2 6 2 9c0 1.7 1 3.2 2.7 4.3L4 16l2.8-1.4c.7.2 1.5.3 2.2.3 4 0 7-2.5 7-5.5S13 3.5 9 3.5z" fill="white"/>
+          </svg>
+        </div>
+        <div class="tab-label">微信</div>
+      </div>
       <div class="tab-item" data-tab="offline">
         <div class="tab-icon">
           <svg viewBox="0 0 24 24">
