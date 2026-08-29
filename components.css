@@ -582,18 +582,25 @@ input:checked + label:before {
 /* ========== 情侣展示区 ========== */
 .couple-section {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: stretch;
+  gap: 16px;
   padding: 8px 0;
 }
 
-/* 左侧：聊天气泡 */
+/* 左侧容器 */
+.couple-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 左侧下方聊天气泡 */
 .couple-bubbles {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
-  min-width: 0;
   align-items: flex-start;
 }
 
@@ -603,20 +610,18 @@ input:checked + label:before {
   padding: 10px 14px;
   font-size: 13px;
   color: #1c1c1e;
-  max-width: 80%;
+  max-width: 90%;
   outline: none;
   line-height: 1.4;
   word-break: break-word;
-}
-.couple-bubble:nth-child(2) {
-  border-radius: 16px 16px 16px 4px;
 }
 
 /* 右侧：情侣头像 */
 .couple-avatars {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   flex-shrink: 0;
+  align-items: center;
 }
 
 .couple-avatar-item {
@@ -655,8 +660,8 @@ input:checked + label:before {
 
 /* 圆形头像 */
 .couple-avatar-circle {
-  width: 54px;
-  height: 54px;
+  width: 66px;
+  height: 66px;
   border-radius: 50%;
   background: #f0f0f3;
   overflow: hidden;
@@ -679,8 +684,8 @@ input:checked + label:before {
   display: none;
 }
 .couple-avatar-circle svg {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   stroke: #c7c7cc;
   stroke-width: 1.5;
   fill: none;
@@ -694,7 +699,8 @@ input:checked + label:before {
   color: #8e8e93;
   text-align: center;
   outline: none;
-  max-width: 60px;
+  max-width: 66px;
   word-break: break-all;
   line-height: 1.3;
 }
+
