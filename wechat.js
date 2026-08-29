@@ -1,15 +1,15 @@
-
 (function(){
   'use strict';
 
   var wxCurrentTab = 'chats';
   var wxContacts = [];
-  var wxMeInfo = { name: '', id: '', sign: '' };
+  var wxMeInfo = { name: '墨墨', id: 'mo_mo', sign: '' };
   var wxMeAvatar = null;
+  var wxHeaderBg = null;
+  var wxTabbarBg = null;
 
   window.addEventListener('dbReady', function() {
     loadWxData(function() {
-      // 隐藏 app.js 原本生成的通用 header，改用微信自己的 header
       var wxPage = document.querySelector('[data-page="wechat"]');
       if (wxPage) {
         var defaultHeader = wxPage.querySelector('.app-header');
@@ -23,17 +23,30 @@
     var content = document.getElementById('wechatContent');
     if (!content) return;
 
-    // 微信自带顶部栏（返回、居中Chat、纯加号图标）
-    var headerHtml = '<div class="wx-header">'
+    // 顶部栏
+    var headerHtml = '<div class="wx-header" id="wxHeader">'
       + '<button class="wx-header-back" data-back="home" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
       + '<div class="wx-header-title">Chat</div>'
       + '<button class="wx-header-add" id="wxHeaderAddBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
       + '</div>';
 
+    // 气泡子菜单
+    var menuHtml = '<div class="wx-menu-mask" id="wxMenuMask"></div>'
+      + '<div class="wx-menu-popover" id="wxMenuPopover">'
+      +   '<div class="wx-menu-item" id="wxSetHeaderBg">'
+      +     '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="6" rx="2"/><rect x="3" y="11" width="18" height="10" rx="2"/></svg>'
+      +     '<span>顶部栏背景</span>'
+      +   '</div>'
+      +   '<div class="wx-menu-item" id="wxSetTabbarBg">'
+      +     '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="10" rx="2"/><rect x="3" y="15" width="18" height="6" rx="2"/></svg>'
+      +     '<span>底部栏背景</span>'
+      +   '</div>'
+      + '</div>';
+
     var bodyHtml = '<div class="wx-body" id="wxBody"></div>';
 
     // 底部栏
-    var tabbarHtml = '<div class="wx-tabbar">'
+    var tabbarHtml = '<div class="wx-tabbar" id="wxTabbar">'
       + '<div class="wx-tab-item" data-tab="chats">'
       +   '<svg viewBox="0 0 64 64"><path d="M32 15C21.5 15 13 22 13 31C13 36 16 40.5 20.6 43.2L18.5 50L26 46.4C27.9 46.9 29.9 47 32 47C42.5 47 51 40 51 31C51 22 42.5 15 32 15Z" stroke-width="3.6"/></svg>'
       +   '<div class="wx-tab-label">聊天</div>'
@@ -52,9 +65,12 @@
       + '</div>'
       + '</div>';
 
-    content.innerHTML = headerHtml + bodyHtml + tabbarHtml;
+    content.innerHTML = headerHtml + menuHtml + bodyHtml + tabbarHtml;
 
-    // 绑定返回桌面
+    applyHeaderBg();
+    applyTabbarBg();
+
+    // 返回
     var backBtn = content.querySelector('.wx-header-back');
     if (backBtn) {
       backBtn.addEventListener('click', function() {
@@ -62,7 +78,80 @@
       });
     }
 
-    // 绑定 Tab 切换
+    // 右上角加号展开/收起菜单
+    var addBtn = content.querySelector('#wxHeaderAddBtn');
+    var mask = content.querySelector('#wxMenuMask');
+    var popover = content.querySelector('#wxMenuPopover');
+
+    function toggleMenu() {
+      var isShow = popover.classList.contains('show');
+      if (isShow) {
+        popover.classList.remove('show');
+        mask.classList.remove('show');
+      } else {
+        popover.classList.add('show');
+        mask.classList.add('show');
+      }
+    }
+
+    if (addBtn) addBtn.addEventListener('click', toggleMenu);
+    if (mask) mask.addEventListener('click', toggleMenu);
+
+    // 子菜单点击：顶部栏背景
+    var setHeaderBgBtn = content.querySelector('#wxSetHeaderBg');
+    if (setHeaderBgBtn) {
+      setHeaderBgBtn.addEventListener('click', function() {
+        toggleMenu();
+        if (wxHeaderBg) {
+          window.PhotoAction.show(function() {
+            pickBackground(function(imgData) {
+              wxHeaderBg = imgData;
+              saveWxData();
+              applyHeaderBg();
+            });
+          }, function() {
+            wxHeaderBg = null;
+            saveWxData();
+            applyHeaderBg();
+          });
+        } else {
+          pickBackground(function(imgData) {
+            wxHeaderBg = imgData;
+            saveWxData();
+            applyHeaderBg();
+          });
+        }
+      });
+    }
+
+    // 子菜单点击：底部栏背景
+    var setTabbarBgBtn = content.querySelector('#wxSetTabbarBg');
+    if (setTabbarBgBtn) {
+      setTabbarBgBtn.addEventListener('click', function() {
+        toggleMenu();
+        if (wxTabbarBg) {
+          window.PhotoAction.show(function() {
+            pickBackground(function(imgData) {
+              wxTabbarBg = imgData;
+              saveWxData();
+              applyTabbarBg();
+            });
+          }, function() {
+            wxTabbarBg = null;
+            saveWxData();
+            applyTabbarBg();
+          });
+        } else {
+          pickBackground(function(imgData) {
+            wxTabbarBg = imgData;
+            saveWxData();
+            applyTabbarBg();
+          });
+        }
+      });
+    }
+
+    // Tab 切换
     content.querySelectorAll('.wx-tab-item').forEach(function(tab) {
       tab.addEventListener('click', function() {
         wxCurrentTab = this.dataset.tab;
@@ -76,6 +165,44 @@
     if (activeTab) activeTab.classList.add('active');
 
     renderWxBody();
+  }
+
+  function applyHeaderBg() {
+    var header = document.getElementById('wxHeader');
+    if (!header) return;
+    if (wxHeaderBg) {
+      header.style.backgroundImage = 'url(' + wxHeaderBg + ')';
+    } else {
+      header.style.backgroundImage = 'none';
+    }
+  }
+
+  function applyTabbarBg() {
+    var tabbar = document.getElementById('wxTabbar');
+    if (!tabbar) return;
+    if (wxTabbarBg) {
+      tabbar.style.backgroundImage = 'url(' + wxTabbarBg + ')';
+    } else {
+      tabbar.style.backgroundImage = 'none';
+    }
+  }
+
+  function pickBackground(callback) {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.addEventListener('change', function() {
+      var file = this.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        window.AppCropper.open(e.target.result, { aspectRatio: 0 }, function(cropped) {
+          if (callback) callback(cropped);
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+    input.click();
   }
 
   function renderWxBody() {
@@ -93,7 +220,7 @@
     if (!wxContacts.length) {
       body.innerHTML = '<div class="wx-empty">'
         + '<svg viewBox="0 0 64 64"><path d="M32 15C21.5 15 13 22 13 31C13 36 16 40.5 20.6 43.2L18.5 50L26 46.4C27.9 46.9 29.9 47 32 47C42.5 47 51 40 51 31C51 22 42.5 15 32 15Z" stroke-width="2.5"/></svg>'
-        + '<div class="wx-empty-text">暂无聊天，去通讯录添加角色</div>'
+        + '<div class="wx-empty-text">暂无聊天，去通讯录创建角色吧</div>'
         + '</div>';
       return;
     }
@@ -340,19 +467,22 @@
   // ========== 数据存取 ==========
   function loadWxData(callback) {
     if (!window.AppDB) { if (callback) callback(); return; }
-    var total = 3, done = 0;
+    var total = 5, done = 0;
     function check() { done++; if (done >= total && callback) callback(); }
     AppDB.get('wx_contacts', function(val) { if (val) wxContacts = val; check(); });
     AppDB.get('wx_me_info', function(val) { if (val) wxMeInfo = val; check(); });
     AppDB.get('wx_me_avatar', function(val) { if (val) wxMeAvatar = val; check(); });
+    AppDB.get('wx_header_bg', function(val) { if (val) wxHeaderBg = val; check(); });
+    AppDB.get('wx_tabbar_bg', function(val) { if (val) wxTabbarBg = val; check(); });
   }
 
   function saveWxData() {
     if (!window.AppDB) return;
     AppDB.save('wx_contacts', wxContacts);
     AppDB.save('wx_me_info', wxMeInfo);
-    if (wxMeAvatar) AppDB.save('wx_me_avatar', wxMeAvatar);
-    else AppDB.delete('wx_me_avatar');
+    if (wxMeAvatar) AppDB.save('wx_me_avatar', wxMeAvatar); else AppDB.delete('wx_me_avatar');
+    if (wxHeaderBg) AppDB.save('wx_header_bg', wxHeaderBg); else AppDB.delete('wx_header_bg');
+    if (wxTabbarBg) AppDB.save('wx_tabbar_bg', wxTabbarBg); else AppDB.delete('wx_tabbar_bg');
   }
 
   function esc(str) {
