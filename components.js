@@ -1,3 +1,4 @@
+
 (function(){
   'use strict';
 
@@ -391,7 +392,6 @@
     if (circle1) circle1.addEventListener('click', function() { handleAvatarClick(1); });
     if (circle2) circle2.addEventListener('click', function() { handleAvatarClick(2); });
 
-    // 点击天数打开日期选择
     var daysEl = document.getElementById('dateDaysCount');
     var dateInput = document.getElementById('dateStartInput');
     if (daysEl && dateInput) {
@@ -444,7 +444,6 @@
     saveCoupleData();
   }
 
-  // ========== 日期卡片 ==========
   function updateDateName() {
     var nameEl = document.getElementById('datePartnerName');
     if (nameEl) nameEl.textContent = coupleData.name1 || 'TA';
@@ -457,15 +456,12 @@
 
     if (!daysEl || !datesEl) return;
 
-    // 同步名字
     updateDateName();
 
-    // 回填日期选择器
     if (dateInput && coupleData.startDate) {
       dateInput.value = coupleData.startDate;
     }
 
-    // 计算天数
     var days = 0;
     if (coupleData.startDate) {
       var parts = coupleData.startDate.split('-');
@@ -477,7 +473,6 @@
     }
     daysEl.textContent = days;
 
-    // 渲染本周日期
     var today = new Date();
     var dayOfWeek = today.getDay();
     var weekStart = new Date(today);
@@ -495,7 +490,6 @@
     datesEl.innerHTML = html;
   }
 
-  // ========== 数据 ==========
   function loadCoupleData(callback) {
     if (!window.AppDB) { if (callback) callback(); return; }
     AppDB.get('couple_data', function(val) {
