@@ -301,13 +301,13 @@
 
 })();
 
-// ========== 情侣展示区（独立模块） ==========
+// ========== 头像展示区（独立模块） ==========
 (function() {
   'use strict';
 
   var coupleData = {
-    speech1: '♡',
-    speech2: '♡',
+    speech1: '对话1',
+    speech2: '对话2',
     name1: 'TA',
     name2: '我',
     avatar1: null,
