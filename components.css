@@ -296,29 +296,35 @@
 /* ========== 情侣展示区 ========== */
 .couple-section {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: flex-start;
+  gap: 16px;
   padding: 4px 0;
 }
 
-.couple-top {
+.couple-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.couple-right {
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 /* 右侧：情侣头像 */
 .couple-avatars {
   display: flex;
   gap: 10px;
-  flex-shrink: 0;
 }
 
 .couple-avatar-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 /* 对白气泡 */
@@ -331,7 +337,7 @@
   text-align: center;
   outline: none;
   position: relative;
-  max-width: 70px;
+  max-width: 60px;
   word-break: break-all;
   line-height: 1.3;
   min-height: 18px;
@@ -357,8 +363,8 @@
 
 /* 圆形头像：灰边 → 白边 → 头像 */
 .couple-avatar-circle {
-  width: 66px;
-  height: 66px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   background: #ffffff;
   border: 1.5px solid #ffffff;
@@ -376,15 +382,11 @@
   border-radius: 50%;
   display: none;
 }
-.couple-avatar-circle.has-img img {
-  display: block;
-}
-.couple-avatar-circle.has-img svg {
-  display: none;
-}
+.couple-avatar-circle.has-img img { display: block; }
+.couple-avatar-circle.has-img svg { display: none; }
 .couple-avatar-circle svg {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   stroke: #c7c7cc;
   stroke-width: 1.5;
   fill: none;
@@ -398,9 +400,9 @@
   color: #8e8e93;
   text-align: center;
   outline: none;
-  max-width: 66px;
+  max-width: 58px;
   min-height: 16px;
-  min-width: 30px;
+  min-width: 24px;
   word-break: break-all;
   line-height: 1.3;
 }
@@ -410,26 +412,29 @@
   pointer-events: none;
 }
 
-/* ========== 日期卡片 ========== */
+/* ========== 迷你日期卡片 ========== */
 .couple-date-card {
   background: #f8f8fa;
-  border-radius: 14px;
+  border-radius: 12px;
   border: 0.5px solid rgba(0, 0, 0, 0.05);
-  padding: 12px 14px;
+  padding: 8px 8px 6px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  width: 100%;
 }
 
 .date-card-header {
   display: flex;
   align-items: baseline;
-  gap: 2px;
-  font-size: 13px;
-  color: #3c3c43;
+  justify-content: center;
+  gap: 1px;
+  font-size: 10px;
+  color: #8e8e93;
   font-weight: 500;
   flex-wrap: wrap;
   position: relative;
+  line-height: 1.4;
 }
 
 .date-card-name {
@@ -438,19 +443,21 @@
 }
 
 .date-card-days {
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 800;
   color: #1c1c1e;
   line-height: 1;
-  margin: 0 2px;
+  margin: 0 1px;
   cursor: pointer;
 }
-.date-card-days:active {
-  opacity: 0.5;
-}
+.date-card-days:active { opacity: 0.5; }
 
-.date-card-text {
-  white-space: nowrap;
+.date-card-text { white-space: nowrap; }
+
+.date-card-unit {
+  font-size: 10px;
+  color: #8e8e93;
+  font-weight: 500;
 }
 
 .date-hidden-input {
@@ -461,15 +468,15 @@
   pointer-events: none;
 }
 
-/* 日历网格 */
+/* 迷你日历 */
 .date-card-calendar {
   background: #ffffff;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 0.5px solid rgba(0, 0, 0, 0.04);
-  padding: 8px 4px;
+  padding: 4px 2px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .date-card-labels,
@@ -480,18 +487,18 @@
 }
 
 .date-card-labels span {
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 600;
-  color: #8e8e93;
-  padding: 2px 0;
+  color: #c7c7cc;
+  padding: 1px 0;
 }
 
 .date-card-dates span {
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 500;
   color: #1c1c1e;
-  padding: 4px 0;
-  border-radius: 8px;
+  padding: 2px 0;
+  border-radius: 6px;
 }
 
 .date-card-dates span.today {
