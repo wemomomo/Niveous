@@ -2,7 +2,9 @@
 .couple-icons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  row-gap: 20px;   /* 上下间距 */
+  column-gap: 10px; /* 左右间距 */
+}
 }
 
 .couple-icon-item {
@@ -34,7 +36,7 @@
   width: 30px;
   height: 30px;
   stroke: #8e8e93;
-  stroke-width: 1.5;
+  stroke-width: 1;
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
