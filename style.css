@@ -1,3 +1,4 @@
+
 :root {
   --safe-top: env(safe-area-inset-top, 10px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -107,7 +108,7 @@ html, body { height:100vh; background:#ffffff; color:#1c1c1e; overflow:hidden; }
 .photo-action-card button:last-child { border-bottom: none; }
 .photo-action-card button:active { background: rgba(0,0,0,0.05); }
 .photo-action-mask {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+  position: fixed; inset: 0; background: transparent;
   z-index: 1150; display: none;
 }
 .photo-action-mask.show { display: block; }
@@ -170,4 +171,84 @@ html, body { height:100vh; background:#ffffff; color:#1c1c1e; overflow:hidden; }
 }
 .crop-workspace canvas {
   max-width: 100%; max-height: 100%; touch-action: none;
+}
+
+/* ========== 独立 App 页面通用骨架 ========== */
+.app-page {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  height: 100vh;
+  background: #ffffff;
+  z-index: 500;
+  display: none;
+  flex-direction: column;
+  padding: 0;
+}
+.app-page.active {
+  display: flex;
+  animation: slideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.app-header {
+  padding: var(--app-header-top) 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.icon-back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3c3c43;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  margin-left: -4px;
+  flex-shrink: 0;
+}
+.icon-back-btn:active { opacity: 0.5; }
+.icon-back-btn svg {
+  width: 28px; height: 28px;
+  stroke: currentColor; stroke-width: 2.5; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.app-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1c1c1e;
+  line-height: 1;
+}
+
+.app-content { 
+  flex: 1; 
+  overflow-y: auto; 
+  padding: 0 16px 20px; 
+  -webkit-overflow-scrolling: touch; 
+}
+
+/* ========== 底部栏定位（在页面中的位置） ========== */
+.tab-bar {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 380px;
+  width: calc(100% - 32px);
+}
+
+@media (display-mode: standalone) {
+  .tab-bar {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  }
 }
