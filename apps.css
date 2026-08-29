@@ -1,18 +1,21 @@
+
 /* ========== 首页功能图标（2x2网格） ========== */
 .couple-icons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  row-gap: 20px;   /* 上下间距 */
+  row-gap: 20px;    /* 上下间距 */
   column-gap: 10px; /* 左右间距 */
-}
+  justify-items: center; /* 确保每个格子里的内容在网格中居中 */
 }
 
 .couple-icon-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   cursor: pointer;
+  width: 100%;
 }
 .couple-icon-item:active {
   opacity: 0.5;
@@ -55,6 +58,7 @@
 }
 
 .couple-icon-item span {
+  width: 100%;
   font-size: 10px;
   color: #8e8e93;
   font-weight: 500;
