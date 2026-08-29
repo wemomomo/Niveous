@@ -1,3 +1,4 @@
+
 (function(){
   'use strict';
 
@@ -64,7 +65,7 @@
     var windowW = window.innerWidth;
 
     tabbarPopup.style.visibility = 'hidden';
-    tabbarPopup.style.display = 'block';
+    tabbarPopup.style.display = 'flex';
     var popupW = tabbarPopup.offsetWidth;
     var popupH = tabbarPopup.offsetHeight;
     tabbarPopup.style.visibility = '';
@@ -75,6 +76,7 @@
 
     if (left < 12) left = 12;
     if (left + popupW > windowW - 12) left = windowW - popupW - 12;
+    if (top < 20) top = 20;
 
     tabbarPopup.style.left = left + 'px';
     tabbarPopup.style.top = top + 'px';
