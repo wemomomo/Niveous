@@ -86,9 +86,15 @@
       this.value = '';
     });
 
-    // --- 文字保存 ---
-    infoTexts.forEach(function(el) { el.addEventListener('blur', saveCardState); });
-    if (locationText) locationText.addEventListener('blur', saveCardState);
+    // --- 文字实时与失焦保存 ---
+    infoTexts.forEach(function(el) { 
+      el.addEventListener('input', saveCardState);
+      el.addEventListener('blur', saveCardState); 
+    });
+    if (locationText) {
+      locationText.addEventListener('input', saveCardState);
+      locationText.addEventListener('blur', saveCardState);
+    }
 
     // --- 编辑气泡卡片 ---
     var cardEditBtn = document.querySelector('[data-edit-target="card"]');
@@ -121,9 +127,19 @@
           + '<span class="popup-card-value" id="cardOpacityValue">80%</span></div>';
         document.body.appendChild(cardPopup);
 
-        document.getElementById('cardGlassToggle').addEventListener('change', applyCardOverlay);
-        document.getElementById('cardColorPicker').addEventListener('input', applyCardOverlay);
-        document.getElementById('cardOpacitySlider').addEventListener('input', applyCardOverlay);
+        // 每次变动立刻应用并实时存储
+        document.getElementById('cardGlassToggle').addEventListener('change', function() {
+          applyCardOverlay();
+          saveCardState();
+        });
+        document.getElementById('cardColorPicker').addEventListener('input', function() {
+          applyCardOverlay();
+          saveCardState();
+        });
+        document.getElementById('cardOpacitySlider').addEventListener('input', function() {
+          applyCardOverlay();
+          saveCardState();
+        });
       }
 
       loadStyleToControls();
@@ -199,22 +215,33 @@
       var glassToggle = document.getElementById('cardGlassToggle');
       var colorPicker = document.getElementById('cardColorPicker');
       var opacitySlider = document.getElementById('cardOpacitySlider');
-      var state = {
-        hasBg: cardBg.classList.contains('has-bg'),
-        hasAvatar: avatarBtn.classList.contains('has-img'),
-        texts: {},
-        style: {
-          glass: glassToggle ? glassToggle.checked : false,
-          color: colorPicker ? colorPicker.value : '#ffffff',
-          opacity: opacitySlider ? opacitySlider.value : 80
-        }
-      };
-      infoTexts.forEach(function(el) {
-        var key = el.dataset.key;
-        if (key !== 'line4') state.texts[key] = el.textContent.trim();
+      
+      AppDB.get('card_state', function(existingState) {
+        var prevStyle = (existingState && existingState.style) ? existingState.style : {
+          glass: false,
+          color: '#ffffff',
+          opacity: 80
+        };
+
+        var state = {
+          hasBg: cardBg.classList.contains('has-bg'),
+          hasAvatar: avatarBtn.classList.contains('has-img'),
+          texts: {},
+          style: {
+            glass: glassToggle ? glassToggle.checked : prevStyle.glass,
+            color: colorPicker ? colorPicker.value : prevStyle.color,
+            opacity: opacitySlider ? opacitySlider.value : prevStyle.opacity
+          }
+        };
+
+        infoTexts.forEach(function(el) {
+          var key = el.dataset.key;
+          if (key !== 'line4') state.texts[key] = el.textContent.trim();
+        });
+        state.texts['line4text'] = locationText ? locationText.textContent.trim() : '';
+
+        AppDB.save('card_state', state);
       });
-      state.texts['line4text'] = locationText ? locationText.textContent.trim() : '';
-      AppDB.save('card_state', state);
     }
 
     function loadCardState() {
@@ -243,7 +270,14 @@
           });
         }
         if (state.style) {
-          setTimeout(function() { applyCardOverlay(); }, 100);
+          var color = state.style.color || '#ffffff';
+          var opacity = (state.style.opacity !== undefined ? state.style.opacity : 80) / 100;
+          var r = parseInt(color.slice(1,3), 16);
+          var g = parseInt(color.slice(3,5), 16);
+          var b = parseInt(color.slice(5,7), 16);
+          lowerOverlay.style.backgroundColor = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
+          if (state.style.glass) lowerOverlay.classList.add('glass-effect');
+          else lowerOverlay.classList.remove('glass-effect');
         }
       });
     }
@@ -298,6 +332,9 @@
     });
 
     if (messagePreview) {
+      messagePreview.addEventListener('input', function() {
+        AppDB.save('message_preview', this.textContent.trim());
+      });
       messagePreview.addEventListener('blur', function() {
         AppDB.save('message_preview', this.textContent.trim());
       });
@@ -380,6 +417,11 @@
     editables.forEach(function(pair) {
       var el = document.getElementById(pair[0]);
       if (el) {
+        el.addEventListener('input', function() {
+          coupleData[pair[1]] = this.textContent.trim() || '';
+          saveCoupleData();
+          if (pair[1] === 'name1') updateDateName();
+        });
         el.addEventListener('blur', function() {
           coupleData[pair[1]] = this.textContent.trim() || '';
           saveCoupleData();
