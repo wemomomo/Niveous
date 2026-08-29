@@ -300,7 +300,7 @@
 
 .couple-name {
   font-size: 11px;
-  color: #8e8e93;
+  color: #1c1c1e;
   text-align: center;
   outline: none;
   max-width: 58px;
@@ -311,7 +311,7 @@
 }
 .couple-name:empty::before {
   content: '名字';
-  color: #c7c7cc;
+  color: #1c1c1e;
   pointer-events: none;
 }
 
@@ -342,13 +342,13 @@
 
 .date-card-name {
   font-weight: 700;
-  color: #1c1c1e;
+  color: #8e8e93;
 }
 
 .date-card-days {
   font-size: 16px;
   font-weight: 800;
-  color: #1c1c1e;
+  color: #8e8e93;
   line-height: 1;
   margin: 0 1px;
   cursor: pointer;
@@ -391,14 +391,14 @@
 .date-card-labels span {
   font-size: 8px;
   font-weight: 600;
-  color: #c7c7cc;
+  color: #f8f8fa;
   padding: 1px 0;
 }
 
 .date-card-dates span {
   font-size: 10px;
   font-weight: 500;
-  color: #1c1c1e;
+  color: #f8f8fa;
   padding: 2px 0;
   border-radius: 6px;
 }
