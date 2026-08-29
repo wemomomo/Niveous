@@ -18,7 +18,7 @@
   var touchStartX = 0;
   var touchStartY = 0;
 
-  var defaultOrder = ['card', 'message', 'icons'];
+  var defaultOrder = ['card', 'message', 'couple'];
 
   window.addEventListener('dbReady', loadDragPositions);
 
