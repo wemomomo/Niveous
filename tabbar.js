@@ -80,7 +80,6 @@
     tabbarPopup.style.top = top + 'px';
   }
 
-  // 从控件读取并应用
   function applyFromControls() {
     var glassToggle = document.getElementById('tabbarGlassToggle');
     var bgColor = document.getElementById('tabbarBgColor');
@@ -105,7 +104,6 @@
     saveTabbarState();
   }
 
-  // 直接用数据应用样式（不依赖控件）
   function applyTabbarStyle(glass, bgColor, opacity, borderColor, borderWidth) {
     var capsule = document.querySelector('.tab-bar-capsule');
     if (!capsule) return;
@@ -169,7 +167,6 @@
     });
   }
 
-  // 页面加载时直接从数据恢复样式
   function loadTabbarState() {
     if (!window.AppDB) return;
     AppDB.get('tabbar_state', function(state) {
@@ -183,5 +180,5 @@
       );
     });
   }
-  
+
 })();
