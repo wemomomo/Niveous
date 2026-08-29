@@ -8,6 +8,24 @@
   var wxHeaderBg = null;
   var wxTabbarBg = null;
 
+  // iOS 安全的文件选择（input 必须挂到 DOM 上，防止 GC 导致 change 丢失）
+  var _fileInput = null;
+  function safePickFile(accept, callback) {
+    if (_fileInput && _fileInput.parentNode) _fileInput.parentNode.removeChild(_fileInput);
+    _fileInput = document.createElement('input');
+    _fileInput.type = 'file';
+    _fileInput.accept = accept || 'image/*';
+    _fileInput.style.cssText = 'position:fixed;left:-9999px;opacity:0;pointer-events:none;';
+    document.body.appendChild(_fileInput);
+    _fileInput.addEventListener('change', function() {
+      var file = _fileInput.files[0];
+      if (_fileInput.parentNode) _fileInput.parentNode.removeChild(_fileInput);
+      _fileInput = null;
+      if (file && callback) callback(file);
+    });
+    _fileInput.click();
+  }
+
   window.addEventListener('dbReady', function() {
     loadWxData(function() {
       var wxPage = document.querySelector('[data-page="wechat"]');
@@ -23,14 +41,12 @@
     var content = document.getElementById('wechatContent');
     if (!content) return;
 
-    // 顶部栏
     var headerHtml = '<div class="wx-header" id="wxHeader">'
-      + '<button class="wx-header-back" data-back="home" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
+      + '<button class="wx-header-back" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
       + '<div class="wx-header-title">Chat</div>'
       + '<button class="wx-header-add" id="wxHeaderAddBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
       + '</div>';
 
-    // 气泡子菜单
     var menuHtml = '<div class="wx-menu-mask" id="wxMenuMask"></div>'
       + '<div class="wx-menu-popover" id="wxMenuPopover">'
       +   '<div class="wx-menu-item" id="wxSetHeaderBg">'
@@ -45,7 +61,6 @@
 
     var bodyHtml = '<div class="wx-body" id="wxBody"></div>';
 
-    // 底部栏
     var tabbarHtml = '<div class="wx-tabbar" id="wxTabbar">'
       + '<div class="wx-tab-item" data-tab="chats">'
       +   '<svg viewBox="0 0 64 64"><path d="M32 15C21.5 15 13 22 13 31C13 36 16 40.5 20.6 43.2L18.5 50L26 46.4C27.9 46.9 29.9 47 32 47C42.5 47 51 40 51 31C51 22 42.5 15 32 15Z" stroke-width="3.6"/></svg>'
@@ -71,85 +86,57 @@
     applyTabbarBg();
 
     // 返回
-    var backBtn = content.querySelector('.wx-header-back');
-    if (backBtn) {
-      backBtn.addEventListener('click', function() {
-        if (window.AppNav) AppNav.showPage('home');
-      });
-    }
+    content.querySelector('.wx-header-back').addEventListener('click', function() {
+      if (window.AppNav) AppNav.showPage('home');
+    });
 
-    // 右上角加号展开/收起菜单
+    // 加号菜单
     var addBtn = content.querySelector('#wxHeaderAddBtn');
     var mask = content.querySelector('#wxMenuMask');
     var popover = content.querySelector('#wxMenuPopover');
 
-    function toggleMenu() {
-      var isShow = popover.classList.contains('show');
-      if (isShow) {
-        popover.classList.remove('show');
-        mask.classList.remove('show');
+    function closeMenu() {
+      popover.classList.remove('show');
+      mask.classList.remove('show');
+    }
+    function openMenu() {
+      popover.classList.add('show');
+      mask.classList.add('show');
+    }
+
+    addBtn.addEventListener('click', function() {
+      if (popover.classList.contains('show')) closeMenu();
+      else openMenu();
+    });
+    mask.addEventListener('click', closeMenu);
+
+    // 顶部栏背景
+    content.querySelector('#wxSetHeaderBg').addEventListener('click', function() {
+      closeMenu();
+      if (wxHeaderBg) {
+        window.PhotoAction.show(function() {
+          pickBg(function(data) { wxHeaderBg = data; saveWxData(); applyHeaderBg(); });
+        }, function() {
+          wxHeaderBg = null; saveWxData(); applyHeaderBg();
+        });
       } else {
-        popover.classList.add('show');
-        mask.classList.add('show');
+        pickBg(function(data) { wxHeaderBg = data; saveWxData(); applyHeaderBg(); });
       }
-    }
+    });
 
-    if (addBtn) addBtn.addEventListener('click', toggleMenu);
-    if (mask) mask.addEventListener('click', toggleMenu);
-
-    // 子菜单点击：顶部栏背景
-    var setHeaderBgBtn = content.querySelector('#wxSetHeaderBg');
-    if (setHeaderBgBtn) {
-      setHeaderBgBtn.addEventListener('click', function() {
-        toggleMenu();
-        if (wxHeaderBg) {
-          window.PhotoAction.show(function() {
-            pickBackground(function(imgData) {
-              wxHeaderBg = imgData;
-              saveWxData();
-              applyHeaderBg();
-            });
-          }, function() {
-            wxHeaderBg = null;
-            saveWxData();
-            applyHeaderBg();
-          });
-        } else {
-          pickBackground(function(imgData) {
-            wxHeaderBg = imgData;
-            saveWxData();
-            applyHeaderBg();
-          });
-        }
-      });
-    }
-
-    // 子菜单点击：底部栏背景
-    var setTabbarBgBtn = content.querySelector('#wxSetTabbarBg');
-    if (setTabbarBgBtn) {
-      setTabbarBgBtn.addEventListener('click', function() {
-        toggleMenu();
-        if (wxTabbarBg) {
-          window.PhotoAction.show(function() {
-            pickBackground(function(imgData) {
-              wxTabbarBg = imgData;
-              saveWxData();
-              applyTabbarBg();
-            });
-          }, function() {
-            wxTabbarBg = null;
-            saveWxData();
-            applyTabbarBg();
-          });
-        } else {
-          pickBackground(function(imgData) {
-            wxTabbarBg = imgData;
-            saveWxData();
-            applyTabbarBg();
-          });
-        }
-      });
-    }
+    // 底部栏背景
+    content.querySelector('#wxSetTabbarBg').addEventListener('click', function() {
+      closeMenu();
+      if (wxTabbarBg) {
+        window.PhotoAction.show(function() {
+          pickBg(function(data) { wxTabbarBg = data; saveWxData(); applyTabbarBg(); });
+        }, function() {
+          wxTabbarBg = null; saveWxData(); applyTabbarBg();
+        });
+      } else {
+        pickBg(function(data) { wxTabbarBg = data; saveWxData(); applyTabbarBg(); });
+      }
+    });
 
     // Tab 切换
     content.querySelectorAll('.wx-tab-item').forEach(function(tab) {
@@ -168,47 +155,32 @@
   }
 
   function applyHeaderBg() {
-    var header = document.getElementById('wxHeader');
-    if (!header) return;
-    if (wxHeaderBg) {
-      header.style.backgroundImage = 'url(' + wxHeaderBg + ')';
-    } else {
-      header.style.backgroundImage = 'none';
-    }
+    var el = document.getElementById('wxHeader');
+    if (!el) return;
+    el.style.backgroundImage = wxHeaderBg ? 'url(' + wxHeaderBg + ')' : 'none';
   }
 
   function applyTabbarBg() {
-    var tabbar = document.getElementById('wxTabbar');
-    if (!tabbar) return;
-    if (wxTabbarBg) {
-      tabbar.style.backgroundImage = 'url(' + wxTabbarBg + ')';
-    } else {
-      tabbar.style.backgroundImage = 'none';
-    }
+    var el = document.getElementById('wxTabbar');
+    if (!el) return;
+    el.style.backgroundImage = wxTabbarBg ? 'url(' + wxTabbarBg + ')' : 'none';
   }
 
-  function pickBackground(callback) {
-    var input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.addEventListener('change', function() {
-      var file = this.files[0];
-      if (!file) return;
+  function pickBg(callback) {
+    safePickFile('image/*', function(file) {
       var reader = new FileReader();
       reader.onload = function(e) {
-        window.AppCropper.open(e.target.result, { aspectRatio: 0 }, function(cropped) {
+        window.AppCropper.open(e.target.result, {}, function(cropped) {
           if (callback) callback(cropped);
         });
       };
       reader.readAsDataURL(file);
     });
-    input.click();
   }
 
   function renderWxBody() {
     var body = document.getElementById('wxBody');
     if (!body) return;
-
     if (wxCurrentTab === 'chats') renderChats(body);
     else if (wxCurrentTab === 'contacts') renderContacts(body);
     else if (wxCurrentTab === 'discover') renderDiscover(body);
@@ -224,7 +196,6 @@
         + '</div>';
       return;
     }
-
     var html = '<div class="wx-chat-list">';
     wxContacts.forEach(function(c) {
       html += '<div class="wx-chat-item" data-id="' + c.id + '">'
@@ -284,11 +255,9 @@
       btn.addEventListener('click', function(e) {
         e.stopPropagation();
         wxContacts.splice(parseInt(this.dataset.idx), 1);
-        saveWxData();
-        renderContacts(body);
+        saveWxData(); renderContacts(body);
       });
     });
-
     body.querySelectorAll('.wx-contact-act.edit').forEach(function(btn) {
       btn.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -305,7 +274,6 @@
       { icon: '<line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/>', text: '搜一搜' },
       { icon: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>', text: '购物' },
     ];
-
     var html = '<div class="wx-discover-list">';
     items.forEach(function(item) {
       html += '<div class="wx-discover-item">'
@@ -320,7 +288,7 @@
 
   // ========== 我 ==========
   function renderMe(body) {
-    var html = '<div class="wx-me-header" id="wxMeHeader">'
+    var html = '<div class="wx-me-header">'
       + '<div class="wx-me-avatar" id="wxMeAvatarBtn">'
       + (wxMeAvatar ? '<img src="' + wxMeAvatar + '" alt="">' : '<svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>')
       + '</div>'
@@ -334,9 +302,8 @@
     var meItems = [
       { icon: '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>', text: '相册' },
       { icon: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', text: '收藏' },
-      { icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/>', text: '设置' },
+      { icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/>', text: '设置' },
     ];
-
     html += '<div class="wx-me-list">';
     meItems.forEach(function(item) {
       html += '<div class="wx-me-item">'
@@ -346,58 +313,42 @@
         + '</div>';
     });
     html += '</div>';
-
     body.innerHTML = html;
 
-    var avatarBtn = body.querySelector('#wxMeAvatarBtn');
-    if (avatarBtn) {
-      avatarBtn.addEventListener('click', function() {
-        if (wxMeAvatar) {
-          window.PhotoAction.show(function() { pickMeAvatar(); }, function() {
-            wxMeAvatar = null;
-            saveWxData();
-            renderMe(body);
-          });
-        } else {
-          pickMeAvatar();
-        }
-      });
-    }
-
-    bindMeEditable(body, 'wxMeName', 'name');
-    bindMeEditable(body, 'wxMeId', 'id');
-    bindMeEditable(body, 'wxMeSign', 'sign');
-  }
-
-  function bindMeEditable(body, elemId, key) {
-    var el = body.querySelector('#' + elemId);
-    if (!el) return;
-    el.addEventListener('blur', function() {
-      wxMeInfo[key] = this.textContent.trim();
-      saveWxData();
+    body.querySelector('#wxMeAvatarBtn').addEventListener('click', function() {
+      if (wxMeAvatar) {
+        window.PhotoAction.show(function() { pickAvatar(); }, function() {
+          wxMeAvatar = null; saveWxData(); renderMe(body);
+        });
+      } else {
+        pickAvatar();
+      }
     });
+
+    bindEditable(body, 'wxMeName', 'name');
+    bindEditable(body, 'wxMeId', 'id');
+    bindEditable(body, 'wxMeSign', 'sign');
   }
 
-  function pickMeAvatar() {
-    var input = document.createElement('input');
-    input.type = 'file'; input.accept = 'image/*';
-    input.addEventListener('change', function() {
-      var file = this.files[0];
-      if (!file) return;
+  function bindEditable(body, id, key) {
+    var el = body.querySelector('#' + id);
+    if (!el) return;
+    el.addEventListener('blur', function() { wxMeInfo[key] = this.textContent.trim(); saveWxData(); });
+  }
+
+  function pickAvatar() {
+    safePickFile('image/*', function(file) {
       var reader = new FileReader();
       reader.onload = function(e) {
         window.AppCropper.open(e.target.result, { aspectRatio: 1 }, function(cropped) {
-          wxMeAvatar = cropped;
-          saveWxData();
-          renderWxBody();
+          wxMeAvatar = cropped; saveWxData(); renderWxBody();
         });
       };
       reader.readAsDataURL(file);
     });
-    input.click();
   }
 
-  // ========== 创建/编辑角色弹窗 ==========
+  // ========== 创建/编辑角色 ==========
   function showCreateContact(editIdx) {
     var isEdit = typeof editIdx === 'number';
     var contact = isEdit ? wxContacts[editIdx] : { id: Date.now().toString(), name: '', avatar: null };
@@ -415,18 +366,13 @@
       + '<button class="wx-create-btn confirm" id="wxCreateConfirm" type="button">' + (isEdit ? '保存' : '创建') + '</button>'
       + '</div>'
       + '</div>';
-
     document.body.appendChild(overlay);
 
     var tempAvatar = contact.avatar;
 
     overlay.querySelector('#wxCreateAvatarBtn').addEventListener('click', function() {
       var self = this;
-      var input = document.createElement('input');
-      input.type = 'file'; input.accept = 'image/*';
-      input.addEventListener('change', function() {
-        var file = this.files[0];
-        if (!file) return;
+      safePickFile('image/*', function(file) {
         var reader = new FileReader();
         reader.onload = function(e) {
           window.AppCropper.open(e.target.result, { aspectRatio: 1 }, function(cropped) {
@@ -436,7 +382,6 @@
         };
         reader.readAsDataURL(file);
       });
-      input.click();
     });
 
     overlay.querySelector('#wxCreateCancel').addEventListener('click', function() {
@@ -446,14 +391,12 @@
     overlay.querySelector('#wxCreateConfirm').addEventListener('click', function() {
       var name = overlay.querySelector('#wxCreateName').value.trim();
       if (!name) { AppNav.showToast('请输入名称'); return; }
-
       if (isEdit) {
         wxContacts[editIdx].name = name;
         wxContacts[editIdx].avatar = tempAvatar;
       } else {
         wxContacts.push({ id: Date.now().toString(), name: name, avatar: tempAvatar, lastMsg: '', lastTime: '' });
       }
-
       saveWxData();
       document.body.removeChild(overlay);
       renderWxBody();
@@ -464,16 +407,16 @@
     });
   }
 
-  // ========== 数据存取 ==========
+  // ========== 数据 ==========
   function loadWxData(callback) {
     if (!window.AppDB) { if (callback) callback(); return; }
     var total = 5, done = 0;
     function check() { done++; if (done >= total && callback) callback(); }
-    AppDB.get('wx_contacts', function(val) { if (val) wxContacts = val; check(); });
-    AppDB.get('wx_me_info', function(val) { if (val) wxMeInfo = val; check(); });
-    AppDB.get('wx_me_avatar', function(val) { if (val) wxMeAvatar = val; check(); });
-    AppDB.get('wx_header_bg', function(val) { if (val) wxHeaderBg = val; check(); });
-    AppDB.get('wx_tabbar_bg', function(val) { if (val) wxTabbarBg = val; check(); });
+    AppDB.get('wx_contacts', function(v) { if (v) wxContacts = v; check(); });
+    AppDB.get('wx_me_info', function(v) { if (v) wxMeInfo = v; check(); });
+    AppDB.get('wx_me_avatar', function(v) { if (v) wxMeAvatar = v; check(); });
+    AppDB.get('wx_header_bg', function(v) { if (v) wxHeaderBg = v; check(); });
+    AppDB.get('wx_tabbar_bg', function(v) { if (v) wxTabbarBg = v; check(); });
   }
 
   function saveWxData() {
