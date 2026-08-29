@@ -1,6 +1,6 @@
 :root {
   --safe-top: env(safe-area-inset-top, 10px);
-  --safe-bottom: env(safe-area-inset-bottom, 5px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --app-header-top: calc(10px + var(--safe-top));
 }
 
@@ -82,7 +82,7 @@ html, body { height:100vh; background:#ffffff; color:#1c1c1e; overflow:hidden; }
   transform: translate(-50%, -50%) scale(0.9);
   padding: 12px 24px; background: rgba(0, 0, 0, 0.8);
   color: #fff; border-radius: 12px; font-size: 14px; font-weight: 500;
-  z-index: 100; opacity: 0; pointer-events: none;
+  z-index: 2000; opacity: 0; pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -93,7 +93,7 @@ html, body { height:100vh; background:#ffffff; color:#1c1c1e; overflow:hidden; }
   transform: translate(-50%, -50%) scale(0.9);
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border-radius: 14px; overflow: hidden; z-index: 100;
+  border-radius: 14px; overflow: hidden; z-index: 1200;
   opacity: 0; pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease; min-width: 200px;
 }
@@ -107,8 +107,8 @@ html, body { height:100vh; background:#ffffff; color:#1c1c1e; overflow:hidden; }
 .photo-action-card button:last-child { border-bottom: none; }
 .photo-action-card button:active { background: rgba(0,0,0,0.05); }
 .photo-action-mask {
-  position: fixed; inset: 0; background: transparent;
-  z-index: 1; display: none;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+  z-index: 1150; display: none;
 }
 .photo-action-mask.show { display: block; }
 
@@ -116,7 +116,7 @@ html, body { height:100vh; background:#ffffff; color:#1c1c1e; overflow:hidden; }
 .crop-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 1300;
   background: rgba(0,0,0,0.9);
   display: none;
   flex-direction: column;
@@ -171,4 +171,3 @@ html, body { height:100vh; background:#ffffff; color:#1c1c1e; overflow:hidden; }
 .crop-workspace canvas {
   max-width: 100%; max-height: 100%; touch-action: none;
 }
-
