@@ -44,24 +44,58 @@ body {
   overflow: hidden;
 }
 
+/* 全屏壁纸层与遮罩滤镜 */
+.home-bg-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+  transition: filter 0.25s ease;
+}
+
+.home-bg-dim-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: #000000;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.home-bg-white-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: #ffffff;
+  opacity: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
 .page-container { 
-  flex:1; 
-  overflow:hidden; 
-  padding:0; 
-  display:flex; 
-  flex-direction:column; 
+  flex: 1; 
+  overflow: hidden; 
+  padding: 0; 
+  display: flex; 
+  flex-direction: column; 
+  position: relative;
+  z-index: 1;
 }
 
 .page { 
-  display:none; 
-  flex-direction:column; 
-  gap:20px; 
-  height:100%; 
-  overflow:hidden; 
+  display: none; 
+  flex-direction: column; 
+  gap: 20px; 
+  height: 100%; 
+  overflow: hidden; 
   padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(env(safe-area-inset-bottom, 0px) + 95px); 
-  position:relative; 
+  position: relative; 
 }
-.page.active { display:flex; }
+.page.active { display: flex; }
 
 /* 头像展示区布局 */
 .couple-section {
@@ -93,7 +127,7 @@ body {
   bottom: 1px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,35 +141,6 @@ body {
   }
 }
 
-.reset-layout-btn {
-  position: fixed;
-  top: calc(env(safe-area-inset-top, 0) + 16px);
-  right: 16px;
-  z-index: 1;
-  display: none;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: none;
-  border-radius: 20px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: auto;
-  max-width: fit-content;
-}
-.reset-layout-btn svg {
-  width: 16px; height: 16px; stroke: currentColor; fill: none;
-  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0;
-}
-.app-shell.edit-mode .reset-layout-btn { display: flex; }
-.reset-layout-btn:active { transform: scale(0.95); opacity: 0.8; }
-
 .page-title { font-size:28px; font-weight:700; letter-spacing:-.5px; padding:8px 0; }
 
 /* ========== Toast ========== */
@@ -144,7 +149,7 @@ body {
   transform: translate(-50%, -50%) scale(0.9);
   padding: 12px 24px; background: rgba(0, 0, 0, 0.8);
   color: #fff; border-radius: 12px; font-size: 14px; font-weight: 500;
-  z-index: 200; opacity: 0; pointer-events: none;
+  z-index: 2000; opacity: 0; pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 .toast-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -170,7 +175,7 @@ body {
 .photo-action-card button:active { background: rgba(0,0,0,0.05); }
 .photo-action-mask {
   position: fixed; inset: 0; background: transparent;
-  z-index: 300; display: none;
+  z-index: 1100; display: none;
 }
 .photo-action-mask.show { display: block; }
 
@@ -178,7 +183,7 @@ body {
 .crop-overlay {
   position: fixed;
   inset: 0;
-  z-index: 300;
+  z-index: 3000;
   background: rgba(0,0,0,0.9);
   display: none;
   flex-direction: column;
@@ -293,4 +298,3 @@ body {
   padding: 0 16px 20px; 
   -webkit-overflow-scrolling: touch; 
 }
-
