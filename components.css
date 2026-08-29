@@ -481,28 +481,6 @@ input:checked + label:before {
 }
 
 /* ========== 头像展示区 ========== */
-.couple-section {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 4px 0;
-  flex-shrink: 0;
-}
-
-.couple-left {
-  flex: 0 0 auto;
-  min-width: 0;
-}
-
-.couple-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
 .couple-avatars {
   display: flex;
   gap: 10px;
