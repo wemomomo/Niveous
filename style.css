@@ -6,31 +6,45 @@
 
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
+/* 统一最外层 100vh 高度链，绝不使用 fixed body 和 100dvh */
 html {
-  position: fixed;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  width: 100vw;
-  height: 100vh;
 }
 
 body {
-  overflow: hidden;
-  overscroll-behavior: none;
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
+  overscroll-behavior: none;
   background: #ffffff;
   color: #1c1c1e;
   -webkit-font-smoothing: antialiased;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  position: relative;
 }
 
 [contenteditable="true"] {
   -webkit-user-select: text;
   user-select: text;
+}
+
+/* 全局全屏壁纸层（直接铺到底部物理屏幕） */
+.home-bg-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .app-shell { 
@@ -42,38 +56,7 @@ body {
   margin: 0 auto; 
   position: relative; 
   overflow: hidden;
-}
-
-/* 全屏壁纸层与遮罩滤镜 */
-.home-bg-layer {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: 0;
-  pointer-events: none;
-  transition: filter 0.25s ease;
-}
-
-.home-bg-dim-overlay {
-  position: absolute;
-  inset: 0;
-  background-color: #000000;
-  opacity: 0;
-  z-index: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-}
-
-.home-bg-white-overlay {
-  position: absolute;
-  inset: 0;
-  background-color: #ffffff;
-  opacity: 0;
-  z-index: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
+  background: transparent;
 }
 
 .page-container { 
@@ -109,7 +92,7 @@ body {
 .couple-left {
   flex: 5;
   min-width: 0;
-  padding-top: 27px; 
+  padding-top: 25px; 
 }
 
 .couple-right {
@@ -121,10 +104,10 @@ body {
   min-width: 0;
 }
 
-/* ========== 底部栏定位（在页面中的位置） ========== */
+/* ========== 底部栏定位 ========== */
 .tab-bar {
   position: fixed;
-  bottom: 1px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -133,12 +116,6 @@ body {
   justify-content: center;
   max-width: 380px;
   width: calc(100% - 32px);
-}
-
-@media (display-mode: standalone) {
-  .tab-bar {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
-  }
 }
 
 .page-title { font-size:28px; font-weight:700; letter-spacing:-.5px; padding:8px 0; }
