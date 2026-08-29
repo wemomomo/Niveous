@@ -79,7 +79,7 @@
 
       <!-- 情侣展示区 -->
       <div class="couple-section draggable" id="coupleSection" data-component="couple">
-        <div class="couple-left">
+        <div class="couple-top">
           <div class="couple-icons">
             <div class="couple-icon-item" data-action="beautify">
               <div class="couple-icon-circle">
@@ -121,27 +121,37 @@
               <span>情侣空间</span>
             </div>
           </div>
-          <div class="couple-bubbles">
-            <div class="couple-bubble" contenteditable="true" id="coupleBubble1">在想你...</div>
-            <div class="couple-bubble" contenteditable="true" id="coupleBubble2">我也是 ♡</div>
+          <div class="couple-avatars">
+            <div class="couple-avatar-item">
+              <div class="couple-speech" contenteditable="true" id="coupleSpeech1">♡</div>
+              <div class="couple-avatar-circle" id="coupleAvatar1">
+                <img id="coupleAvatarImg1" alt="">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+              </div>
+              <div class="couple-name" contenteditable="true" id="coupleName1">TA</div>
+            </div>
+            <div class="couple-avatar-item">
+              <div class="couple-speech" contenteditable="true" id="coupleSpeech2">♡</div>
+              <div class="couple-avatar-circle" id="coupleAvatar2">
+                <img id="coupleAvatarImg2" alt="">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+              </div>
+              <div class="couple-name" contenteditable="true" id="coupleName2">我</div>
+            </div>
           </div>
         </div>
-        <div class="couple-avatars">
-          <div class="couple-avatar-item">
-            <div class="couple-speech" contenteditable="true" id="coupleSpeech1">♡</div>
-            <div class="couple-avatar-circle" id="coupleAvatar1">
-              <img id="coupleAvatarImg1" alt="">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-            </div>
-            <div class="couple-name" contenteditable="true" id="coupleName1">TA</div>
+        <div class="couple-date-card" id="coupleDateCard">
+          <div class="date-card-header">
+            <span class="date-card-text">和<span class="date-card-name" id="datePartnerName">TA</span>在一起 已经</span>
+            <span class="date-card-days" id="dateDaysCount">0</span>
+            <span class="date-card-text">天</span>
+            <input type="date" id="dateStartInput" class="date-hidden-input">
           </div>
-          <div class="couple-avatar-item">
-            <div class="couple-speech" contenteditable="true" id="coupleSpeech2">♡</div>
-            <div class="couple-avatar-circle" id="coupleAvatar2">
-              <img id="coupleAvatarImg2" alt="">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          <div class="date-card-calendar">
+            <div class="date-card-labels">
+              <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
             </div>
-            <div class="couple-name" contenteditable="true" id="coupleName2">我</div>
+            <div class="date-card-dates" id="dateWeekDates"></div>
           </div>
         </div>
       </div>
@@ -149,7 +159,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- App 空壳页面 (内部全部由 JS 自动渲染填入) -->
+    <!-- App 空壳页面 -->
     <!-- ========================================== -->
     <div class="page app-page" data-page="wechat"></div>
     <div class="page app-page" data-page="offline"></div>
@@ -158,10 +168,8 @@
 
   </div>
 
-  <!-- 底部栏编辑按钮 -->
   <button class="edit-btn tabbar-edit-btn" data-edit-target="tabbar">编辑</button>
 
-  <!-- 桌面 Dock 栏 -->
   <div class="tab-bar">
     <div class="tab-bar-capsule">
       <div class="tab-item" data-tab="wechat">
