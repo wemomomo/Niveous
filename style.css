@@ -1,32 +1,26 @@
+
 :root {
-  --safe-top: env(safe-area-inset-top, 10px);
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --app-header-top: calc(10px + var(--safe-top));
+  --app-header-top: calc(12px + var(--safe-top));
 }
 
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
-/* 统一最外层 100vh 高度链，绝不使用 fixed body 和 100dvh */
-html {
+html, body {
   width: 100vw;
   height: 100vh;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-}
-
-body {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  overscroll-behavior: none;
   background: #ffffff;
   color: #1c1c1e;
   -webkit-font-smoothing: antialiased;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-  position: relative;
 }
 
 [contenteditable="true"] {
@@ -34,10 +28,13 @@ body {
   user-select: text;
 }
 
-/* 全局全屏壁纸层（直接铺到底部物理屏幕） */
+/* 全屏壁纸层（固定铺满物理全屏） */
 .home-bg-layer {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100vw;
   height: 100vh;
   background-size: cover;
@@ -47,16 +44,20 @@ body {
   pointer-events: none;
 }
 
+/* 主容器：固定定位防止 iOS 键盘弹出时将顶部顶进刘海屏 */
 .app-shell { 
-  display: flex; 
-  flex-direction: column; 
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
   height: 100vh; 
   width: 100vw;
   max-width: 430px; 
-  margin: 0 auto; 
-  position: relative; 
+  display: flex; 
+  flex-direction: column; 
   overflow: hidden;
   background: transparent;
+  z-index: 1;
 }
 
 .page-container { 
@@ -75,8 +76,9 @@ body {
   gap: 20px; 
   height: 100%; 
   overflow: hidden; 
-  padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(env(safe-area-inset-bottom, 0px) + 95px); 
+  padding: calc(16px + var(--safe-top)) 16px calc(var(--safe-bottom) + 95px); 
   position: relative; 
+  box-sizing: border-box;
 }
 .page.active { display: flex; }
 
@@ -107,7 +109,7 @@ body {
 /* ========== 底部栏定位 ========== */
 .tab-bar {
   position: fixed;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  bottom: calc(var(--safe-bottom) + 8px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -180,7 +182,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: calc(16px + env(safe-area-inset-top, 0)) 16px 12px;
+  padding: calc(16px + var(--safe-top)) 16px 12px;
   flex-shrink: 0;
 }
 .crop-header span { font-size: 16px; font-weight: 600; color: #fff; }
