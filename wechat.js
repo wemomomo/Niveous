@@ -3,11 +3,17 @@
 
   var wxCurrentTab = 'chats';
   var wxContacts = [];
-  var wxMeInfo = { name: '墨墨', id: 'mo_mo', sign: '' };
+  var wxMeInfo = { name: '', id: '', sign: '' };
   var wxMeAvatar = null;
 
   window.addEventListener('dbReady', function() {
     loadWxData(function() {
+      // 隐藏 app.js 原本生成的通用 header，改用微信自己的 header
+      var wxPage = document.querySelector('[data-page="wechat"]');
+      if (wxPage) {
+        var defaultHeader = wxPage.querySelector('.app-header');
+        if (defaultHeader) defaultHeader.style.display = 'none';
+      }
       renderWechatPage();
     });
   });
@@ -16,11 +22,19 @@
     var content = document.getElementById('wechatContent');
     if (!content) return;
 
+    // 微信自带顶部栏（返回、居中Chat、加号）
+    var headerHtml = '<div class="wx-header">'
+      + '<button class="wx-header-back" data-back="home" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
+      + '<div class="wx-header-title">Chat</div>'
+      + '<button class="wx-header-add" id="wxHeaderAddBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+      + '</div>';
+
     var bodyHtml = '<div class="wx-body" id="wxBody"></div>';
 
+    // 底部栏
     var tabbarHtml = '<div class="wx-tabbar">'
       + '<div class="wx-tab-item" data-tab="chats">'
-      +   '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+      +   '<svg viewBox="0 0 64 64"><path d="M32 15C21.5 15 13 22 13 31C13 36 16 40.5 20.6 43.2L18.5 50L26 46.4C27.9 46.9 29.9 47 32 47C42.5 47 51 40 51 31C51 22 42.5 15 32 15Z" stroke-width="3.6"/></svg>'
       +   '<div class="wx-tab-label">聊天</div>'
       + '</div>'
       + '<div class="wx-tab-item" data-tab="contacts">'
@@ -37,8 +51,25 @@
       + '</div>'
       + '</div>';
 
-    content.innerHTML = bodyHtml + tabbarHtml;
+    content.innerHTML = headerHtml + bodyHtml + tabbarHtml;
 
+    // 绑定返回桌面
+    var backBtn = content.querySelector('.wx-header-back');
+    if (backBtn) {
+      backBtn.addEventListener('click', function() {
+        if (window.AppNav) AppNav.showPage('home');
+      });
+    }
+
+    // 绑定右上角加号
+    var addBtn = content.querySelector('#wxHeaderAddBtn');
+    if (addBtn) {
+      addBtn.addEventListener('click', function() {
+        showCreateContact();
+      });
+    }
+
+    // 绑定 Tab 切换
     content.querySelectorAll('.wx-tab-item').forEach(function(tab) {
       tab.addEventListener('click', function() {
         wxCurrentTab = this.dataset.tab;
@@ -68,8 +99,8 @@
   function renderChats(body) {
     if (!wxContacts.length) {
       body.innerHTML = '<div class="wx-empty">'
-        + '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
-        + '<div class="wx-empty-text">暂无聊天，去通讯录创建角色吧</div>'
+        + '<svg viewBox="0 0 64 64"><path d="M32 15C21.5 15 13 22 13 31C13 36 16 40.5 20.6 43.2L18.5 50L26 46.4C27.9 46.9 29.9 47 32 47C42.5 47 51 40 51 31C51 22 42.5 15 32 15Z" stroke-width="2.5"/></svg>'
+        + '<div class="wx-empty-text">暂无聊天，点击右上角 + 创建角色</div>'
         + '</div>';
       return;
     }
@@ -183,7 +214,7 @@
     var meItems = [
       { icon: '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>', text: '相册' },
       { icon: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', text: '收藏' },
-      { icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/>', text: '设置' },
+      { icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/>', text: '设置' },
     ];
 
     html += '<div class="wx-me-list">';
