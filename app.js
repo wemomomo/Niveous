@@ -1,3 +1,4 @@
+
 (function(){
   'use strict';
 
@@ -38,7 +39,7 @@
 
   window.AppDB = { open: openDB, save: dbSave, get: dbGet, delete: dbDelete };
 
-  // ============ Canvas 裁剪器（操作预先放好的DOM） ============
+  // ============ Canvas 裁剪器（微信同款指哪到哪） ============
   var cropOverlay = document.getElementById('cropOverlay');
   var cropCanvas = document.getElementById('cropCanvas');
   var cropWorkspace = document.getElementById('cropWorkspace');
@@ -55,26 +56,29 @@
   var cropLockedRatio = 0;
   var cropDragMode = '';
   var cropStartX = 0, cropStartY = 0, cropStartBox = {};
-  var CROP_HANDLE = 20, CROP_MIN = 30;
+  var CROP_HANDLE = 24, CROP_MIN = 40;
 
   window.AppCropper = {
     open: function(src, options, callback) {
       cropCallback = callback;
-      cropLockedRatio = (options && options.aspectRatio) || 0;
+      
+      // 默认开启自由模式，框到哪里就是哪里
+      cropLockedRatio = 0;
 
-      // 重置比例按钮
+      // 重置比例工具栏激活项
       cropOverlay.querySelectorAll('.crop-ratio-btn').forEach(function(b) { b.classList.remove('active'); });
-      cropOverlay.querySelector('[data-ratio="free"]').classList.add('active');
+      var freeBtn = cropOverlay.querySelector('[data-ratio="free"]');
+      if (freeBtn) freeBtn.classList.add('active');
 
-      // 显示裁剪器
+      // 显示裁剪层
       cropOverlay.classList.add('show');
 
-      // 加载图片
+      // 加载图片计算尺寸
       cropImg = new Image();
       cropImg.onload = function() {
-        var maxW = cropWorkspace.clientWidth - 40;
-        var maxH = cropWorkspace.clientHeight - 40;
-        if (maxW <= 0 || maxH <= 0) { maxW = window.innerWidth - 40; maxH = window.innerHeight - 200; }
+        var maxW = cropWorkspace.clientWidth - 32;
+        var maxH = cropWorkspace.clientHeight - 32;
+        if (maxW <= 0 || maxH <= 0) { maxW = window.innerWidth - 32; maxH = window.innerHeight - 180; }
 
         cropScale = Math.min(maxW / cropImg.width, maxH / cropImg.height, 1);
         cropDisplayW = Math.round(cropImg.width * cropScale);
@@ -86,16 +90,20 @@
         cropCanvas.style.height = cropDisplayH + 'px';
         cropCtx.setTransform(cropDpr, 0, 0, cropDpr, 0, 0);
 
-        if (cropLockedRatio) {
-          var initW = cropDisplayW * 0.85;
-          var initH = initW / cropLockedRatio;
-          if (initH > cropDisplayH * 0.85) { initH = cropDisplayH * 0.85; initW = initH * cropLockedRatio; }
-          cropBox.w = initW; cropBox.h = initH;
-        } else {
-          cropBox.w = cropDisplayW * 0.7; cropBox.h = cropDisplayH * 0.7;
+        // 如果调用时提供了初始比例参考，按该形状初次居中展示，但允许自由拉伸
+        var initRatio = (options && options.aspectRatio) ? options.aspectRatio : (cropDisplayW / cropDisplayH);
+        var initW = cropDisplayW * 0.85;
+        var initH = initW / initRatio;
+        if (initH > cropDisplayH * 0.85) {
+          initH = cropDisplayH * 0.85;
+          initW = initH * initRatio;
         }
+
+        cropBox.w = initW;
+        cropBox.h = initH;
         cropBox.x = (cropDisplayW - cropBox.w) / 2;
         cropBox.y = (cropDisplayH - cropBox.h) / 2;
+
         cropDraw();
       };
       cropImg.src = src;
@@ -103,24 +111,46 @@
   };
 
   function cropClamp() {
-    cropBox.w = Math.max(CROP_MIN, Math.min(cropDisplayW, cropBox.w));
-    cropBox.h = Math.max(CROP_MIN, Math.min(cropDisplayH, cropBox.h));
-    cropBox.x = Math.max(0, Math.min(cropDisplayW - cropBox.w, cropBox.x));
-    cropBox.y = Math.max(0, Math.min(cropDisplayH - cropBox.h, cropBox.y));
+    // 限制在图片画布内
+    if (cropBox.w < CROP_MIN) cropBox.w = CROP_MIN;
+    if (cropBox.h < CROP_MIN) cropBox.h = CROP_MIN;
+
+    if (cropBox.x < 0) {
+      cropBox.w += cropBox.x;
+      cropBox.x = 0;
+    }
+    if (cropBox.y < 0) {
+      cropBox.h += cropBox.y;
+      cropBox.y = 0;
+    }
+    if (cropBox.x + cropBox.w > cropDisplayW) {
+      cropBox.w = cropDisplayW - cropBox.x;
+    }
+    if (cropBox.y + cropBox.h > cropDisplayH) {
+      cropBox.h = cropDisplayH - cropBox.y;
+    }
   }
 
   function cropDraw() {
     var c = cropBox;
     cropCtx.clearRect(0, 0, cropDisplayW, cropDisplayH);
     cropCtx.drawImage(cropImg, 0, 0, cropDisplayW, cropDisplayH);
-    cropCtx.fillStyle = 'rgba(0,0,0,0.5)';
+
+    // 半透明遮罩
+    cropCtx.fillStyle = 'rgba(0,0,0,0.55)';
     cropCtx.fillRect(0, 0, cropDisplayW, c.y);
     cropCtx.fillRect(0, c.y + c.h, cropDisplayW, cropDisplayH - c.y - c.h);
     cropCtx.fillRect(0, c.y, c.x, c.h);
     cropCtx.fillRect(c.x + c.w, c.y, cropDisplayW - c.x - c.w, c.h);
-    cropCtx.strokeStyle = '#fff'; cropCtx.lineWidth = 2;
+
+    // 外边框
+    cropCtx.strokeStyle = '#ffffff';
+    cropCtx.lineWidth = 2;
     cropCtx.strokeRect(c.x, c.y, c.w, c.h);
-    cropCtx.strokeStyle = 'rgba(255,255,255,0.3)'; cropCtx.lineWidth = 1;
+
+    // 九宫格参考线
+    cropCtx.strokeStyle = 'rgba(255,255,255,0.35)';
+    cropCtx.lineWidth = 1;
     var tw = c.w / 3, th = c.h / 3;
     cropCtx.beginPath();
     cropCtx.moveTo(c.x + tw, c.y); cropCtx.lineTo(c.x + tw, c.y + c.h);
@@ -128,10 +158,16 @@
     cropCtx.moveTo(c.x, c.y + th); cropCtx.lineTo(c.x + c.w, c.y + th);
     cropCtx.moveTo(c.x, c.y + th * 2); cropCtx.lineTo(c.x + c.w, c.y + th * 2);
     cropCtx.stroke();
-    cropCtx.fillStyle = '#fff';
-    var hs = 8;
-    [[c.x,c.y],[c.x+c.w,c.y],[c.x,c.y+c.h],[c.x+c.w,c.y+c.h]].forEach(function(p){cropCtx.fillRect(p[0]-hs/2,p[1]-hs/2,hs,hs);});
-    [[c.x+c.w/2,c.y],[c.x+c.w/2,c.y+c.h],[c.x,c.y+c.h/2],[c.x+c.w,c.y+c.h/2]].forEach(function(p){cropCtx.fillRect(p[0]-hs/2,p[1]-hs/2,hs,hs);});
+
+    // 四角与中点高亮手柄
+    cropCtx.fillStyle = '#ffffff';
+    var hs = 9;
+    [[c.x, c.y], [c.x + c.w, c.y], [c.x, c.y + c.h], [c.x + c.w, c.y + c.h]].forEach(function(p) {
+      cropCtx.fillRect(p[0] - hs / 2, p[1] - hs / 2, hs, hs);
+    });
+    [[c.x + c.w / 2, c.y], [c.x + c.w / 2, c.y + c.h], [c.x, c.y + c.h / 2], [c.x + c.w, c.y + c.h / 2]].forEach(function(p) {
+      cropCtx.fillRect(p[0] - hs / 2, p[1] - hs / 2, hs, hs);
+    });
   }
 
   function cropGetPos(e) {
@@ -142,22 +178,21 @@
 
   function cropHitTest(px, py) {
     var c = cropBox, H = CROP_HANDLE;
-    if (px >= c.x-H && px <= c.x+H && py >= c.y-H && py <= c.y+H) return 'tl';
-    if (px >= c.x+c.w-H && px <= c.x+c.w+H && py >= c.y-H && py <= c.y+H) return 'tr';
-    if (px >= c.x-H && px <= c.x+H && py >= c.y+c.h-H && py <= c.y+c.h+H) return 'bl';
-    if (px >= c.x+c.w-H && px <= c.x+c.w+H && py >= c.y+c.h-H && py <= c.y+c.h+H) return 'br';
-    if (py >= c.y-H && py <= c.y+H && px > c.x+H && px < c.x+c.w-H) return 't';
-    if (py >= c.y+c.h-H && py <= c.y+c.h+H && px > c.x+H && px < c.x+c.w-H) return 'b';
-    if (px >= c.x-H && px <= c.x+H && py > c.y+H && py < c.y+c.h-H) return 'l';
-    if (px >= c.x+c.w-H && px <= c.x+c.w+H && py > c.y+H && py < c.y+c.h-H) return 'r';
-    if (px >= c.x && px <= c.x+c.w && py >= c.y && py <= c.y+c.h) return 'move';
-    return '';
-  }
+    // 优先命中四个角落
+    if (px >= c.x - H && px <= c.x + H && py >= c.y - H && py <= c.y + H) return 'tl';
+    if (px >= c.x + c.w - H && px <= c.x + c.w + H && py >= c.y - H && py <= c.y + H) return 'tr';
+    if (px >= c.x - H && px <= c.x + H && py >= c.y + c.h - H && py <= c.y + c.h + H) return 'bl';
+    if (px >= c.x + c.w - H && px <= c.x + c.w + H && py >= c.y + c.h - H && py <= c.y + c.h + H) return 'br';
 
-  function cropApplyRatio(mode) {
-    if (!cropLockedRatio || mode === 'move') return;
-    if (mode === 't' || mode === 'b') cropBox.w = cropBox.h * cropLockedRatio;
-    else cropBox.h = cropBox.w / cropLockedRatio;
+    // 命中四条边
+    if (py >= c.y - H && py <= c.y + H && px > c.x + H && px < c.x + c.w - H) return 't';
+    if (py >= c.y + c.h - H && py <= c.y + c.h + H && px > c.x + H && px < c.x + c.w - H) return 'b';
+    if (px >= c.x - H && px <= c.x + H && py > c.y + H && py < c.y + c.h - H) return 'l';
+    if (px >= c.x + c.w - H && px <= c.x + c.w + H && py > c.y + H && py < c.y + c.h - H) return 'r';
+
+    // 内部整体移动
+    if (px >= c.x && px <= c.x + c.w && py >= c.y && py <= c.y + c.h) return 'move';
+    return '';
   }
 
   function cropOnStart(e) {
@@ -180,16 +215,74 @@
     var p = cropGetPos(e);
     var dx = p.x - cropStartX, dy = p.y - cropStartY;
     var sc = cropStartBox;
-    if (cropDragMode === 'move') { cropBox.x = sc.x + dx; cropBox.y = sc.y + dy; }
-    else if (cropDragMode === 'br') { cropBox.w = sc.w + dx; cropBox.h = sc.h + dy; cropApplyRatio('br'); }
-    else if (cropDragMode === 'bl') { cropBox.x = sc.x + dx; cropBox.w = sc.w - dx; cropBox.h = sc.h + dy; cropApplyRatio('bl'); }
-    else if (cropDragMode === 'tr') { cropBox.w = sc.w + dx; cropBox.y = sc.y + dy; cropBox.h = sc.h - dy; cropApplyRatio('tr'); }
-    else if (cropDragMode === 'tl') { cropBox.x = sc.x + dx; cropBox.y = sc.y + dy; cropBox.w = sc.w - dx; cropBox.h = sc.h - dy; cropApplyRatio('tl'); }
-    else if (cropDragMode === 'r') { cropBox.w = sc.w + dx; cropApplyRatio('r'); }
-    else if (cropDragMode === 'l') { cropBox.x = sc.x + dx; cropBox.w = sc.w - dx; cropApplyRatio('l'); }
-    else if (cropDragMode === 'b') { cropBox.h = sc.h + dy; cropApplyRatio('b'); }
-    else if (cropDragMode === 't') { cropBox.y = sc.y + dy; cropBox.h = sc.h - dy; cropApplyRatio('t'); }
-    cropClamp(); cropDraw();
+
+    // 整体平移
+    if (cropDragMode === 'move') {
+      var nextX = sc.x + dx;
+      var nextY = sc.y + dy;
+      cropBox.x = Math.max(0, Math.min(cropDisplayW - cropBox.w, nextX));
+      cropBox.y = Math.max(0, Math.min(cropDisplayH - cropBox.h, nextY));
+      cropDraw();
+      return;
+    }
+
+    // 单边独立拉伸：指哪到哪，对边绝对不动
+    if (cropDragMode === 'r') {
+      var maxW = cropDisplayW - sc.x;
+      cropBox.w = Math.max(CROP_MIN, Math.min(maxW, sc.w + dx));
+    } else if (cropDragMode === 'l') {
+      var rightAnchor = sc.x + sc.w;
+      var newX = Math.max(0, Math.min(rightAnchor - CROP_MIN, sc.x + dx));
+      cropBox.x = newX;
+      cropBox.w = rightAnchor - newX;
+    } else if (cropDragMode === 'b') {
+      var maxH = cropDisplayH - sc.y;
+      cropBox.h = Math.max(CROP_MIN, Math.min(maxH, sc.h + dy));
+    } else if (cropDragMode === 't') {
+      var bottomAnchor = sc.y + sc.h;
+      var newY = Math.max(0, Math.min(bottomAnchor - CROP_MIN, sc.y + dy));
+      cropBox.y = newY;
+      cropBox.h = bottomAnchor - newY;
+    }
+
+    // 四角拉伸
+    else if (cropDragMode === 'br') {
+      cropBox.w = Math.max(CROP_MIN, Math.min(cropDisplayW - sc.x, sc.w + dx));
+      cropBox.h = Math.max(CROP_MIN, Math.min(cropDisplayH - sc.y, sc.h + dy));
+    } else if (cropDragMode === 'bl') {
+      var rA = sc.x + sc.w;
+      var nX = Math.max(0, Math.min(rA - CROP_MIN, sc.x + dx));
+      cropBox.x = nX;
+      cropBox.w = rA - nX;
+      cropBox.h = Math.max(CROP_MIN, Math.min(cropDisplayH - sc.y, sc.h + dy));
+    } else if (cropDragMode === 'tr') {
+      var bA = sc.y + sc.h;
+      var nY = Math.max(0, Math.min(bA - CROP_MIN, sc.y + dy));
+      cropBox.w = Math.max(CROP_MIN, Math.min(cropDisplayW - sc.x, sc.w + dx));
+      cropBox.y = nY;
+      cropBox.h = bA - nY;
+    } else if (cropDragMode === 'tl') {
+      var rA2 = sc.x + sc.w;
+      var bA2 = sc.y + sc.h;
+      var nX2 = Math.max(0, Math.min(rA2 - CROP_MIN, sc.x + dx));
+      var nY2 = Math.max(0, Math.min(bA2 - CROP_MIN, sc.y + dy));
+      cropBox.x = nX2;
+      cropBox.w = rA2 - nX2;
+      cropBox.y = nY2;
+      cropBox.h = bA2 - nY2;
+    }
+
+    // 如果用户主动锁定了特定比例，按锁定比例贴合调整
+    if (cropLockedRatio) {
+      if (cropDragMode === 'r' || cropDragMode === 'l' || cropDragMode === 'tr' || cropDragMode === 'tl') {
+        cropBox.h = cropBox.w / cropLockedRatio;
+      } else {
+        cropBox.w = cropBox.h * cropLockedRatio;
+      }
+      cropClamp();
+    }
+
+    cropDraw();
   }
 
   function cropOnEnd() {
@@ -236,6 +329,7 @@
       else if (r === '1') cropLockedRatio = 1;
       else if (r === '4:3') cropLockedRatio = 4 / 3;
       else if (r === '16:9') cropLockedRatio = 16 / 9;
+
       if (cropLockedRatio) {
         var cx = cropBox.x + cropBox.w / 2, cy = cropBox.y + cropBox.h / 2;
         var newW = cropBox.w, newH = newW / cropLockedRatio;
@@ -258,7 +352,7 @@
     output.width = outW; output.height = outH;
     var outCtx = output.getContext('2d');
     outCtx.drawImage(cropImg, cropBox.x / cropScale, cropBox.y / cropScale, cropBox.w / cropScale, cropBox.h / cropScale, 0, 0, outW, outH);
-    var data = output.toDataURL('image/jpeg', 0.9);
+    var data = output.toDataURL('image/jpeg', 0.92);
     cropOverlay.classList.remove('show');
     if (cropCallback) cropCallback(data);
     cropCallback = null;
@@ -326,19 +420,17 @@
   }
 
   // ============ 页面导航 (桌面与App模式) ============
-  var pages = document.querySelectorAll('.page');
   var dock = document.querySelector('.tab-bar');
   var dockEditBtn = document.querySelector('.tabbar-edit-btn');
 
-   function initAppShells() {
+  function initAppShells() {
     var appPages = ['wechat', 'offline', 'settings', 'check'];
     appPages.forEach(function(name) {
       var page = document.querySelector('[data-page="' + name + '"]');
-      if (!page || page.querySelector('.app-header')) return; // 已初始化就跳过
+      if (!page || page.querySelector('.app-header')) return;
 
       var titleText = { wechat: '微信', offline: '线下', settings: '设置', check: '查岗' }[name];
       
-      // 新结构：头部容器包含返回按钮和标题，在同一行
       page.innerHTML = 
         '<div class="app-header">' +
           '<button class="icon-back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>' +
@@ -347,7 +439,7 @@
         '<div class="app-content" id="' + name + 'Content"></div>';
     });
 
-    // 给设置页特殊处理：注入二级入口列表
+    // 给设置页注入二级入口
     var settingsContent = document.getElementById('settingsContent');
     if (settingsContent && !settingsContent.querySelector('.settings-list')) {
       settingsContent.innerHTML = 
@@ -371,7 +463,7 @@
         '</div>';
     }
 
-    // 创建 API 和 Data 的二级页面（如果不存在）
+    // 创建 API 和 Data 的二级页面
     var subPages = [
       { name: 'api', title: 'API 配置', back: 'settings' },
       { name: 'data', title: '数据', back: 'settings' }
@@ -404,37 +496,31 @@
       }
     });
 
-    // 如果回到桌面(home)，显示 Dock 栏
     if (name === 'home') {
       if (dock) dock.style.display = 'flex';
       if (dockEditBtn) dockEditBtn.style.display = 'block';
     } else {
-      // 进入任何 App，隐藏 Dock 栏
       if (dock) dock.style.display = 'none';
       if (dockEditBtn) dockEditBtn.style.display = 'none';
     }
   }
 
-  // 绑定所有返回按钮和跳转按钮
   function bindNavigation() {
-    // Dock 栏点击
     document.querySelectorAll('.tab-item').forEach(function(tab) {
       tab.addEventListener('click', function() { showPage(this.dataset.tab); });
     });
 
-    // data-back 返回按钮
     document.addEventListener('click', function(e) {
       var backBtn = e.target.closest('[data-back]');
       if (backBtn) showPage(backBtn.dataset.back);
     });
 
-    // data-goto 跳转按钮
     document.addEventListener('click', function(e) {
       var gotoBtn = e.target.closest('[data-goto]');
       if (gotoBtn) showPage(gotoBtn.dataset.goto);
     });
 
-    // 右滑返回
+    // 右滑返回手势
     document.querySelectorAll('.app-page').forEach(function(page) {
       var startX = 0, currentX = 0, isDragging = false;
 
@@ -472,10 +558,9 @@
   // ============ 初始化 ============
   openDB(function() {
     setupPhotoAction();
-    initAppShells(); // 先搭建App骨架
-    bindNavigation(); // 再绑定导航
+    initAppShells();
+    bindNavigation();
     window.dispatchEvent(new CustomEvent('dbReady'));
   });
 
 })();
-
