@@ -4,6 +4,12 @@
   var pageContainer = document.querySelector('.page-container');
   var appShell = document.querySelector('.app-shell');
   var resetLayoutBtn = document.getElementById('resetLayoutBtn');
+  var addHomeBgBtn = document.getElementById('addHomeBgBtn');
+  var editHomeBgBtn = document.getElementById('editHomeBgBtn');
+
+  var homeBgLayer = document.getElementById('homeBgLayer');
+  var homeBgDimOverlay = document.getElementById('homeBgDimOverlay');
+  var homeBgWhiteOverlay = document.getElementById('homeBgWhiteOverlay');
 
   var longPressTimer = null;
   var isEditMode = false;
@@ -17,7 +23,11 @@
 
   var defaultOrder = ['card', 'message', 'couple'];
 
-  window.addEventListener('dbReady', loadDragPositions);
+  window.addEventListener('dbReady', function() {
+    loadDragPositions();
+    loadHomeBg();
+    setupHomeBgActions();
+  });
 
   // ============ 长按空白处进入/退出编辑模式 ============
   pageContainer.addEventListener('touchstart', function(e) {
@@ -47,7 +57,6 @@
   function enterEditMode() {
     isEditMode = true;
     appShell.classList.add('edit-mode');
-    // 在编辑模式下失焦任何输入框，避免软键盘挡住
     if (document.activeElement && document.activeElement.blur) {
       document.activeElement.blur();
     }
@@ -81,7 +90,184 @@
     });
   }
 
-  // ============ 丝滑跟手拖拽（全卡片任意位置响应） ============
+  // ============ 背景添加与编辑 ============
+  var homeBgFileInput = document.createElement('input');
+  homeBgFileInput.type = 'file';
+  homeBgFileInput.accept = 'image/*';
+  homeBgFileInput.style.display = 'none';
+  document.body.appendChild(homeBgFileInput);
+
+  var homeBgPopup = null;
+  var homeBgPopupMask = null;
+
+  function setupHomeBgActions() {
+    // 1. 添加背景按钮
+    if (addHomeBgBtn) {
+      addHomeBgBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        PhotoAction.show(
+          function() { homeBgFileInput.click(); },
+          function() {
+            if (homeBgLayer) homeBgLayer.style.backgroundImage = '';
+            AppDB.delete('home_bg_img');
+            if (window.AppNav) AppNav.showToast('桌面背景已清除');
+          }
+        );
+      });
+    }
+
+    homeBgFileInput.addEventListener('change', function() {
+      var file = this.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        AppCropper.open(e.target.result, { aspectRatio: window.innerWidth / window.innerHeight }, function(croppedData) {
+          if (homeBgLayer) homeBgLayer.style.backgroundImage = 'url(' + croppedData + ')';
+          AppDB.save('home_bg_img', croppedData);
+          if (window.AppNav) AppNav.showToast('背景已设置');
+        });
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    });
+
+    // 2. 背景编辑按钮
+    if (editHomeBgBtn) {
+      editHomeBgBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        showHomeBgPopup();
+      });
+    }
+  }
+
+  function showHomeBgPopup() {
+    if (!homeBgPopup) {
+      homeBgPopupMask = document.createElement('div');
+      homeBgPopupMask.className = 'popup-mask';
+      document.body.appendChild(homeBgPopupMask);
+      homeBgPopupMask.addEventListener('click', hideHomeBgPopup);
+
+      homeBgPopup = document.createElement('div');
+      homeBgPopup.className = 'popup-card';
+      homeBgPopup.innerHTML = 
+        '<div class="popup-card-title">背景效果编辑</div>' +
+        '<div class="popup-card-row">' +
+          '<span>虚化模糊</span>' +
+          '<input type="range" id="bgBlurSlider" min="0" max="30" value="0">' +
+          '<span class="popup-card-value" id="bgBlurValue">0px</span>' +
+        '</div>' +
+        '<div class="popup-card-row">' +
+          '<span>变暗遮罩</span>' +
+          '<input type="range" id="bgDimSlider" min="0" max="100" value="0">' +
+          '<span class="popup-card-value" id="bgDimValue">0%</span>' +
+        '</div>' +
+        '<div class="popup-card-row">' +
+          '<span>白色遮罩</span>' +
+          '<input type="range" id="bgWhiteSlider" min="0" max="100" value="0">' +
+          '<span class="popup-card-value" id="bgWhiteValue">0%</span>' +
+        '</div>';
+      document.body.appendChild(homeBgPopup);
+
+      document.getElementById('bgBlurSlider').addEventListener('input', applyHomeBgFilterFromControls);
+      document.getElementById('bgDimSlider').addEventListener('input', applyHomeBgFilterFromControls);
+      document.getElementById('bgWhiteSlider').addEventListener('input', applyHomeBgFilterFromControls);
+    }
+
+    loadHomeBgControls();
+    positionHomeBgPopup();
+    homeBgPopupMask.classList.add('show');
+    homeBgPopup.classList.add('show');
+  }
+
+  function hideHomeBgPopup() {
+    if (homeBgPopup) homeBgPopup.classList.remove('show');
+    if (homeBgPopupMask) homeBgPopupMask.classList.remove('show');
+  }
+
+  function positionHomeBgPopup() {
+    var btnRect = editHomeBgBtn.getBoundingClientRect();
+    homeBgPopup.style.visibility = 'hidden';
+    homeBgPopup.style.display = 'flex';
+    var popupH = homeBgPopup.offsetHeight;
+    homeBgPopup.style.visibility = '';
+    homeBgPopup.style.display = '';
+
+    var top = btnRect.bottom + 10;
+    if (top + popupH > window.innerHeight - 20) {
+      top = btnRect.top - popupH - 10;
+    }
+    homeBgPopup.style.left = '16px';
+    homeBgPopup.style.top = top + 'px';
+  }
+
+  function applyHomeBgFilterFromControls() {
+    var blurSlider = document.getElementById('bgBlurSlider');
+    var dimSlider = document.getElementById('bgDimSlider');
+    var whiteSlider = document.getElementById('bgWhiteSlider');
+
+    var blurVal = blurSlider.value;
+    var dimVal = dimSlider.value;
+    var whiteVal = whiteSlider.value;
+
+    document.getElementById('bgBlurValue').textContent = blurVal + 'px';
+    document.getElementById('bgDimValue').textContent = dimVal + '%';
+    document.getElementById('bgWhiteValue').textContent = whiteVal + '%';
+
+    applyHomeBgStyles(blurVal, dimVal / 100, whiteVal / 100);
+
+    var config = {
+      blur: blurVal,
+      dim: dimVal,
+      white: whiteVal
+    };
+    AppDB.save('home_bg_effects', config);
+  }
+
+  function applyHomeBgStyles(blurPx, dimAlpha, whiteAlpha) {
+    if (homeBgLayer) {
+      homeBgLayer.style.filter = blurPx > 0 ? ('blur(' + blurPx + 'px)') : 'none';
+      // 虚化时轻微放大防止白边
+      homeBgLayer.style.transform = blurPx > 0 ? 'scale(1.05)' : 'none';
+    }
+    if (homeBgDimOverlay) homeBgDimOverlay.style.opacity = dimAlpha;
+    if (homeBgWhiteOverlay) homeBgWhiteOverlay.style.opacity = whiteAlpha;
+  }
+
+  function loadHomeBgControls() {
+    AppDB.get('home_bg_effects', function(config) {
+      if (!config) return;
+      var blurSlider = document.getElementById('bgBlurSlider');
+      var dimSlider = document.getElementById('bgDimSlider');
+      var whiteSlider = document.getElementById('bgWhiteSlider');
+      if (blurSlider) {
+        blurSlider.value = config.blur || 0;
+        document.getElementById('bgBlurValue').textContent = blurSlider.value + 'px';
+      }
+      if (dimSlider) {
+        dimSlider.value = config.dim || 0;
+        document.getElementById('bgDimValue').textContent = dimSlider.value + '%';
+      }
+      if (whiteSlider) {
+        whiteSlider.value = config.white || 0;
+        document.getElementById('bgWhiteValue').textContent = whiteSlider.value + '%';
+      }
+    });
+  }
+
+  function loadHomeBg() {
+    AppDB.get('home_bg_img', function(data) {
+      if (data && homeBgLayer) {
+        homeBgLayer.style.backgroundImage = 'url(' + data + ')';
+      }
+    });
+    AppDB.get('home_bg_effects', function(config) {
+      if (config) {
+        applyHomeBgStyles(config.blur || 0, (config.dim || 0) / 100, (config.white || 0) / 100);
+      }
+    });
+  }
+
+  // ============ 丝滑跟手拖拽 ============
   var draggables = document.querySelectorAll('.draggable');
 
   draggables.forEach(function(el) {
@@ -89,11 +275,12 @@
       if (!isEditMode) return;
 
       var target = e.target;
-      // 只有点在【编辑按钮】或【恢复初始按钮】上时才不触发拖拽
       if (target.classList.contains('edit-btn') ||
           target.closest('.edit-btn') ||
           target.classList.contains('reset-layout-btn') ||
-          target.closest('.reset-layout-btn')) {
+          target.closest('.reset-layout-btn') ||
+          target.classList.contains('edit-tool-btn') ||
+          target.closest('.edit-tool-btn')) {
         return;
       }
 
@@ -109,7 +296,7 @@
 
   document.addEventListener('touchmove', function(e) {
     if (!dragElement) return;
-    if (e.cancelable) e.preventDefault(); // 拖拽时完全接管，禁止 iOS 滚动或手势干扰
+    if (e.cancelable) e.preventDefault();
 
     var y = e.touches[0].clientY;
     dragCurrentY = y - dragStartY;
