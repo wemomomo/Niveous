@@ -33,7 +33,7 @@
 .couple-icon-circle svg {
   width: 30px;
   height: 30px;
-  stroke: #1c1c1e;
+  stroke: #8e8e93;
   stroke-width: 1.5;
   fill: none;
   stroke-linecap: round;
@@ -42,13 +42,13 @@
 
 /* 美化图标的星星用填充 */
 .couple-icon-item[data-action="beautify"] .couple-icon-circle svg .star-fill {
-  fill: #1c1c1e;
+  fill: #8e8e93;
   stroke: none;
 }
 
 /* 情侣空间爱心用填充 */
 .couple-icon-item[data-action="couple-space"] .couple-icon-circle svg .heart-fill {
-  fill: #1c1c1e;
+  fill: #8e8e93;
   stroke: none;
 }
 
