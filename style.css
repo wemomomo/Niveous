@@ -63,11 +63,46 @@ body {
 }
 .page.active { display:flex; }
 
-.icons-row {
+/* 头像展示区布局 */
+.couple-section {
   display: flex;
-  justify-content: space-around;
-  flex-wrap: nowrap;
-  flex-shrink: 1;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 4px 0;
+  flex-shrink: 0;
+}
+
+.couple-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.couple-right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ========== 底部栏定位（在页面中的位置） ========== */
+.tab-bar {
+  position: fixed;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 380px;
+  width: calc(100% - 32px);
+}
+
+@media (display-mode: standalone) {
+  .tab-bar {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  }
 }
 
 .reset-layout-btn {
@@ -257,22 +292,3 @@ body {
   -webkit-overflow-scrolling: touch; 
 }
 
-/* ========== 底部栏定位（在页面中的位置） ========== */
-.tab-bar {
-  position: fixed;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 380px;
-  width: calc(100% - 32px);
-}
-
-@media (display-mode: standalone) {
-  .tab-bar {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-  }
-}
