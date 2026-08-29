@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -76,11 +77,54 @@
         </div>
       </div>
 
-      <!-- 展示区 -->
+      <!-- 情侣展示区 -->
       <div class="couple-section draggable" id="coupleSection" data-component="couple">
-        <div class="couple-bubbles">
-          <div class="couple-bubble" contenteditable="true" id="coupleBubble1">在想你...</div>
-          <div class="couple-bubble" contenteditable="true" id="coupleBubble2">我也是 ♡</div>
+        <div class="couple-left">
+          <div class="couple-icons">
+            <div class="couple-icon-item" data-action="beautify">
+              <div class="couple-icon-circle">
+                <svg viewBox="0 0 24 24">
+                  <polygon class="star-fill" points="12,2 14.5,9 22,9.5 16.5,14 18,21.5 12,17.5 6,21.5 7.5,14 2,9.5 9.5,9"/>
+                  <circle cx="19" cy="4" r="1.5" stroke-width="1.2"/>
+                  <circle cx="20" cy="8" r="1" stroke-width="1"/>
+                </svg>
+              </div>
+              <span>美化</span>
+            </div>
+            <div class="couple-icon-item" data-action="worldbook">
+              <div class="couple-icon-circle">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M3.6 9h16.8"/>
+                  <path d="M3.6 15h16.8"/>
+                  <ellipse cx="12" cy="12" rx="4.5" ry="9"/>
+                </svg>
+              </div>
+              <span>世界书</span>
+            </div>
+            <div class="couple-icon-item" data-action="forum">
+              <div class="couple-icon-circle">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <path d="M8 9h8"/>
+                  <path d="M8 13h5"/>
+                </svg>
+              </div>
+              <span>论坛</span>
+            </div>
+            <div class="couple-icon-item" data-action="couple-space">
+              <div class="couple-icon-circle">
+                <svg viewBox="0 0 24 24">
+                  <path class="heart-fill" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </div>
+              <span>情侣空间</span>
+            </div>
+          </div>
+          <div class="couple-bubbles">
+            <div class="couple-bubble" contenteditable="true" id="coupleBubble1">在想你...</div>
+            <div class="couple-bubble" contenteditable="true" id="coupleBubble2">我也是 ♡</div>
+          </div>
         </div>
         <div class="couple-avatars">
           <div class="couple-avatar-item">
