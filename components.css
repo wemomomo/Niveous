@@ -44,7 +44,7 @@
   align-items: center;
 }
 
-/* 下半部分遮罩层：顶部改成优雅的弧形曲角 */
+/* 下半部分遮罩层：轻透薄水晶质感毛玻璃 */
 .lower-overlay {
   position: absolute;
   inset: 0;
@@ -54,8 +54,8 @@
   transition: background-color 0.3s ease;
 }
 .lower-overlay.glass-effect {
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .avatar-wrapper {
