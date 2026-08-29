@@ -73,16 +73,17 @@ body {
 }
 
 .couple-left {
-  flex: 1;
+  flex: 4;
   min-width: 0;
 }
 
 .couple-right {
-  flex: 0 0 auto;
+  flex: 6;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 /* ========== 底部栏定位（在页面中的位置） ========== */
