@@ -403,7 +403,7 @@ input:checked + label:before {
   border-radius: 50%;
   background: #ffffff;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 0 1px #d1d1d6;
+  box-shadow: 0 0 0 0.5px #d1d1d6;
   overflow: hidden;
   display: flex;
   align-items: center;
