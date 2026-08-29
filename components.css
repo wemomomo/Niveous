@@ -13,7 +13,7 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  background-color: #fff;
+  background-color: #transparent;
   z-index: 0;
 }
 .card-bg:not(.has-bg)::after {
@@ -120,25 +120,25 @@
   align-items: center;
   justify-content: center;
   gap: 1px;
-  color: #6c6c70;
+  color: #1a1a1a;
   -webkit-user-select: none;
   user-select: none;
 }
 .info-text.line-4:empty::before { content: none; }
 .location-icon {
-  width: 13px; height: 13px; fill: #8e8e93; flex-shrink: 0;
+  width: 13px; height: 13px; fill: #1a1a1a; flex-shrink: 0;
 }
 .location-text {
   outline: none;
   -webkit-user-select: text;
   user-select: text;
 }
-.location-text:empty::before { content: '所在地'; color: #c7c7cc; font-weight: 400; }
+.location-text:empty::before { content: '所在地'; color: #1a1a1a; font-weight: 400; }
 
 /* ========== 消息卡片 ========== */
 .message-card {
   width: 100%;
-  background: #ffffff;
+  background: rgba(255,255,255,0.9);
   border-radius: 16px;
   padding: 8px 14px;
   display: flex;
