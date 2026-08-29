@@ -1,4 +1,3 @@
-
 (function(){
   'use strict';
 
@@ -310,14 +309,13 @@
   'use strict';
 
   var coupleData = {
-    bubble1: '在想你...',
-    bubble2: '我也是 ♡',
     speech1: '♡',
     speech2: '♡',
     name1: 'TA',
     name2: '我',
     avatar1: null,
-    avatar2: null
+    avatar2: null,
+    startDate: null
   };
 
   var _coupleFileInput = null;
@@ -341,12 +339,11 @@
     loadCoupleData(function() {
       applyCoupleData();
       bindCoupleEvents();
+      renderDateCard();
     });
   });
 
   function applyCoupleData() {
-    var b1 = document.getElementById('coupleBubble1');
-    var b2 = document.getElementById('coupleBubble2');
     var s1 = document.getElementById('coupleSpeech1');
     var s2 = document.getElementById('coupleSpeech2');
     var n1 = document.getElementById('coupleName1');
@@ -356,8 +353,6 @@
     var circle1 = document.getElementById('coupleAvatar1');
     var circle2 = document.getElementById('coupleAvatar2');
 
-    if (b1) b1.textContent = coupleData.bubble1;
-    if (b2) b2.textContent = coupleData.bubble2;
     if (s1) s1.textContent = coupleData.speech1;
     if (s2) s2.textContent = coupleData.speech2;
     if (n1) n1.textContent = coupleData.name1;
@@ -375,8 +370,6 @@
 
   function bindCoupleEvents() {
     var editables = [
-      ['coupleBubble1', 'bubble1'],
-      ['coupleBubble2', 'bubble2'],
       ['coupleSpeech1', 'speech1'],
       ['coupleSpeech2', 'speech2'],
       ['coupleName1', 'name1'],
@@ -386,17 +379,31 @@
       var el = document.getElementById(pair[0]);
       if (el) {
         el.addEventListener('blur', function() {
-          coupleData[pair[1]] = this.textContent.trim() || pair[1];
+          coupleData[pair[1]] = this.textContent.trim() || '';
           saveCoupleData();
+          if (pair[1] === 'name1') updateDateName();
         });
       }
     });
 
     var circle1 = document.getElementById('coupleAvatar1');
     var circle2 = document.getElementById('coupleAvatar2');
-
     if (circle1) circle1.addEventListener('click', function() { handleAvatarClick(1); });
     if (circle2) circle2.addEventListener('click', function() { handleAvatarClick(2); });
+
+    // 点击天数打开日期选择
+    var daysEl = document.getElementById('dateDaysCount');
+    var dateInput = document.getElementById('dateStartInput');
+    if (daysEl && dateInput) {
+      daysEl.addEventListener('click', function() {
+        dateInput.showPicker ? dateInput.showPicker() : dateInput.click();
+      });
+      dateInput.addEventListener('change', function() {
+        coupleData.startDate = this.value || null;
+        saveCoupleData();
+        renderDateCard();
+      });
+    }
   }
 
   function handleAvatarClick(idx) {
@@ -437,6 +444,58 @@
     saveCoupleData();
   }
 
+  // ========== 日期卡片 ==========
+  function updateDateName() {
+    var nameEl = document.getElementById('datePartnerName');
+    if (nameEl) nameEl.textContent = coupleData.name1 || 'TA';
+  }
+
+  function renderDateCard() {
+    var daysEl = document.getElementById('dateDaysCount');
+    var datesEl = document.getElementById('dateWeekDates');
+    var dateInput = document.getElementById('dateStartInput');
+
+    if (!daysEl || !datesEl) return;
+
+    // 同步名字
+    updateDateName();
+
+    // 回填日期选择器
+    if (dateInput && coupleData.startDate) {
+      dateInput.value = coupleData.startDate;
+    }
+
+    // 计算天数
+    var days = 0;
+    if (coupleData.startDate) {
+      var parts = coupleData.startDate.split('-');
+      var start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      var now = new Date();
+      now.setHours(0, 0, 0, 0);
+      days = Math.floor((now - start) / 86400000);
+      if (days < 0) days = 0;
+    }
+    daysEl.textContent = days;
+
+    // 渲染本周日期
+    var today = new Date();
+    var dayOfWeek = today.getDay();
+    var weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - dayOfWeek);
+
+    var html = '';
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      var isToday = d.getDate() === today.getDate()
+        && d.getMonth() === today.getMonth()
+        && d.getFullYear() === today.getFullYear();
+      html += '<span' + (isToday ? ' class="today"' : '') + '>' + d.getDate() + '</span>';
+    }
+    datesEl.innerHTML = html;
+  }
+
+  // ========== 数据 ==========
   function loadCoupleData(callback) {
     if (!window.AppDB) { if (callback) callback(); return; }
     AppDB.get('couple_data', function(val) {
