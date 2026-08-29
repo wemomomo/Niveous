@@ -1,26 +1,4 @@
-
-/* ========== 底部栏 ========== */
-/* 默认浏览器网页端 */
-.tab-bar {
-  position: fixed;
-  bottom: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 380px;
-  width: calc(100% - 32px);
-}
-
-/* 🌟 苹果 PWA / 添加到主屏幕模式：自动避开底部小黑条 */
-@media (display-mode: standalone) {
-  .tab-bar {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
-  }
-}
-
+/* ========== 底部栏外观 ========== */
 .tab-bar-capsule {
   display: flex;
   align-items: center;
@@ -46,6 +24,7 @@
   user-select: none;
 }
 .tab-item:active { opacity: .5; }
+
 .tab-icon { 
   height: 26px; 
   display: flex; 
@@ -62,11 +41,13 @@
   stroke-linejoin: round; 
   transition: stroke .15s ease; 
 }
+
 .tab-label { 
   font-size: 10px; 
   font-weight: 500; 
   color: #8e8e93; 
   transition: color .15s ease; 
 }
+
 .tab-item.active .tab-icon svg { stroke: #1c1c1e; }
 .tab-item.active .tab-label { color: #1c1c1e; }
