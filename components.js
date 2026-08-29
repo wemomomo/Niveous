@@ -24,7 +24,6 @@
     var avatarFileInput = document.createElement('input');
     avatarFileInput.type = 'file'; avatarFileInput.accept = 'image/*';
 
-    // --- 点击背景 ---
     cardUpper.addEventListener('click', function() {
       if (document.querySelector('.app-shell').classList.contains('edit-mode')) return;
       PhotoAction.show(
@@ -38,7 +37,6 @@
       );
     });
 
-    // --- 点击头像 ---
     avatarBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       if (document.querySelector('.app-shell').classList.contains('edit-mode')) return;
@@ -53,7 +51,6 @@
       );
     });
 
-    // --- 背景上传+裁剪 ---
     bgFileInput.addEventListener('change', function() {
       var file = this.files[0];
       if (!file) return;
@@ -70,7 +67,6 @@
       this.value = '';
     });
 
-    // --- 头像上传+裁剪 ---
     avatarFileInput.addEventListener('change', function() {
       var file = this.files[0];
       if (!file) return;
@@ -87,11 +83,9 @@
       this.value = '';
     });
 
-    // --- 文字保存 ---
     infoTexts.forEach(function(el) { el.addEventListener('blur', saveCardState); });
     if (locationText) locationText.addEventListener('blur', saveCardState);
 
-    // --- 编辑气泡卡片 ---
     var cardEditBtn = document.querySelector('[data-edit-target="card"]');
     var cardPopup = null;
     var cardPopupMask = null;
@@ -127,7 +121,6 @@
         document.getElementById('cardOpacitySlider').addEventListener('input', applyFromControls);
       }
 
-      // 把当前保存的数据填入控件
       loadStyleToControls();
       positionCardPopup();
       cardPopupMask.classList.add('show');
@@ -174,7 +167,6 @@
       });
     }
 
-    // 从控件读取值并应用到界面
     function applyFromControls() {
       var colorPicker = document.getElementById('cardColorPicker');
       var opacitySlider = document.getElementById('cardOpacitySlider');
@@ -190,7 +182,6 @@
       saveCardState();
     }
 
-    // 直接用数据应用样式（不依赖控件）
     function applyOverlayStyle(glass, color, opacity) {
       var r = parseInt(color.slice(1,3), 16);
       var g = parseInt(color.slice(3,5), 16);
@@ -247,7 +238,6 @@
             }
           });
         }
-        // 直接用保存的数据恢复样式，不依赖弹出框控件
         if (state.style) {
           var color = state.style.color || '#ffffff';
           var opacity = (state.style.opacity || 80) / 100;
@@ -313,8 +303,12 @@
     }
   }
 
-// ========== 情侣展示区 ==========
+})();
+
+// ========== 情侣展示区（独立模块） ==========
 (function() {
+  'use strict';
+
   var coupleData = {
     bubble1: '在想你...',
     bubble2: '我也是 ♡',
@@ -380,7 +374,6 @@
   }
 
   function bindCoupleEvents() {
-    // 文字编辑自动保存
     var editables = [
       ['coupleBubble1', 'bubble1'],
       ['coupleBubble2', 'bubble2'],
@@ -399,7 +392,6 @@
       }
     });
 
-    // 头像点击
     var circle1 = document.getElementById('coupleAvatar1');
     var circle2 = document.getElementById('coupleAvatar2');
 
