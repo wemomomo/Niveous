@@ -17,7 +17,6 @@
     var windowW = window.innerWidth;
     var windowH = window.innerHeight;
 
-    // 先展示以获取尺寸
     popupEl.style.visibility = 'hidden';
     popupEl.style.display = 'flex';
     var popupW = popupEl.offsetWidth || 240;
@@ -25,25 +24,23 @@
     popupEl.style.visibility = '';
     popupEl.style.display = '';
 
-    // 水平居中并限制在屏幕内
+    // 水平居中并限制在屏幕安全宽度内
     var left = targetRect.left + targetRect.width / 2 - popupW / 2;
     if (left < 16) left = 16;
     if (left + popupW > windowW - 16) left = windowW - popupW - 16;
 
-    // 垂直智能判断：比较上方和下方的剩余空间
+    // 垂直智能避让：判断上下空间
     var spaceAbove = targetRect.top;
     var spaceBelow = windowH - targetRect.bottom;
 
     var top = 0;
     if (spaceAbove >= popupH + 12 || spaceAbove > spaceBelow) {
-      // 放在上方
       top = targetRect.top - popupH - 10;
     } else {
-      // 放在下方
       top = targetRect.bottom + 10;
     }
 
-    // 严格屏幕安全边界锁定，杜绝任何溢出或被遮挡
+    // 严格屏幕安全边界锁定
     var minTop = 20;
     var maxTop = windowH - popupH - 20;
     if (top < minTop) top = minTop;
@@ -409,7 +406,7 @@
     });
   }
 
-  // ============ 头像展示区样式定制模块 ============
+  // ============ 情侣展示区样式定制模块 ============
   function setupCoupleStyle() {
     var coupleEditBtn = document.querySelector('[data-edit-target="couple"]');
     var couplePopup = null;
@@ -466,7 +463,6 @@
 
       loadCoupleStyleControls();
       positionSmartPopup(couplePopup, document.getElementById('coupleSection'));
-      cardPopupMask = couplePopupMask;
       couplePopupMask.classList.add('show');
       couplePopup.classList.add('show');
     }
