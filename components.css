@@ -141,7 +141,7 @@
 /* ========== 消息卡片 ========== */
 .message-card {
   width: 100%;
-  background: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.8);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: 16px;
