@@ -1,3 +1,4 @@
+
 /* ========== 个人卡片 ========== */
 .profile-card {
   width: 100%;
@@ -273,7 +274,6 @@
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
   border-top: 4px solid #f0f0f3;
-  border-top-color: inherit;
 }
 
 .couple-avatar-circle {
@@ -323,8 +323,7 @@
 }
 .couple-name:empty::before {
   content: '名字';
-  color: inherit;
-  opacity: 0.6;
+  color: #1c1c1e;
   pointer-events: none;
 }
 
