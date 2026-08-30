@@ -10,6 +10,49 @@
     setupCoupleStyle();
   }
 
+  // ============ 通用智能弹窗定位函数 ============
+  function positionSmartPopup(popupEl, targetEl) {
+    if (!popupEl || !targetEl) return;
+    var targetRect = targetEl.getBoundingClientRect();
+    var windowW = window.innerWidth;
+    var windowH = window.innerHeight;
+
+    // 先展示以获取尺寸
+    popupEl.style.visibility = 'hidden';
+    popupEl.style.display = 'flex';
+    var popupW = popupEl.offsetWidth || 240;
+    var popupH = popupEl.offsetHeight || 260;
+    popupEl.style.visibility = '';
+    popupEl.style.display = '';
+
+    // 水平居中并限制在屏幕内
+    var left = targetRect.left + targetRect.width / 2 - popupW / 2;
+    if (left < 16) left = 16;
+    if (left + popupW > windowW - 16) left = windowW - popupW - 16;
+
+    // 垂直智能判断：比较上方和下方的剩余空间
+    var spaceAbove = targetRect.top;
+    var spaceBelow = windowH - targetRect.bottom;
+
+    var top = 0;
+    if (spaceAbove >= popupH + 12 || spaceAbove > spaceBelow) {
+      // 放在上方
+      top = targetRect.top - popupH - 10;
+    } else {
+      // 放在下方
+      top = targetRect.bottom + 10;
+    }
+
+    // 严格屏幕安全边界锁定，杜绝任何溢出或被遮挡
+    var minTop = 20;
+    var maxTop = windowH - popupH - 20;
+    if (top < minTop) top = minTop;
+    if (top > maxTop) top = maxTop;
+
+    popupEl.style.left = Math.round(left) + 'px';
+    popupEl.style.top = Math.round(top) + 'px';
+  }
+
   // ============ 个人卡片模块 ============
   function setupCard() {
     var cardBg = document.getElementById('cardBg');
@@ -25,13 +68,11 @@
     var avatarFileInput = document.createElement('input');
     avatarFileInput.type = 'file'; avatarFileInput.accept = 'image/*';
 
-    // 状态保险箱：保证文字与样式永久并存，互不覆盖
     var cardState = {
       texts: { line1: '', line2: '', line3: '', line4text: '' },
       style: { glass: false, color: '#ffffff', opacity: 80 }
     };
 
-    // --- 背景点击 ---
     cardUpper.addEventListener('click', function() {
       if (document.querySelector('.app-shell').classList.contains('edit-mode')) return;
       PhotoAction.show(
@@ -44,7 +85,6 @@
       );
     });
 
-    // --- 头像点击 ---
     avatarBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       if (document.querySelector('.app-shell').classList.contains('edit-mode')) return;
@@ -58,7 +98,6 @@
       );
     });
 
-    // --- 背景选择与裁剪 ---
     bgFileInput.addEventListener('change', function() {
       var file = this.files[0];
       if (!file) return;
@@ -74,7 +113,6 @@
       this.value = '';
     });
 
-    // --- 头像选择与裁剪 ---
     avatarFileInput.addEventListener('change', function() {
       var file = this.files[0];
       if (!file) return;
@@ -90,7 +128,6 @@
       this.value = '';
     });
 
-    // --- 文字即时同步与保存（双重监听，防止杀后台丢失） ---
     infoTexts.forEach(function(el) {
       var key = el.dataset.key;
       el.addEventListener('input', function() {
@@ -114,7 +151,6 @@
       });
     }
 
-    // --- 编辑气泡弹窗 ---
     var cardEditBtn = document.querySelector('[data-edit-target="card"]');
     var cardPopup = null;
     var cardPopupMask = null;
@@ -151,7 +187,7 @@
       }
 
       loadControlsFromState();
-      positionCardPopup();
+      positionSmartPopup(cardPopup, document.getElementById('profileCard'));
       cardPopupMask.classList.add('show');
       cardPopup.classList.add('show');
     }
@@ -159,29 +195,6 @@
     function hideCardPopup() {
       if (cardPopup) cardPopup.classList.remove('show');
       if (cardPopupMask) cardPopupMask.classList.remove('show');
-    }
-
-    function positionCardPopup() {
-      var cardRect = document.getElementById('profileCard').getBoundingClientRect();
-      var windowW = window.innerWidth;
-      var windowH = window.innerHeight;
-
-      cardPopup.style.visibility = 'hidden';
-      cardPopup.style.display = 'flex';
-      var popupW = cardPopup.offsetWidth;
-      var popupH = cardPopup.offsetHeight;
-      cardPopup.style.visibility = '';
-      cardPopup.style.display = '';
-
-      var left = cardRect.left + cardRect.width / 2 - popupW / 2;
-      var top = cardRect.bottom + 10;
-
-      if (left < 12) left = 12;
-      if (left + popupW > windowW - 12) left = windowW - popupW - 12;
-      if (top + popupH > windowH - 20) top = cardRect.top - popupH - 10;
-
-      cardPopup.style.left = left + 'px';
-      cardPopup.style.top = top + 'px';
     }
 
     function loadControlsFromState() {
@@ -322,7 +335,6 @@
       });
     }
 
-    // 消息胶囊编辑弹窗
     var msgEditBtn = document.querySelector('[data-edit-target="message"]');
     var msgPopup = null;
     var msgPopupMask = null;
@@ -355,7 +367,7 @@
       }
 
       loadMsgBadgeControls();
-      positionMsgPopup();
+      positionSmartPopup(msgPopup, document.getElementById('messageCard'));
       msgPopupMask.classList.add('show');
       msgPopup.classList.add('show');
     }
@@ -363,29 +375,6 @@
     function hideMsgPopup() {
       if (msgPopup) msgPopup.classList.remove('show');
       if (msgPopupMask) msgPopupMask.classList.remove('show');
-    }
-
-    function positionMsgPopup() {
-      var msgRect = document.getElementById('messageCard').getBoundingClientRect();
-      var windowW = window.innerWidth;
-      var windowH = window.innerHeight;
-
-      msgPopup.style.visibility = 'hidden';
-      msgPopup.style.display = 'flex';
-      var popupW = msgPopup.offsetWidth;
-      var popupH = msgPopup.offsetHeight;
-      msgPopup.style.visibility = '';
-      msgPopup.style.display = '';
-
-      var left = msgRect.left + msgRect.width / 2 - popupW / 2;
-      var top = msgRect.bottom + 10;
-
-      if (left < 12) left = 12;
-      if (left + popupW > windowW - 12) left = windowW - popupW - 12;
-      if (top + popupH > windowH - 20) top = msgRect.top - popupH - 10;
-
-      msgPopup.style.left = left + 'px';
-      msgPopup.style.top = top + 'px';
     }
 
     function applyMsgBadgeStyle() {
@@ -420,7 +409,7 @@
     });
   }
 
-  // ============ 情侣展示区样式定制模块 ============
+  // ============ 头像展示区样式定制模块 ============
   function setupCoupleStyle() {
     var coupleEditBtn = document.querySelector('[data-edit-target="couple"]');
     var couplePopup = null;
@@ -476,7 +465,8 @@
       }
 
       loadCoupleStyleControls();
-      positionCouplePopup();
+      positionSmartPopup(couplePopup, document.getElementById('coupleSection'));
+      cardPopupMask = couplePopupMask;
       couplePopupMask.classList.add('show');
       couplePopup.classList.add('show');
     }
@@ -484,29 +474,6 @@
     function hideCouplePopup() {
       if (couplePopup) couplePopup.classList.remove('show');
       if (couplePopupMask) couplePopupMask.classList.remove('show');
-    }
-
-    function positionCouplePopup() {
-      var coupleRect = document.getElementById('coupleSection').getBoundingClientRect();
-      var windowW = window.innerWidth;
-      var windowH = window.innerHeight;
-
-      couplePopup.style.visibility = 'hidden';
-      couplePopup.style.display = 'flex';
-      var popupW = couplePopup.offsetWidth;
-      var popupH = couplePopup.offsetHeight;
-      couplePopup.style.visibility = '';
-      couplePopup.style.display = '';
-
-      var left = coupleRect.left + coupleRect.width / 2 - popupW / 2;
-      var top = coupleRect.top - popupH - 10;
-
-      if (left < 12) left = 12;
-      if (left + popupW > windowW - 12) left = windowW - popupW - 12;
-      if (top < 20) top = coupleRect.bottom + 10;
-
-      couplePopup.style.left = left + 'px';
-      couplePopup.style.top = top + 'px';
     }
 
     function loadCoupleStyleControls() {
