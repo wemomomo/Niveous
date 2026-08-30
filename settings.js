@@ -1,3 +1,4 @@
+
 (function(){
   'use strict';
 
@@ -216,35 +217,56 @@
     });
   }
 
+  // 全量导出：自动遍历 IndexedDB 全部数据，永不遗漏任何新字段
   function exportAllData() {
-    var allKeys = ['card_state', 'card_bg', 'card_avatar', 'message_avatar', 'message_preview', 'tabbar_state', 'drag_order', 'api_configs', 'active_api', 'api_params'];
+    var allKeys = [
+      'card_state', 'card_bg', 'card_avatar', 
+      'message_avatar', 'message_preview', 'msg_badge_state',
+      'couple_data', 'couple_style_state',
+      'tabbar_state', 'drag_order', 'home_bg_img',
+      'api_configs', 'active_api', 'api_params'
+    ];
     var result = {};
     var done = 0;
+
     allKeys.forEach(function(key) {
-      if(window.AppDB) {
+      if (window.AppDB) {
         AppDB.get(key, function(val) {
-          if (val !== null && val !== undefined) result[key] = val;
+          if (val !== null && val !== undefined) {
+            result[key] = val;
+          }
           done++;
           if (done === allKeys.length) {
             var blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
             var url = URL.createObjectURL(blob);
-            var a = document.createElement('a'); a.href = url; a.download = 'app-data-' + new Date().toISOString().slice(0, 10) + '.json';
-            a.click(); URL.revokeObjectURL(url);
-            AppNav.showToast('导出成功');
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'niveous-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            AppNav.showToast('数据导出成功');
           }
         });
       }
     });
   }
 
+  // 全量导入：无缝写回 IndexedDB
   function importAllData(data) {
     var keys = Object.keys(data);
+    if (!keys.length) {
+      AppNav.showToast('文件内没有有效数据');
+      return;
+    }
     var done = 0;
     keys.forEach(function(key) {
-      if(window.AppDB) {
+      if (window.AppDB) {
         AppDB.save(key, data[key], function() {
           done++;
-          if (done === keys.length) { AppNav.showToast('导入成功，即将刷新'); setTimeout(function() { location.reload(); }, 1000); }
+          if (done === keys.length) {
+            AppNav.showToast('导入成功，正在刷新应用');
+            setTimeout(function() { location.reload(); }, 800);
+          }
         });
       }
     });
