@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -17,7 +16,7 @@
 </head>
 <body>
 
-<!-- 全局全屏壁纸层（直接铺满整块物理屏幕，彻底杜绝PWA底部白边） -->
+<!-- 全局全屏壁纸层 -->
 <div class="home-bg-layer" id="homeBgLayer"></div>
 
 <div class="app-shell">
@@ -50,6 +49,7 @@
     <!-- ========================================== -->
     <div class="page active" data-page="home">
 
+      <!-- 1. 个人卡片 -->
       <div class="profile-card draggable" id="profileCard" data-component="card">
         <div class="card-bg" id="cardBg"></div>
         <div class="card-upper" id="cardUpper"></div>
@@ -60,9 +60,9 @@
             <svg class="avatar-placeholder" viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
           </div>
           <div class="info-area">
-            <div class="info-text line-1" contenteditable="true" data-key="line1" data-placeholder="昵称"></div>
-            <div class="info-text line-2" contenteditable="true" data-key="line2" data-placeholder="@称号"></div>
-            <div class="info-text line-3" contenteditable="true" data-key="line3" data-placeholder="签名"></div>
+            <div class="info-text line-1" contenteditable="true" data-key="line1" data-placeholder="姓名"></div>
+            <div class="info-text line-2" contenteditable="true" data-key="line2" data-placeholder="身份/称号"></div>
+            <div class="info-text line-3" contenteditable="true" data-key="line3" data-placeholder="签名/心情"></div>
             <div class="info-text line-4">
               <svg class="location-icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               <span class="location-text" contenteditable="true"></span>
@@ -72,27 +72,29 @@
         <button class="edit-btn" data-edit-target="card">编辑</button>
       </div>
 
+      <!-- 2. 消息卡片 -->
       <div class="message-card draggable" id="messageCard" data-component="message">
         <div class="message-avatar" id="messageAvatar">
           <img id="messageAvatarImg" alt="角色头像">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
         </div>
         <div class="message-content">
-          <div class="message-preview" id="messagePreview" contenteditable="true">暂无联通角色...</div>
+          <div class="message-preview" id="messagePreview" contenteditable="true">暂无消息...</div>
         </div>
-        <div class="message-badge">
-          <svg class="badge-icon" viewBox="0 0 20 22">
+        <div class="message-badge" id="messageBadge">
+          <svg class="badge-icon" id="messageBadgeIcon" viewBox="0 0 20 22">
             <path d="M4 2 L16 2 Q18 2 18 4 L18 12 Q18 14 16 14 L11 14 L10 17 L9 14 L4 14 Q2 14 2 12 L2 4 Q2 2 4 2 Z" 
                   stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
             <circle cx="6" cy="8" r="1" fill="currentColor"/>
             <circle cx="10" cy="8" r="1" fill="currentColor"/>
             <circle cx="14" cy="8" r="1" fill="currentColor"/>
           </svg>
-          <span id="messageBadgeText">最新讯息</span>
+          <span id="messageBadgeText">new message</span>
         </div>
+        <button class="edit-btn" data-edit-target="message">编辑</button>
       </div>
 
-      <!-- 情侣展示区 -->
+      <!-- 3. 情侣展示区 -->
       <div class="couple-section draggable" id="coupleSection" data-component="couple">
         <div class="couple-left">
           <div class="couple-icons">
@@ -171,12 +173,13 @@
             </div>
           </div>
         </div>
+        <button class="edit-btn" data-edit-target="couple">编辑</button>
       </div>
 
     </div>
 
     <!-- ========================================== -->
-    <!-- App 空壳页面 (内部全部由 JS 自动渲染填入) -->
+    <!-- App 空壳页面 -->
     <!-- ========================================== -->
     <div class="page app-page" data-page="wechat"></div>
     <div class="page app-page" data-page="offline"></div>
@@ -202,7 +205,6 @@
       </div>
       <div class="tab-item" data-tab="offline">
         <div class="tab-icon">
-          <!-- 剧情/线下：微缩故事画卷与闪耀星芒 -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
