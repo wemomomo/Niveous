@@ -277,3 +277,15 @@ html, body {
   padding: 0 16px 20px; 
   -webkit-overflow-scrolling: touch; 
 }
+
+/* 彻底隐藏 Netlify 注入的调试抽屉与绿色小条 */
+#netlify-drawer,
+.netlify-drawer,
+[data-netlify-deploy-id],
+iframe[src*="netlify"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
