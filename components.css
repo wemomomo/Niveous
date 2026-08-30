@@ -2,7 +2,7 @@
 /* ========== 个人卡片 ========== */
 .profile-card {
   width: 100%;
-  aspect-ratio: 16 / 11;
+  aspect-ratio: 16 / 11.5;
   border-radius: 20px;
   position: relative;
   overflow: hidden;
