@@ -1,3 +1,4 @@
+
 (function(){
   'use strict';
 
@@ -9,7 +10,7 @@
     setupCoupleStyle();
   }
 
-  // ============ 卡片模块 ============
+  // ============ 个人卡片模块 ============
   function setupCard() {
     var cardBg = document.getElementById('cardBg');
     var cardUpper = document.getElementById('cardUpper');
@@ -24,6 +25,13 @@
     var avatarFileInput = document.createElement('input');
     avatarFileInput.type = 'file'; avatarFileInput.accept = 'image/*';
 
+    // 状态保险箱：保证文字与样式永久并存，互不覆盖
+    var cardState = {
+      texts: { line1: '', line2: '', line3: '', line4text: '' },
+      style: { glass: false, color: '#ffffff', opacity: 80 }
+    };
+
+    // --- 背景点击 ---
     cardUpper.addEventListener('click', function() {
       if (document.querySelector('.app-shell').classList.contains('edit-mode')) return;
       PhotoAction.show(
@@ -32,11 +40,11 @@
           cardBg.style.backgroundImage = '';
           cardBg.classList.remove('has-bg');
           AppDB.delete('card_bg');
-          saveCardState();
         }
       );
     });
 
+    // --- 头像点击 ---
     avatarBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       if (document.querySelector('.app-shell').classList.contains('edit-mode')) return;
@@ -46,11 +54,11 @@
           avatarImg.src = '';
           avatarBtn.classList.remove('has-img');
           AppDB.delete('card_avatar');
-          saveCardState();
         }
       );
     });
 
+    // --- 背景选择与裁剪 ---
     bgFileInput.addEventListener('change', function() {
       var file = this.files[0];
       if (!file) return;
@@ -60,13 +68,13 @@
           cardBg.style.backgroundImage = 'url(' + croppedData + ')';
           cardBg.classList.add('has-bg');
           AppDB.save('card_bg', croppedData);
-          saveCardState();
         });
       };
       reader.readAsDataURL(file);
       this.value = '';
     });
 
+    // --- 头像选择与裁剪 ---
     avatarFileInput.addEventListener('change', function() {
       var file = this.files[0];
       if (!file) return;
@@ -76,16 +84,37 @@
           avatarImg.src = croppedData;
           avatarBtn.classList.add('has-img');
           AppDB.save('card_avatar', croppedData);
-          saveCardState();
         });
       };
       reader.readAsDataURL(file);
       this.value = '';
     });
 
-    infoTexts.forEach(function(el) { el.addEventListener('blur', saveCardState); });
-    if (locationText) locationText.addEventListener('blur', saveCardState);
+    // --- 文字即时同步与保存（双重监听，防止杀后台丢失） ---
+    infoTexts.forEach(function(el) {
+      var key = el.dataset.key;
+      el.addEventListener('input', function() {
+        cardState.texts[key] = this.textContent.trim();
+        AppDB.save('card_state', cardState);
+      });
+      el.addEventListener('blur', function() {
+        cardState.texts[key] = this.textContent.trim();
+        AppDB.save('card_state', cardState);
+      });
+    });
 
+    if (locationText) {
+      locationText.addEventListener('input', function() {
+        cardState.texts.line4text = this.textContent.trim();
+        AppDB.save('card_state', cardState);
+      });
+      locationText.addEventListener('blur', function() {
+        cardState.texts.line4text = this.textContent.trim();
+        AppDB.save('card_state', cardState);
+      });
+    }
+
+    // --- 编辑气泡弹窗 ---
     var cardEditBtn = document.querySelector('[data-edit-target="card"]');
     var cardPopup = null;
     var cardPopupMask = null;
@@ -116,12 +145,12 @@
           + '<span class="popup-card-value" id="cardOpacityValue">80%</span></div>';
         document.body.appendChild(cardPopup);
 
-        document.getElementById('cardGlassToggle').addEventListener('change', applyCardOverlay);
-        document.getElementById('cardColorPicker').addEventListener('input', applyCardOverlay);
-        document.getElementById('cardOpacitySlider').addEventListener('input', applyCardOverlay);
+        document.getElementById('cardGlassToggle').addEventListener('change', applyCardStyleFromControls);
+        document.getElementById('cardColorPicker').addEventListener('input', applyCardStyleFromControls);
+        document.getElementById('cardOpacitySlider').addEventListener('input', applyCardStyleFromControls);
       }
 
-      loadStyleToControls();
+      loadControlsFromState();
       positionCardPopup();
       cardPopupMask.classList.add('show');
       cardPopup.classList.add('show');
@@ -130,7 +159,6 @@
     function hideCardPopup() {
       if (cardPopup) cardPopup.classList.remove('show');
       if (cardPopupMask) cardPopupMask.classList.remove('show');
-      saveCardState();
     }
 
     function positionCardPopup() {
@@ -156,90 +184,81 @@
       cardPopup.style.top = top + 'px';
     }
 
-    function loadStyleToControls() {
-      AppDB.get('card_state', function(state) {
-        if (!state || !state.style) return;
-        var glassToggle = document.getElementById('cardGlassToggle');
-        var colorPicker = document.getElementById('cardColorPicker');
-        var opacitySlider = document.getElementById('cardOpacitySlider');
-        var opacityValue = document.getElementById('cardOpacityValue');
-        if (glassToggle) glassToggle.checked = state.style.glass;
-        if (colorPicker) colorPicker.value = state.style.color;
-        if (opacitySlider) opacitySlider.value = state.style.opacity;
-        if (opacityValue) opacityValue.textContent = state.style.opacity + '%';
-        applyCardOverlay();
-      });
+    function loadControlsFromState() {
+      var glassToggle = document.getElementById('cardGlassToggle');
+      var colorPicker = document.getElementById('cardColorPicker');
+      var opacitySlider = document.getElementById('cardOpacitySlider');
+      var opacityValue = document.getElementById('cardOpacityValue');
+      if (glassToggle) glassToggle.checked = !!cardState.style.glass;
+      if (colorPicker) colorPicker.value = cardState.style.color || '#ffffff';
+      if (opacitySlider) opacitySlider.value = (cardState.style.opacity !== undefined) ? cardState.style.opacity : 80;
+      if (opacityValue) opacityValue.textContent = (cardState.style.opacity !== undefined ? cardState.style.opacity : 80) + '%';
     }
 
-    function applyCardOverlay() {
+    function applyCardStyleFromControls() {
       var colorPicker = document.getElementById('cardColorPicker');
       var opacitySlider = document.getElementById('cardOpacitySlider');
       var glassToggle = document.getElementById('cardGlassToggle');
       var opacityValue = document.getElementById('cardOpacityValue');
       if (!colorPicker || !opacitySlider || !glassToggle) return;
-      var color = colorPicker.value;
-      var opacity = opacitySlider.value / 100;
+
+      cardState.style.glass = glassToggle.checked;
+      cardState.style.color = colorPicker.value;
+      cardState.style.opacity = parseInt(opacitySlider.value, 10);
+
       if (opacityValue) opacityValue.textContent = opacitySlider.value + '%';
-      var r = parseInt(color.slice(1,3), 16);
-      var g = parseInt(color.slice(3,5), 16);
-      var b = parseInt(color.slice(5,7), 16);
-      lowerOverlay.style.backgroundColor = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
-      if (glassToggle.checked) lowerOverlay.classList.add('glass-effect');
-      else lowerOverlay.classList.remove('glass-effect');
+      renderCardOverlay(cardState.style);
+      AppDB.save('card_state', cardState);
     }
 
-    function saveCardState() {
-      var glassToggle = document.getElementById('cardGlassToggle');
-      var colorPicker = document.getElementById('cardColorPicker');
-      var opacitySlider = document.getElementById('cardOpacitySlider');
-      var state = {
-        hasBg: cardBg.classList.contains('has-bg'),
-        hasAvatar: avatarBtn.classList.contains('has-img'),
-        texts: {},
-        style: {
-          glass: glassToggle ? glassToggle.checked : false,
-          color: colorPicker ? colorPicker.value : '#ffffff',
-          opacity: opacitySlider ? opacitySlider.value : 80
-        }
-      };
-      infoTexts.forEach(function(el) {
-        var key = el.dataset.key;
-        if (key !== 'line4') state.texts[key] = el.textContent.trim();
-      });
-      state.texts['line4text'] = locationText ? locationText.textContent.trim() : '';
-      AppDB.save('card_state', state);
+    function renderCardOverlay(style) {
+      if (!lowerOverlay || !style) return;
+      var color = style.color || '#ffffff';
+      var opacity = (style.opacity !== undefined ? style.opacity : 80) / 100;
+      var r = parseInt(color.slice(1,3), 16) || 255;
+      var g = parseInt(color.slice(3,5), 16) || 255;
+      var b = parseInt(color.slice(5,7), 16) || 255;
+      lowerOverlay.style.backgroundColor = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
+      if (style.glass) lowerOverlay.classList.add('glass-effect');
+      else lowerOverlay.classList.remove('glass-effect');
     }
 
     function loadCardState() {
       AppDB.get('card_bg', function(bgData) {
-        if (bgData) {
+        if (bgData && cardBg) {
           cardBg.style.backgroundImage = 'url(' + bgData + ')';
           cardBg.classList.add('has-bg');
         }
       });
       AppDB.get('card_avatar', function(avatarData) {
-        if (avatarData) {
+        if (avatarData && avatarImg) {
           avatarImg.src = avatarData;
           avatarBtn.classList.add('has-img');
         }
       });
-      AppDB.get('card_state', function(state) {
-        if (!state) return;
-        if (state.texts) {
-          Object.keys(state.texts).forEach(function(key) {
-            if (key === 'line4text') {
-              if (locationText) locationText.textContent = state.texts[key];
-            } else {
-              var el = document.querySelector('[data-key="' + key + '"]');
-              if (el) el.textContent = state.texts[key];
-            }
-          });
+      AppDB.get('card_state', function(saved) {
+        if (saved) {
+          if (saved.texts) {
+            Object.keys(saved.texts).forEach(function(key) {
+              cardState.texts[key] = saved.texts[key];
+              if (key === 'line4text') {
+                if (locationText) locationText.textContent = saved.texts[key];
+              } else {
+                var el = document.querySelector('[data-key="' + key + '"]');
+                if (el) el.textContent = saved.texts[key];
+              }
+            });
+          }
+          if (saved.style) {
+            cardState.style.glass = !!saved.style.glass;
+            cardState.style.color = saved.style.color || '#ffffff';
+            cardState.style.opacity = saved.style.opacity !== undefined ? saved.style.opacity : 80;
+          }
         }
-        if (state.style) {
-          setTimeout(function() { applyCardOverlay(); }, 50);
-        }
+        renderCardOverlay(cardState.style);
       });
     }
+
     loadCardState();
   }
 
@@ -251,6 +270,8 @@
     var messageBadge = document.getElementById('messageBadge');
     var avatarFileInput = document.createElement('input');
     avatarFileInput.type = 'file'; avatarFileInput.accept = 'image/*';
+
+    var msgBadgeState = { bgColor: '#8e8e93', textColor: '#ffffff' };
 
     if (messageAvatar) {
       messageAvatar.addEventListener('click', function(e) {
@@ -287,11 +308,15 @@
         messageAvatar.classList.add('has-img');
       }
     });
+
     AppDB.get('message_preview', function(text) {
       if (text && messagePreview) messagePreview.textContent = text;
     });
 
     if (messagePreview) {
+      messagePreview.addEventListener('input', function() {
+        AppDB.save('message_preview', this.textContent.trim());
+      });
       messagePreview.addEventListener('blur', function() {
         AppDB.save('message_preview', this.textContent.trim());
       });
@@ -338,7 +363,6 @@
     function hideMsgPopup() {
       if (msgPopup) msgPopup.classList.remove('show');
       if (msgPopupMask) msgPopupMask.classList.remove('show');
-      saveMsgBadgeState();
     }
 
     function positionMsgPopup() {
@@ -369,37 +393,29 @@
       var textPicker = document.getElementById('msgBadgeTextColor');
       if (!bgPicker || !textPicker || !messageBadge) return;
 
-      messageBadge.style.backgroundColor = bgPicker.value;
-      messageBadge.style.color = textPicker.value;
-    }
+      msgBadgeState.bgColor = bgPicker.value;
+      msgBadgeState.textColor = textPicker.value;
 
-    function saveMsgBadgeState() {
-      var bgPicker = document.getElementById('msgBadgeBgColor');
-      var textPicker = document.getElementById('msgBadgeTextColor');
-      if (!bgPicker || !textPicker) return;
-      var state = {
-        bgColor: bgPicker.value,
-        textColor: textPicker.value
-      };
-      AppDB.save('msg_badge_state', state);
+      messageBadge.style.backgroundColor = msgBadgeState.bgColor;
+      messageBadge.style.color = msgBadgeState.textColor;
+      AppDB.save('msg_badge_state', msgBadgeState);
     }
 
     function loadMsgBadgeControls() {
-      AppDB.get('msg_badge_state', function(state) {
-        if (!state) return;
-        var bgPicker = document.getElementById('msgBadgeBgColor');
-        var textPicker = document.getElementById('msgBadgeTextColor');
-        if (bgPicker) bgPicker.value = state.bgColor || '#8e8e93';
-        if (textPicker) textPicker.value = state.textColor || '#ffffff';
-        applyMsgBadgeStyle();
-      });
+      var bgPicker = document.getElementById('msgBadgeBgColor');
+      var textPicker = document.getElementById('msgBadgeTextColor');
+      if (bgPicker) bgPicker.value = msgBadgeState.bgColor || '#8e8e93';
+      if (textPicker) textPicker.value = msgBadgeState.textColor || '#ffffff';
     }
 
-    // 初始化加载角标样式
-    AppDB.get('msg_badge_state', function(state) {
-      if (state && messageBadge) {
-        if (state.bgColor) messageBadge.style.backgroundColor = state.bgColor;
-        if (state.textColor) messageBadge.style.color = state.textColor;
+    AppDB.get('msg_badge_state', function(saved) {
+      if (saved) {
+        msgBadgeState.bgColor = saved.bgColor || '#8e8e93';
+        msgBadgeState.textColor = saved.textColor || '#ffffff';
+      }
+      if (messageBadge) {
+        messageBadge.style.backgroundColor = msgBadgeState.bgColor;
+        messageBadge.style.color = msgBadgeState.textColor;
       }
     });
   }
@@ -409,6 +425,15 @@
     var coupleEditBtn = document.querySelector('[data-edit-target="couple"]');
     var couplePopup = null;
     var couplePopupMask = null;
+
+    var cpState = {
+      glass: false,
+      speechBg: '#f0f0f3',
+      speechOpacity: 100,
+      speechText: '#3c3c43',
+      avatarBorder: '#d1d1d6',
+      nameText: '#1c1c1e'
+    };
 
     if (coupleEditBtn) {
       coupleEditBtn.addEventListener('click', function(e) {
@@ -459,7 +484,6 @@
     function hideCouplePopup() {
       if (couplePopup) couplePopup.classList.remove('show');
       if (couplePopupMask) couplePopupMask.classList.remove('show');
-      saveCoupleStyleState();
     }
 
     function positionCouplePopup() {
@@ -485,6 +509,24 @@
       couplePopup.style.top = top + 'px';
     }
 
+    function loadCoupleStyleControls() {
+      var glassToggle = document.getElementById('cpGlassToggle');
+      var speechBg = document.getElementById('cpSpeechBgColor');
+      var speechOpacity = document.getElementById('cpSpeechOpacity');
+      var speechOpacityVal = document.getElementById('cpSpeechOpacityVal');
+      var speechText = document.getElementById('cpSpeechTextColor');
+      var avatarBorder = document.getElementById('cpAvatarBorderColor');
+      var nameText = document.getElementById('cpNameTextColor');
+
+      if (glassToggle) glassToggle.checked = !!cpState.glass;
+      if (speechBg) speechBg.value = cpState.speechBg || '#f0f0f3';
+      if (speechOpacity) speechOpacity.value = cpState.speechOpacity !== undefined ? cpState.speechOpacity : 100;
+      if (speechOpacityVal) speechOpacityVal.textContent = (cpState.speechOpacity !== undefined ? cpState.speechOpacity : 100) + '%';
+      if (speechText) speechText.value = cpState.speechText || '#3c3c43';
+      if (avatarBorder) avatarBorder.value = cpState.avatarBorder || '#d1d1d6';
+      if (nameText) nameText.value = cpState.nameText || '#1c1c1e';
+    }
+
     function applyCoupleStylesFromControls() {
       var glassToggle = document.getElementById('cpGlassToggle');
       var speechBg = document.getElementById('cpSpeechBgColor');
@@ -496,118 +538,62 @@
 
       if (!speechBg || !speechOpacity) return;
 
-      var opacity = speechOpacity.value / 100;
+      cpState.glass = glassToggle.checked;
+      cpState.speechBg = speechBg.value;
+      cpState.speechOpacity = parseInt(speechOpacity.value, 10);
+      cpState.speechText = speechText.value;
+      cpState.avatarBorder = avatarBorder.value;
+      cpState.nameText = nameText.value;
+
       if (speechOpacityVal) speechOpacityVal.textContent = speechOpacity.value + '%';
-
-      var r = parseInt(speechBg.value.slice(1,3), 16);
-      var g = parseInt(speechBg.value.slice(3,5), 16);
-      var b = parseInt(speechBg.value.slice(5,7), 16);
-      var rgbaBg = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
-
-      // 气泡
-      var s1 = document.getElementById('coupleSpeech1');
-      var s2 = document.getElementById('coupleSpeech2');
-      [s1, s2].forEach(function(el) {
-        if (!el) return;
-        el.style.backgroundColor = rgbaBg;
-        el.style.color = speechText.value;
-        if (glassToggle.checked) el.classList.add('glass-effect');
-        else el.classList.remove('glass-effect');
-      });
-
-      // 头像框颜色
-      var c1 = document.getElementById('coupleAvatar1');
-      var c2 = document.getElementById('coupleAvatar2');
-      [c1, c2].forEach(function(el) {
-        if (!el) return;
-        el.style.boxShadow = '0 0 0 1px ' + avatarBorder.value;
-      });
-
-      // 名字颜色
-      var n1 = document.getElementById('coupleName1');
-      var n2 = document.getElementById('coupleName2');
-      [n1, n2].forEach(function(el) {
-        if (!el) return;
-        el.style.color = nameText.value;
-      });
+      renderCoupleStyles(cpState);
+      AppDB.save('couple_style_state', cpState);
     }
 
-    function saveCoupleStyleState() {
-      var glassToggle = document.getElementById('cpGlassToggle');
-      var speechBg = document.getElementById('cpSpeechBgColor');
-      var speechOpacity = document.getElementById('cpSpeechOpacity');
-      var speechText = document.getElementById('cpSpeechTextColor');
-      var avatarBorder = document.getElementById('cpAvatarBorderColor');
-      var nameText = document.getElementById('cpNameTextColor');
-
-      if (!speechBg) return;
-
-      var state = {
-        glass: glassToggle.checked,
-        speechBg: speechBg.value,
-        speechOpacity: speechOpacity.value,
-        speechText: speechText.value,
-        avatarBorder: avatarBorder.value,
-        nameText: nameText.value
-      };
-      AppDB.save('couple_style_state', state);
-    }
-
-    function loadCoupleStyleControls() {
-      AppDB.get('couple_style_state', function(state) {
-        if (!state) return;
-        var glassToggle = document.getElementById('cpGlassToggle');
-        var speechBg = document.getElementById('cpSpeechBgColor');
-        var speechOpacity = document.getElementById('cpSpeechOpacity');
-        var speechOpacityVal = document.getElementById('cpSpeechOpacityVal');
-        var speechText = document.getElementById('cpSpeechTextColor');
-        var avatarBorder = document.getElementById('cpAvatarBorderColor');
-        var nameText = document.getElementById('cpNameTextColor');
-
-        if (glassToggle) glassToggle.checked = !!state.glass;
-        if (speechBg) speechBg.value = state.speechBg || '#f0f0f3';
-        if (speechOpacity) speechOpacity.value = state.speechOpacity || 100;
-        if (speechOpacityVal) speechOpacityVal.textContent = (state.speechOpacity || 100) + '%';
-        if (speechText) speechText.value = state.speechText || '#3c3c43';
-        if (avatarBorder) avatarBorder.value = state.avatarBorder || '#d1d1d6';
-        if (nameText) nameText.value = state.nameText || '#1c1c1e';
-        applyCoupleStylesFromControls();
-      });
-    }
-
-    // 初始化时直接应用
-    AppDB.get('couple_style_state', function(state) {
+    function renderCoupleStyles(state) {
       if (!state) return;
-      var s1 = document.getElementById('coupleSpeech1');
-      var s2 = document.getElementById('coupleSpeech2');
-      var c1 = document.getElementById('coupleAvatar1');
-      var c2 = document.getElementById('coupleAvatar2');
-      var n1 = document.getElementById('coupleName1');
-      var n2 = document.getElementById('coupleName2');
-
-      var opacity = (state.speechOpacity || 100) / 100;
+      var opacity = (state.speechOpacity !== undefined ? state.speechOpacity : 100) / 100;
       var bgHex = state.speechBg || '#f0f0f3';
-      var r = parseInt(bgHex.slice(1,3), 16);
-      var g = parseInt(bgHex.slice(3,5), 16);
-      var b = parseInt(bgHex.slice(5,7), 16);
+      var r = parseInt(bgHex.slice(1,3), 16) || 240;
+      var g = parseInt(bgHex.slice(3,5), 16) || 240;
+      var b = parseInt(bgHex.slice(5,7), 16) || 243;
       var rgbaBg = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
 
+      var s1 = document.getElementById('coupleSpeech1');
+      var s2 = document.getElementById('coupleSpeech2');
       [s1, s2].forEach(function(el) {
         if (!el) return;
         el.style.backgroundColor = rgbaBg;
         if (state.speechText) el.style.color = state.speechText;
         if (state.glass) el.classList.add('glass-effect');
+        else el.classList.remove('glass-effect');
       });
 
+      var c1 = document.getElementById('coupleAvatar1');
+      var c2 = document.getElementById('coupleAvatar2');
       [c1, c2].forEach(function(el) {
         if (!el) return;
         if (state.avatarBorder) el.style.boxShadow = '0 0 0 1px ' + state.avatarBorder;
       });
 
+      var n1 = document.getElementById('coupleName1');
+      var n2 = document.getElementById('coupleName2');
       [n1, n2].forEach(function(el) {
         if (!el) return;
         if (state.nameText) el.style.color = state.nameText;
       });
+    }
+
+    AppDB.get('couple_style_state', function(saved) {
+      if (saved) {
+        cpState.glass = !!saved.glass;
+        cpState.speechBg = saved.speechBg || '#f0f0f3';
+        cpState.speechOpacity = saved.speechOpacity !== undefined ? saved.speechOpacity : 100;
+        cpState.speechText = saved.speechText || '#3c3c43';
+        cpState.avatarBorder = saved.avatarBorder || '#d1d1d6';
+        cpState.nameText = saved.nameText || '#1c1c1e';
+      }
+      renderCoupleStyles(cpState);
     });
   }
 
@@ -687,6 +673,11 @@
     editables.forEach(function(pair) {
       var el = document.getElementById(pair[0]);
       if (el) {
+        el.addEventListener('input', function() {
+          coupleData[pair[1]] = this.textContent.trim() || '';
+          saveCoupleData();
+          if (pair[1] === 'name1') updateDateName();
+        });
         el.addEventListener('blur', function() {
           coupleData[pair[1]] = this.textContent.trim() || '';
           saveCoupleData();
