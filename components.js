@@ -418,7 +418,8 @@
       speechOpacity: 100,
       speechText: '#3c3c43',
       avatarBorder: '#d1d1d6',
-      nameText: '#1c1c1e'
+      nameText: '#1c1c1e',
+      dateCardBg: '#f8f8fa'
     };
 
     if (coupleEditBtn) {
@@ -450,7 +451,9 @@
           + '<div class="popup-card-row"><span>头像框颜色</span>'
           + '<input type="color" id="cpAvatarBorderColor" value="#d1d1d6"></div>'
           + '<div class="popup-card-row"><span>名字字体颜色</span>'
-          + '<input type="color" id="cpNameTextColor" value="#1c1c1e"></div>';
+          + '<input type="color" id="cpNameTextColor" value="#1c1c1e"></div>'
+          + '<div class="popup-card-row"><span>日期背景色</span>'
+          + '<input type="color" id="cpDateCardBgColor" value="#f8f8fa"></div>';
         document.body.appendChild(couplePopup);
 
         document.getElementById('cpGlassToggle').addEventListener('change', applyCoupleStylesFromControls);
@@ -459,6 +462,7 @@
         document.getElementById('cpSpeechTextColor').addEventListener('input', applyCoupleStylesFromControls);
         document.getElementById('cpAvatarBorderColor').addEventListener('input', applyCoupleStylesFromControls);
         document.getElementById('cpNameTextColor').addEventListener('input', applyCoupleStylesFromControls);
+        document.getElementById('cpDateCardBgColor').addEventListener('input', applyCoupleStylesFromControls);
       }
 
       loadCoupleStyleControls();
@@ -480,6 +484,7 @@
       var speechText = document.getElementById('cpSpeechTextColor');
       var avatarBorder = document.getElementById('cpAvatarBorderColor');
       var nameText = document.getElementById('cpNameTextColor');
+      var dateCardBg = document.getElementById('cpDateCardBgColor');
 
       if (glassToggle) glassToggle.checked = !!cpState.glass;
       if (speechBg) speechBg.value = cpState.speechBg || '#f0f0f3';
@@ -488,6 +493,7 @@
       if (speechText) speechText.value = cpState.speechText || '#3c3c43';
       if (avatarBorder) avatarBorder.value = cpState.avatarBorder || '#d1d1d6';
       if (nameText) nameText.value = cpState.nameText || '#1c1c1e';
+      if (dateCardBg) dateCardBg.value = cpState.dateCardBg || '#f8f8fa';
     }
 
     function applyCoupleStylesFromControls() {
@@ -498,6 +504,7 @@
       var speechText = document.getElementById('cpSpeechTextColor');
       var avatarBorder = document.getElementById('cpAvatarBorderColor');
       var nameText = document.getElementById('cpNameTextColor');
+      var dateCardBg = document.getElementById('cpDateCardBgColor');
 
       if (!speechBg || !speechOpacity) return;
 
@@ -507,6 +514,7 @@
       cpState.speechText = speechText.value;
       cpState.avatarBorder = avatarBorder.value;
       cpState.nameText = nameText.value;
+      if (dateCardBg) cpState.dateCardBg = dateCardBg.value;
 
       if (speechOpacityVal) speechOpacityVal.textContent = speechOpacity.value + '%';
       renderCoupleStyles(cpState);
@@ -545,6 +553,11 @@
         if (!el) return;
         if (state.nameText) el.style.color = state.nameText;
       });
+
+      var dateCard = document.getElementById('coupleDateCard');
+      if (dateCard && state.dateCardBg) {
+        dateCard.style.backgroundColor = state.dateCardBg;
+      }
     }
 
     AppDB.get('couple_style_state', function(saved) {
@@ -555,6 +568,7 @@
         cpState.speechText = saved.speechText || '#3c3c43';
         cpState.avatarBorder = saved.avatarBorder || '#d1d1d6';
         cpState.nameText = saved.nameText || '#1c1c1e';
+        cpState.dateCardBg = saved.dateCardBg || '#f8f8fa';
       }
       renderCoupleStyles(cpState);
     });
