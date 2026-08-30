@@ -124,6 +124,7 @@
   justify-content: center;
   gap: 1px;
   color: #1a1a1a;
+  margin-bottom: 2px;
   -webkit-user-select: none;
   user-select: none;
 }
