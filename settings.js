@@ -2,305 +2,690 @@
 (function(){
   'use strict';
 
-  var PARAM_DEFAULTS = { temperature: 0.8, freqPenalty: 0.3, presPenalty: 0.3 };
-  var apiConfigs = [];
-  var activeApi = null;
-  var apiParams = null; 
-  var currentTab = 'config';
-  var editingIdx = -1;
+  window.addEventListener('dbReady', init);
+
+  function init() {
+    setupHomeBg();
+    setupCard();
+    setupMessage();
+  }
+
+  // ============ 全局全屏壁纸模块 ============
+  function setupHomeBg() {
+    var bgLayer = document.getElementById('homeBgLayer');
+    var addBgBtn = document.getElementById('addHomeBgBtn');
+    var bgFileInput = document.createElement('input');
+    bgFileInput.type = 'file'; bgFileInput.accept = 'image/*';
+
+    if (addBgBtn) {
+      addBgBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        PhotoAction.show(
+          function() { bgFileInput.click(); },
+          function() {
+            if (bgLayer) bgLayer.style.backgroundImage = '';
+            AppDB.delete('home_bg_img');
+          }
+        );
+      });
+    }
+
+    bgFileInput.addEventListener('change', function() {
+      var file = this.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        AppCropper.open(e.target.result, { aspectRatio: 9/16 }, function(croppedData) {
+          if (bgLayer) bgLayer.style.backgroundImage = 'url(' + croppedData + ')';
+          AppDB.save('home_bg_img', croppedData);
+        });
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    });
+
+    AppDB.get('home_bg_img', function(bgData) {
+      if (bgData && bgLayer) {
+        bgLayer.style.backgroundImage = 'url(' + bgData + ')';
+      } else if (bgLayer) {
+        bgLayer.style.backgroundImage = '';
+      }
+    });
+  }
+
+  // ============ 个人卡片模块 ============
+  function setupCard() {
+    var cardBg = document.getElementById('cardBg');
+    var cardUpper = document.getElementById('cardUpper');
+    var avatarBtn = document.getElementById('avatarBtn');
+    var avatarImg = document.getElementById('avatarImg');
+    var lowerOverlay = document.getElementById('lowerOverlay');
+    var infoTexts = document.querySelectorAll('.info-text[data-key]');
+    var locationText = document.querySelector('.location-text');
+
+    var bgFileInput = document.createElement('input');
+    bgFileInput.type = 'file'; bgFileInput.accept = 'image/*';
+    var avatarFileInput = document.createElement('input');
+    avatarFileInput.type = 'file'; avatarFileInput.accept = 'image/*';
+
+    cardUpper.addEventListener('click', function() {
+      if (document.querySelector('.app-shell').classList.contains('edit-mode')) return;
+      PhotoAction.show(
+        function() { bgFileInput.click(); },
+        function() {
+          cardBg.style.backgroundImage = '';
+          cardBg.classList.remove('has-bg');
+          AppDB.delete('card_bg');
+          saveCardState();
+        }
+      );
+    });
+
+    avatarBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (document.querySelector('.app-shell').classList.contains('edit-mode')) return;
+      PhotoAction.show(
+        function() { avatarFileInput.click(); },
+        function() {
+          avatarImg.src = '';
+          avatarBtn.classList.remove('has-img');
+          AppDB.delete('card_avatar');
+          saveCardState();
+        }
+      );
+    });
+
+    bgFileInput.addEventListener('change', function() {
+      var file = this.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        AppCropper.open(e.target.result, { aspectRatio: 16/11 }, function(croppedData) {
+          cardBg.style.backgroundImage = 'url(' + croppedData + ')';
+          cardBg.classList.add('has-bg');
+          AppDB.save('card_bg', croppedData);
+          saveCardState();
+        });
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    });
+
+    avatarFileInput.addEventListener('change', function() {
+      var file = this.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        AppCropper.open(e.target.result, { aspectRatio: 1 }, function(croppedData) {
+          avatarImg.src = croppedData;
+          avatarBtn.classList.add('has-img');
+          AppDB.save('card_avatar', croppedData);
+          saveCardState();
+        });
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    });
+
+    infoTexts.forEach(function(el) { el.addEventListener('blur', saveCardState); });
+    if (locationText) locationText.addEventListener('blur', saveCardState);
+
+    var cardEditBtn = document.querySelector('[data-edit-target="card"]');
+    var cardPopup = null;
+    var cardPopupMask = null;
+
+    if (cardEditBtn) {
+      cardEditBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        showCardPopup();
+      });
+    }
+
+    function showCardPopup() {
+      if (!cardPopup) {
+        cardPopupMask = document.createElement('div');
+        cardPopupMask.className = 'popup-mask';
+        document.body.appendChild(cardPopupMask);
+        cardPopupMask.addEventListener('click', hideCardPopup);
+
+        cardPopup = document.createElement('div');
+        cardPopup.className = 'popup-card';
+        cardPopup.innerHTML = '<div class="popup-card-title">卡片设置</div>'
+          + '<div class="popup-card-row"><span>毛玻璃</span>'
+          + '<div class="toggle-switch"><input type="checkbox" id="cardGlassToggle"><label for="cardGlassToggle"></label></div></div>'
+          + '<div class="popup-card-row"><span>背景颜色</span>'
+          + '<input type="color" id="cardColorPicker" value="#ffffff"></div>'
+          + '<div class="popup-card-row"><span>透明度</span>'
+          + '<input type="range" id="cardOpacitySlider" min="0" max="100" value="80">'
+          + '<span class="popup-card-value" id="cardOpacityValue">80%</span></div>';
+        document.body.appendChild(cardPopup);
+
+        document.getElementById('cardGlassToggle').addEventListener('change', applyCardOverlay);
+        document.getElementById('cardColorPicker').addEventListener('input', applyCardOverlay);
+        document.getElementById('cardOpacitySlider').addEventListener('input', applyCardOverlay);
+      }
+
+      loadStyleToControls();
+      positionCardPopup();
+      cardPopupMask.classList.add('show');
+      cardPopup.classList.add('show');
+    }
+
+    function hideCardPopup() {
+      if (cardPopup) cardPopup.classList.remove('show');
+      if (cardPopupMask) cardPopupMask.classList.remove('show');
+      saveCardState();
+    }
+
+    function positionCardPopup() {
+      var cardRect = document.getElementById('profileCard').getBoundingClientRect();
+      var windowW = window.innerWidth;
+
+      cardPopup.style.visibility = 'hidden';
+      cardPopup.style.display = 'block';
+      var popupW = cardPopup.offsetWidth;
+      cardPopup.style.visibility = '';
+      cardPopup.style.display = '';
+
+      var left = cardRect.left + cardRect.width / 2 - popupW / 2;
+      var top = cardRect.bottom + 10;
+
+      if (left < 12) left = 12;
+      if (left + popupW > windowW - 12) left = windowW - popupW - 12;
+
+      cardPopup.style.left = left + 'px';
+      cardPopup.style.top = top + 'px';
+    }
+
+    function loadStyleToControls() {
+      AppDB.get('card_state', function(state) {
+        if (!state || !state.style) return;
+        var glassToggle = document.getElementById('cardGlassToggle');
+        var colorPicker = document.getElementById('cardColorPicker');
+        var opacitySlider = document.getElementById('cardOpacitySlider');
+        var opacityValue = document.getElementById('cardOpacityValue');
+        if (glassToggle) glassToggle.checked = state.style.glass;
+        if (colorPicker) colorPicker.value = state.style.color;
+        if (opacitySlider) opacitySlider.value = state.style.opacity;
+        if (opacityValue) opacityValue.textContent = state.style.opacity + '%';
+        applyCardOverlay();
+      });
+    }
+
+    function applyCardOverlay() {
+      var colorPicker = document.getElementById('cardColorPicker');
+      var opacitySlider = document.getElementById('cardOpacitySlider');
+      var glassToggle = document.getElementById('cardGlassToggle');
+      var opacityValue = document.getElementById('cardOpacityValue');
+      if (!colorPicker || !opacitySlider || !glassToggle) return;
+      var color = colorPicker.value;
+      var opacity = opacitySlider.value / 100;
+      if (opacityValue) opacityValue.textContent = opacitySlider.value + '%';
+      var r = parseInt(color.slice(1,3), 16);
+      var g = parseInt(color.slice(3,5), 16);
+      var b = parseInt(color.slice(5,7), 16);
+      lowerOverlay.style.backgroundColor = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
+      if (glassToggle.checked) lowerOverlay.classList.add('glass-effect');
+      else lowerOverlay.classList.remove('glass-effect');
+    }
+
+    function saveCardState() {
+      var glassToggle = document.getElementById('cardGlassToggle');
+      var colorPicker = document.getElementById('cardColorPicker');
+      var opacitySlider = document.getElementById('cardOpacitySlider');
+      var state = {
+        hasBg: cardBg.classList.contains('has-bg'),
+        hasAvatar: avatarBtn.classList.contains('has-img'),
+        texts: {},
+        style: {
+          glass: glassToggle ? glassToggle.checked : false,
+          color: colorPicker ? colorPicker.value : '#ffffff',
+          opacity: opacitySlider ? opacitySlider.value : 80
+        }
+      };
+      infoTexts.forEach(function(el) {
+        var key = el.dataset.key;
+        if (key !== 'line4') state.texts[key] = el.textContent.trim();
+      });
+      state.texts['line4text'] = locationText ? locationText.textContent.trim() : '';
+      AppDB.save('card_state', state);
+    }
+
+    function loadCardState() {
+      // 显式清理，彻底消灭幽灵背景残留
+      AppDB.get('card_bg', function(bgData) {
+        if (bgData) {
+          cardBg.style.backgroundImage = 'url(' + bgData + ')';
+          cardBg.classList.add('has-bg');
+        } else {
+          cardBg.style.backgroundImage = '';
+          cardBg.classList.remove('has-bg');
+        }
+      });
+      AppDB.get('card_avatar', function(avatarData) {
+        if (avatarData) {
+          avatarImg.src = avatarData;
+          avatarBtn.classList.add('has-img');
+        } else {
+          avatarImg.src = '';
+          avatarBtn.classList.remove('has-img');
+        }
+      });
+      AppDB.get('card_state', function(state) {
+        if (!state) {
+          lowerOverlay.style.backgroundColor = 'rgba(255,255,255,0.8)';
+          lowerOverlay.classList.remove('glass-effect');
+          return;
+        }
+        if (state.texts) {
+          Object.keys(state.texts).forEach(function(key) {
+            if (key === 'line4text') {
+              if (locationText) locationText.textContent = state.texts[key];
+            } else {
+              var el = document.querySelector('[data-key="' + key + '"]');
+              if (el) el.textContent = state.texts[key];
+            }
+          });
+        }
+        if (state.style) {
+          setTimeout(function() {
+            var color = state.style.color || '#ffffff';
+            var opacity = (state.style.opacity !== undefined ? state.style.opacity : 80) / 100;
+            var r = parseInt(color.slice(1,3), 16) || 255;
+            var g = parseInt(color.slice(3,5), 16) || 255;
+            var b = parseInt(color.slice(5,7), 16) || 255;
+            lowerOverlay.style.backgroundColor = 'rgba(' + r + ',' + g + ',' + b + ',' + opacity + ')';
+            if (state.style.glass) lowerOverlay.classList.add('glass-effect');
+            else lowerOverlay.classList.remove('glass-effect');
+          }, 50);
+        }
+      });
+    }
+    loadCardState();
+  }
+
+  // ============ 消息框模块（含胶囊样式精准同步） ============
+  function setupMessage() {
+    var messageAvatar = document.getElementById('messageAvatar');
+    var messageAvatarImg = document.getElementById('messageAvatarImg');
+    var messagePreview = document.getElementById('messagePreview');
+    var messageBadge = document.getElementById('messageBadge');
+    var messageBadgeText = document.getElementById('messageBadgeText');
+    var messageBadgeIcon = document.getElementById('messageBadgeIcon');
+
+    var avatarFileInput = document.createElement('input');
+    avatarFileInput.type = 'file'; avatarFileInput.accept = 'image/*';
+
+    if (messageAvatar) {
+      messageAvatar.addEventListener('click', function(e) {
+        e.stopPropagation();
+        PhotoAction.show(
+          function() { avatarFileInput.click(); },
+          function() {
+            messageAvatarImg.src = '';
+            messageAvatar.classList.remove('has-img');
+            AppDB.delete('message_avatar');
+          }
+        );
+      });
+    }
+
+    avatarFileInput.addEventListener('change', function() {
+      var file = this.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        AppCropper.open(e.target.result, { aspectRatio: 1 }, function(croppedData) {
+          messageAvatarImg.src = croppedData;
+          messageAvatar.classList.add('has-img');
+          AppDB.save('message_avatar', croppedData);
+        });
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    });
+
+    if (messagePreview) {
+      messagePreview.addEventListener('blur', function() {
+        AppDB.save('message_preview', this.textContent.trim());
+      });
+    }
+
+    // 胶囊编辑弹窗
+    var msgEditBtn = document.querySelector('[data-edit-target="message"]');
+    var msgPopup = null;
+    var msgPopupMask = null;
+
+    if (msgEditBtn) {
+      msgEditBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        showMsgPopup();
+      });
+    }
+
+    function showMsgPopup() {
+      if (!msgPopup) {
+        msgPopupMask = document.createElement('div');
+        msgPopupMask.className = 'popup-mask';
+        document.body.appendChild(msgPopupMask);
+        msgPopupMask.addEventListener('click', hideMsgPopup);
+
+        msgPopup = document.createElement('div');
+        msgPopup.className = 'popup-card';
+        msgPopup.innerHTML = '<div class="popup-card-title">消息角标设置</div>'
+          + '<div class="popup-card-row"><span>文字内容</span>'
+          + '<input type="text" id="badgeTextInput" style="width:110px;height:28px;border:1px solid #e5e5ea;border-radius:6px;padding:0 6px;font-size:12px;text-align:center;" value="new message"></div>'
+          + '<div class="popup-card-row"><span>胶囊底色</span>'
+          + '<input type="color" id="badgeBgColor" value="#000000"></div>'
+          + '<div class="popup-card-row"><span>文字/图标颜色</span>'
+          + '<input type="color" id="badgeTextColor" value="#ffffff"></div>';
+        document.body.appendChild(msgPopup);
+
+        document.getElementById('badgeTextInput').addEventListener('input', applyBadgeFromControls);
+        document.getElementById('badgeBgColor').addEventListener('input', applyBadgeFromControls);
+        document.getElementById('badgeTextColor').addEventListener('input', applyBadgeFromControls);
+      }
+
+      loadBadgeControls();
+      positionMsgPopup();
+      msgPopupMask.classList.add('show');
+      msgPopup.classList.add('show');
+    }
+
+    function hideMsgPopup() {
+      if (msgPopup) msgPopup.classList.remove('show');
+      if (msgPopupMask) msgPopupMask.classList.remove('show');
+      saveBadgeState();
+    }
+
+    function positionMsgPopup() {
+      var cardRect = document.getElementById('messageCard').getBoundingClientRect();
+      var windowW = window.innerWidth;
+      msgPopup.style.visibility = 'hidden';
+      msgPopup.style.display = 'block';
+      var popupW = msgPopup.offsetWidth;
+      msgPopup.style.visibility = '';
+      msgPopup.style.display = '';
+
+      var left = cardRect.left + cardRect.width / 2 - popupW / 2;
+      var top = cardRect.bottom + 10;
+      if (left < 12) left = 12;
+      if (left + popupW > windowW - 12) left = windowW - popupW - 12;
+      msgPopup.style.left = left + 'px';
+      msgPopup.style.top = top + 'px';
+    }
+
+    function applyBadgeFromControls() {
+      var t = document.getElementById('badgeTextInput').value;
+      var bg = document.getElementById('badgeBgColor').value;
+      var tc = document.getElementById('badgeTextColor').value;
+      if (messageBadgeText) messageBadgeText.textContent = t;
+      if (messageBadge) messageBadge.style.backgroundColor = bg;
+      if (messageBadge) messageBadge.style.color = tc;
+      if (messageBadgeIcon) messageBadgeIcon.style.color = tc;
+      saveBadgeState();
+    }
+
+    function saveBadgeState() {
+      var textInp = document.getElementById('badgeTextInput');
+      var bgInp = document.getElementById('badgeBgColor');
+      var tcInp = document.getElementById('badgeTextColor');
+      var state = {
+        text: textInp ? textInp.value : (messageBadgeText ? messageBadgeText.textContent : 'new message'),
+        bg: bgInp ? bgInp.value : '#000000',
+        color: tcInp ? tcInp.value : '#ffffff'
+      };
+      AppDB.save('msg_badge_state', state);
+    }
+
+    function loadBadgeControls() {
+      AppDB.get('msg_badge_state', function(state) {
+        if (!state) return;
+        var textInp = document.getElementById('badgeTextInput');
+        var bgInp = document.getElementById('badgeBgColor');
+        var tcInp = document.getElementById('badgeTextColor');
+        if (textInp) textInp.value = state.text || 'new message';
+        if (bgInp) bgInp.value = state.bg || '#000000';
+        if (tcInp) tcInp.value = state.color || '#ffffff';
+      });
+    }
+
+    // 初始化加载
+    AppDB.get('message_avatar', function(data) {
+      if (data && messageAvatarImg) {
+        messageAvatarImg.src = data;
+        messageAvatar.classList.add('has-img');
+      } else if (messageAvatar) {
+        messageAvatarImg.src = '';
+        messageAvatar.classList.remove('has-img');
+      }
+    });
+
+    AppDB.get('message_preview', function(text) {
+      if (text && messagePreview) messagePreview.textContent = text;
+    });
+
+    AppDB.get('msg_badge_state', function(state) {
+      if (state) {
+        if (messageBadgeText && state.text) messageBadgeText.textContent = state.text;
+        if (messageBadge && state.bg) messageBadge.style.backgroundColor = state.bg;
+        if (messageBadge && state.color) messageBadge.style.color = state.color;
+        if (messageBadgeIcon && state.color) messageBadgeIcon.style.color = state.color;
+      } else {
+        if (messageBadge) {
+          messageBadge.style.backgroundColor = '#000000';
+          messageBadge.style.color = '#ffffff';
+        }
+        if (messageBadgeIcon) messageBadgeIcon.style.color = '#ffffff';
+      }
+    });
+  }
+
+})();
+
+// ============ 头像展示区模块 ============
+(function() {
+  'use strict';
+
+  var coupleData = {
+    speech1: '♡',
+    speech2: '♡',
+    name1: 'TA',
+    name2: '我',
+    avatar1: null,
+    avatar2: null,
+    startDate: null
+  };
+
+  var _coupleFileInput = null;
+  function couplePickFile(callback) {
+    if (_coupleFileInput && _coupleFileInput.parentNode) _coupleFileInput.parentNode.removeChild(_coupleFileInput);
+    _coupleFileInput = document.createElement('input');
+    _coupleFileInput.type = 'file';
+    _coupleFileInput.accept = 'image/*';
+    _coupleFileInput.style.cssText = 'position:fixed;left:-9999px;opacity:0;pointer-events:none;';
+    document.body.appendChild(_coupleFileInput);
+    _coupleFileInput.addEventListener('change', function() {
+      var file = _coupleFileInput.files[0];
+      if (_coupleFileInput.parentNode) _coupleFileInput.parentNode.removeChild(_coupleFileInput);
+      _coupleFileInput = null;
+      if (file && callback) callback(file);
+    });
+    _coupleFileInput.click();
+  }
 
   window.addEventListener('dbReady', function() {
-    loadApiData(function() {
-      renderApiBody();
-      renderDataBody();
+    loadCoupleData(function() {
+      applyCoupleData();
+      bindCoupleEvents();
+      renderDateCard();
     });
   });
 
-  function renderApiBody() {
-    var body = document.getElementById('apiPageContent');
-    if (!body) return;
+  function applyCoupleData() {
+    var s1 = document.getElementById('coupleSpeech1');
+    var s2 = document.getElementById('coupleSpeech2');
+    var n1 = document.getElementById('coupleName1');
+    var n2 = document.getElementById('coupleName2');
+    var img1 = document.getElementById('coupleAvatarImg1');
+    var img2 = document.getElementById('coupleAvatarImg2');
+    var circle1 = document.getElementById('coupleAvatar1');
+    var circle2 = document.getElementById('coupleAvatar2');
 
-    var tabsHtml = '<div class="api-tabs">'
-      + '<div class="api-tab' + (currentTab === 'config' ? ' active' : '') + '" data-tab="config">配置</div>'
-      + '<div class="api-tab' + (currentTab === 'params' ? ' active' : '') + '" data-tab="params">参数</div>'
-      + '<div class="api-tab' + (currentTab === 'saved' ? ' active' : '') + '" data-tab="saved">已存</div>'
-      + '</div>';
+    if (s1) s1.textContent = coupleData.speech1 || '♡';
+    if (s2) s2.textContent = coupleData.speech2 || '♡';
+    if (n1) n1.textContent = coupleData.name1 || 'TA';
+    if (n2) n2.textContent = coupleData.name2 || '我';
 
-    var contentHtml = '';
-
-    if (currentTab === 'config') {
-      var cfg = editingIdx >= 0 ? apiConfigs[editingIdx] : null;
-      contentHtml = '<div class="api-section">'
-        + '<div class="api-section-title">接口信息</div>'
-        + '<div class="api-field"><div class="api-field-label">配置名称</div><input type="text" class="api-input" id="apiName" placeholder="例如：OpenAI 中转" value="' + esc(cfg ? cfg.name : '') + '"></div>'
-        + '<div class="api-field"><div class="api-field-label">API 地址</div><input type="text" class="api-input" id="apiUrl" placeholder="https://example.com/v1" value="' + esc(cfg ? cfg.url : '') + '"></div>'
-        + '<div class="api-field"><div class="api-field-label">API KEY</div><div class="api-field-row"><input type="password" class="api-input" id="apiKey" placeholder="sk-..." value="' + esc(cfg ? cfg.key : '') + '"><button class="api-icon-btn" id="apiToggleKey" type="button"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>'
-        + '<div class="api-field"><div class="api-field-label">模型</div><div class="api-field-row"><input type="text" class="api-input" id="apiModel" placeholder="gpt-4o" value="' + esc(cfg ? cfg.model : '') + '"><button class="api-icon-btn" id="apiFetchModels" type="button"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.22-8.56"/><path d="M21 3v6h-6"/></svg></button></div><div class="api-model-list" id="apiModelList"></div></div>'
-        + '</div>'
-        + '<div class="api-btn-group"><button class="api-btn api-btn-primary" id="apiSaveBtn" type="button">保存配置</button></div>';
-    } else if (currentTab === 'params') {
-      var params = getParams();
-      contentHtml = '<div class="api-section">'
-        + '<div class="api-section-title">模型参数</div>'
-        + '<div class="api-param-card"><div class="api-param-title">Temperature</div><div class="api-param-desc">越低越精确，越高越有创意</div><div class="api-param-row"><input type="range" id="apiTemp" min="0" max="2" step="0.05" value="' + params.temperature + '"><span class="api-param-val" id="apiTempVal">' + params.temperature + '</span></div></div>'
-        + '<div class="api-param-card"><div class="api-param-title">Frequency Penalty</div><div class="api-param-desc">避免重复使用相同词汇</div><div class="api-param-row"><input type="range" id="apiFreq" min="0" max="2" step="0.1" value="' + params.freqPenalty + '"><span class="api-param-val" id="apiFreqVal">' + params.freqPenalty + '</span></div></div>'
-        + '<div class="api-param-card"><div class="api-param-title">Presence Penalty</div><div class="api-param-desc">鼓励使用新的话题</div><div class="api-param-row"><input type="range" id="apiPres" min="0" max="2" step="0.1" value="' + params.presPenalty + '"><span class="api-param-val" id="apiPresVal">' + params.presPenalty + '</span></div></div>'
-        + '</div>'
-        + '<div class="api-btn-group"><button class="api-btn api-btn-primary" id="apiSaveParamsBtn" type="button">保存参数</button></div>';
-    } else if (currentTab === 'saved') {
-      if (!apiConfigs.length) {
-        contentHtml = '<div class="api-empty">暂无已存配置</div>';
-      } else {
-        contentHtml = '<div class="api-saved-list">' + apiConfigs.map(function(cfg, i) {
-          var isActive = activeApi && activeApi.name === cfg.name;
-          return '<div class="api-saved-item' + (isActive ? ' active' : '') + '">'
-            + '<div class="api-saved-info"><div class="api-saved-name">' + esc(cfg.name) + (isActive ? '<span class="api-saved-tag">当前</span>' : '') + '</div>'
-            + '<div class="api-saved-detail">' + esc(cfg.model + ' · ' + (cfg.url || '').replace(/^https?:\/\//, '').split('/')[0]) + '</div></div>'
-            + '<div class="api-saved-actions">'
-            + '<button class="api-saved-act use" data-idx="' + i + '" type="button"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></button>'
-            + '<button class="api-saved-act edit" data-idx="' + i + '" type="button"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>'
-            + '<button class="api-saved-act delete" data-idx="' + i + '" type="button"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>'
-            + '</div></div>';
-        }).join('') + '</div>';
-      }
+    if (coupleData.avatar1 && img1) {
+      img1.src = coupleData.avatar1;
+      circle1.classList.add('has-img');
+    } else if (circle1) {
+      if (img1) img1.removeAttribute('src');
+      circle1.classList.remove('has-img');
     }
 
-    body.innerHTML = tabsHtml + contentHtml;
-    bindApiEvents(body);
-  }
-
-  function bindApiEvents(body) {
-    body.querySelectorAll('.api-tab').forEach(function(tab) {
-      tab.addEventListener('click', function() { currentTab = this.dataset.tab; editingIdx = -1; renderApiBody(); });
-    });
-
-    if (currentTab === 'config') {
-      var toggleBtn = body.querySelector('#apiToggleKey');
-      if (toggleBtn) toggleBtn.addEventListener('click', function() { var inp = body.querySelector('#apiKey'); inp.type = inp.type === 'password' ? 'text' : 'password'; });
-      
-      var fetchBtn = body.querySelector('#apiFetchModels');
-      if (fetchBtn) fetchBtn.addEventListener('click', function() { fetchModels(body); });
-
-      var saveBtn = body.querySelector('#apiSaveBtn');
-      if (saveBtn) {
-        saveBtn.addEventListener('click', function() {
-          var name = (body.querySelector('#apiName').value || '').trim();
-          var url = (body.querySelector('#apiUrl').value || '').trim();
-          var key = (body.querySelector('#apiKey').value || '').trim();
-          var model = (body.querySelector('#apiModel').value || '').trim();
-          if (!name || !url || !key || !model) { AppNav.showToast('请填写所有字段'); return; }
-
-          var config = { name: name, url: url, key: key, model: model };
-          if (editingIdx >= 0) {
-            apiConfigs[editingIdx] = config;
-            if (activeApi && activeApi.name === config.name) activeApi = config;
-          } else {
-            var existing = -1;
-            for (var i = 0; i < apiConfigs.length; i++) { if (apiConfigs[i].name === config.name) { existing = i; break; } }
-            if (existing >= 0) apiConfigs[existing] = config; else apiConfigs.push(config);
-          }
-          if (!activeApi) activeApi = config;
-          saveApiData();
-          editingIdx = -1;
-          AppNav.showToast('已保存');
-          currentTab = 'saved';
-          renderApiBody();
-        });
-      }
-    } else if (currentTab === 'params') {
-      bindRange(body, 'apiTemp', 'apiTempVal');
-      bindRange(body, 'apiFreq', 'apiFreqVal');
-      bindRange(body, 'apiPres', 'apiPresVal');
-      var saveParamsBtn = body.querySelector('#apiSaveParamsBtn');
-      if (saveParamsBtn) {
-        saveParamsBtn.addEventListener('click', function() {
-          var params = {
-            temperature: parseFloat(body.querySelector('#apiTemp').value),
-            freqPenalty: parseFloat(body.querySelector('#apiFreq').value),
-            presPenalty: parseFloat(body.querySelector('#apiPres').value)
-          };
-          apiParams = params;
-          AppDB.save('api_params', params);
-          AppNav.showToast('参数已保存');
-        });
-      }
-    } else if (currentTab === 'saved') {
-      body.querySelectorAll('.api-saved-act.use').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          activeApi = apiConfigs[parseInt(this.dataset.idx)];
-          saveApiData();
-          AppNav.showToast('已切换: ' + activeApi.name);
-          renderApiBody();
-        });
-      });
-      body.querySelectorAll('.api-saved-act.edit').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          editingIdx = parseInt(this.dataset.idx);
-          currentTab = 'config';
-          renderApiBody();
-        });
-      });
-      body.querySelectorAll('.api-saved-act.delete').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          var removed = apiConfigs.splice(parseInt(this.dataset.idx), 1)[0];
-          if (activeApi && removed && activeApi.name === removed.name) { activeApi = apiConfigs.length ? apiConfigs[0] : null; }
-          saveApiData();
-          AppNav.showToast('已删除');
-          renderApiBody();
-        });
-      });
+    if (coupleData.avatar2 && img2) {
+      img2.src = coupleData.avatar2;
+      circle2.classList.add('has-img');
+    } else if (circle2) {
+      if (img2) img2.removeAttribute('src');
+      circle2.classList.remove('has-img');
     }
   }
 
-  function fetchModels(body) {
-    var url = (body.querySelector('#apiUrl').value || '').trim();
-    var key = (body.querySelector('#apiKey').value || '').trim();
-    if (!url || !key) { AppNav.showToast('请先填写地址和Key'); return; }
-    AppNav.showToast('获取模型中...');
-    fetch(url.replace(/\/+$/, '') + '/models', { headers: { 'Authorization': 'Bearer ' + key } })
-    .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
-    .then(function(data) {
-      var raw = data.data || data; var models = [];
-      if (Array.isArray(raw)) { for (var i = 0; i < raw.length; i++) { var id = raw[i].id || raw[i].name || raw[i]; if (id) models.push(id); } }
-      if (!models.length) { AppNav.showToast('未找到模型'); return; }
-      var list = body.querySelector('#apiModelList');
-      if (!list) return;
-      var currentModel = body.querySelector('#apiModel').value;
-      list.innerHTML = '<input type="text" class="api-model-search" id="apiModelSearch" placeholder="搜索模型...">'
-        + '<div id="apiModelResults">' + models.map(function(m) { return '<div class="api-model-item' + (m === currentModel ? ' selected' : '') + '">' + esc(m) + '</div>'; }).join('') + '</div>';
-      list.classList.add('show');
-      var searchInput = list.querySelector('#apiModelSearch');
-      var resultsBox = list.querySelector('#apiModelResults');
-      function bindClicks() {
-        resultsBox.querySelectorAll('.api-model-item').forEach(function(item) {
-          item.addEventListener('click', function() { body.querySelector('#apiModel').value = item.textContent; list.classList.remove('show'); });
-        });
-      }
-      bindClicks();
-      searchInput.addEventListener('input', function() {
-        var kw = this.value.trim().toLowerCase();
-        var filtered = kw ? models.filter(function(m) { return m.toLowerCase().indexOf(kw) >= 0; }) : models;
-        resultsBox.innerHTML = filtered.map(function(m) { return '<div class="api-model-item' + (m === currentModel ? ' selected' : '') + '">' + esc(m) + '</div>'; }).join('');
-        bindClicks();
-      });
-      AppNav.showToast(models.length + ' 个模型');
-    }).catch(function(err) { AppNav.showToast('获取失败: ' + err.message); });
-  }
-
-  function renderDataBody() {
-    var body = document.getElementById('dataPageContent');
-    if(!body) return;
-    body.innerHTML = '<div class="data-section">'
-      + '<div class="data-item" id="dataExport"><div class="data-item-icon export"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div class="data-item-text"><div class="data-item-title">导出数据</div><div class="data-item-desc">将所有本地数据导出为JSON文件</div></div></div>'
-      + '<div class="data-item" id="dataImport"><div class="data-item-icon import"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div class="data-item-text"><div class="data-item-title">导入数据</div><div class="data-item-desc">从JSON文件恢复数据</div></div></div>'
-      + '<div class="data-item" id="dataClear"><div class="data-item-icon danger"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></div><div class="data-item-text"><div class="data-item-title danger">清除所有数据</div><div class="data-item-desc">不可恢复，请谨慎操作</div></div></div>'
-      + '</div>';
-
-    body.querySelector('#dataExport').addEventListener('click', exportAllData);
-    body.querySelector('#dataImport').addEventListener('click', function() {
-      var input = document.createElement('input');
-      input.type = 'file'; input.accept = '.json';
-      input.addEventListener('change', function() {
-        var file = this.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(e) { try { importAllData(JSON.parse(e.target.result)); } catch(err) { AppNav.showToast('文件格式错误'); } };
-        reader.readAsText(file);
-      });
-      input.click();
-    });
-    body.querySelector('#dataClear').addEventListener('click', function() {
-      if (!confirm('确定要清除所有数据吗？此操作不可恢复！')) return;
-      var request = indexedDB.deleteDatabase('AppDB');
-      request.onsuccess = function() { AppNav.showToast('已清除，即将刷新'); setTimeout(function() { location.reload(); }, 1000); };
-      request.onerror = function() { AppNav.showToast('清除失败'); };
-    });
-  }
-
-  // 全量导出：自动遍历 IndexedDB 全部数据，永不遗漏任何新字段
-  function exportAllData() {
-    var allKeys = [
-      'card_state', 'card_bg', 'card_avatar', 
-      'message_avatar', 'message_preview', 'msg_badge_state',
-      'couple_data', 'couple_style_state',
-      'tabbar_state', 'drag_order', 'home_bg_img',
-      'api_configs', 'active_api', 'api_params'
+  function bindCoupleEvents() {
+    var editables = [
+      ['coupleSpeech1', 'speech1'],
+      ['coupleSpeech2', 'speech2'],
+      ['coupleName1', 'name1'],
+      ['coupleName2', 'name2']
     ];
-    var result = {};
-    var done = 0;
-
-    allKeys.forEach(function(key) {
-      if (window.AppDB) {
-        AppDB.get(key, function(val) {
-          if (val !== null && val !== undefined) {
-            result[key] = val;
-          }
-          done++;
-          if (done === allKeys.length) {
-            var blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = 'niveous-backup-' + new Date().toISOString().slice(0, 10) + '.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            AppNav.showToast('数据导出成功');
-          }
+    editables.forEach(function(pair) {
+      var el = document.getElementById(pair[0]);
+      if (el) {
+        el.addEventListener('blur', function() {
+          coupleData[pair[1]] = this.textContent.trim() || '';
+          saveCoupleData();
+          if (pair[1] === 'name1') updateDateName();
         });
       }
     });
-  }
 
-  // 全量导入：无缝写回 IndexedDB
-  function importAllData(data) {
-    var keys = Object.keys(data);
-    if (!keys.length) {
-      AppNav.showToast('文件内没有有效数据');
-      return;
+    var circle1 = document.getElementById('coupleAvatar1');
+    var circle2 = document.getElementById('coupleAvatar2');
+    if (circle1) circle1.addEventListener('click', function() { handleAvatarClick(1); });
+    if (circle2) circle2.addEventListener('click', function() { handleAvatarClick(2); });
+
+    var daysEl = document.getElementById('dateDaysCount');
+    var dateInput = document.getElementById('dateStartInput');
+    if (daysEl && dateInput) {
+      daysEl.addEventListener('click', function() {
+        dateInput.showPicker ? dateInput.showPicker() : dateInput.click();
+      });
+      dateInput.addEventListener('change', function() {
+        coupleData.startDate = this.value || null;
+        saveCoupleData();
+        renderDateCard();
+      });
     }
-    var done = 0;
-    keys.forEach(function(key) {
-      if (window.AppDB) {
-        AppDB.save(key, data[key], function() {
-          done++;
-          if (done === keys.length) {
-            AppNav.showToast('导入成功，正在刷新应用');
-            setTimeout(function() { location.reload(); }, 800);
-          }
+  }
+
+  function handleAvatarClick(idx) {
+    var key = 'avatar' + idx;
+    if (coupleData[key]) {
+      window.PhotoAction.show(
+        function() { pickCoupleAvatar(idx); },
+        function() { deleteCoupleAvatar(idx); }
+      );
+    } else {
+      pickCoupleAvatar(idx);
+    }
+  }
+
+  function pickCoupleAvatar(idx) {
+    couplePickFile(function(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        window.AppCropper.open(e.target.result, { aspectRatio: 1 }, function(cropped) {
+          coupleData['avatar' + idx] = cropped;
+          var img = document.getElementById('coupleAvatarImg' + idx);
+          var circle = document.getElementById('coupleAvatar' + idx);
+          if (img) img.src = cropped;
+          if (circle) circle.classList.add('has-img');
+          saveCoupleData();
         });
-      }
+      };
+      reader.readAsDataURL(file);
     });
   }
 
-  function bindRange(container, inputId, valId) {
-    var input = container.querySelector('#' + inputId);
-    var val = container.querySelector('#' + valId);
-    if (input && val) input.addEventListener('input', function() { val.textContent = this.value; });
+  function deleteCoupleAvatar(idx) {
+    coupleData['avatar' + idx] = null;
+    var img = document.getElementById('coupleAvatarImg' + idx);
+    var circle = document.getElementById('coupleAvatar' + idx);
+    if (img) img.removeAttribute('src');
+    if (circle) circle.classList.remove('has-img');
+    saveCoupleData();
   }
 
-  function esc(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  function updateDateName() {
+    var nameEl = document.getElementById('datePartnerName');
+    if (nameEl) nameEl.textContent = coupleData.name1 || 'TA';
   }
 
-  function getParams() { return apiParams || JSON.parse(JSON.stringify(PARAM_DEFAULTS)); }
+  function renderDateCard() {
+    var daysEl = document.getElementById('dateDaysCount');
+    var datesEl = document.getElementById('dateWeekDates');
+    var dateInput = document.getElementById('dateStartInput');
 
-  function loadApiData(callback) {
-    if (!window.AppDB) { if(callback) callback(); return; }
-    var total = 3, done = 0, fired = false;
-    function check() { done++; if (done >= total && !fired) { fired = true; if (callback) callback(); } }
-    setTimeout(function() { if (!fired) { fired = true; if (callback) callback(); } }, 500);
-    AppDB.get('api_configs', function(val) { if(val) apiConfigs = val; check(); });
-    AppDB.get('active_api', function(val) { if(val) activeApi = val; check(); });
-    AppDB.get('api_params', function(val) { if(val) apiParams = val; check(); });
+    if (!daysEl || !datesEl) return;
+    updateDateName();
+
+    if (dateInput && coupleData.startDate) {
+      dateInput.value = coupleData.startDate;
+    }
+
+    var days = 0;
+    if (coupleData.startDate) {
+      var parts = coupleData.startDate.split('-');
+      var start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      var now = new Date();
+      now.setHours(0, 0, 0, 0);
+      days = Math.floor((now - start) / 86400000);
+      if (days < 0) days = 0;
+    }
+    daysEl.textContent = days;
+
+    var today = new Date();
+    var dayOfWeek = today.getDay();
+    var weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - dayOfWeek);
+
+    var html = '';
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      var isToday = d.getDate() === today.getDate()
+        && d.getMonth() === today.getMonth()
+        && d.getFullYear() === today.getFullYear();
+      html += '<span' + (isToday ? ' class="today"' : '') + '>' + d.getDate() + '</span>';
+    }
+    datesEl.innerHTML = html;
   }
 
-  function saveApiData() {
+  function loadCoupleData(callback) {
+    if (!window.AppDB) { if (callback) callback(); return; }
+    AppDB.get('couple_data', function(val) {
+      if (val) {
+        for (var k in val) { if (val.hasOwnProperty(k)) coupleData[k] = val[k]; }
+      }
+      if (callback) callback();
+    });
+  }
+
+  function saveCoupleData() {
     if (!window.AppDB) return;
-    AppDB.save('api_configs', apiConfigs);
-    if (activeApi) AppDB.save('active_api', activeApi); else AppDB.delete('active_api');
+    AppDB.save('couple_data', coupleData);
   }
-
-  window.ApiConfig = { getActive: function() { return activeApi; }, getParams: getParams };
-
 })();
