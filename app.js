@@ -1,4 +1,3 @@
-
 (function(){
   'use strict';
 
@@ -8,46 +7,75 @@
   var STORE_NAME = 'appData';
   var db = null;
 
+  window._dbReady = false;
+
   function openDB(callback) {
     var request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = function(e) {
       var database = e.target.result;
       if (!database.objectStoreNames.contains(STORE_NAME)) database.createObjectStore(STORE_NAME);
     };
-    request.onsuccess = function(e) { db = e.target.result; if (callback) callback(); };
-    request.onerror = function() { if (callback) callback(); };
+    request.onsuccess = function(e) { 
+      db = e.target.result; 
+      window._dbReady = true;
+      window.dispatchEvent(new Event('dbReady'));
+      if (callback) callback(); 
+    };
+    request.onerror = function() { 
+      window._dbReady = true;
+      window.dispatchEvent(new Event('dbReady'));
+      if (callback) callback(); 
+    };
   }
 
   function dbSave(key, value, cb) {
     if (!db) { if (cb) cb(); return; }
-    var tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(value, key);
-    tx.oncomplete = function() { if (cb) cb(); };
+    try {
+      var tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).put(value, key);
+      tx.oncomplete = function() { if (cb) cb(); };
+      tx.onerror = function() { if (cb) cb(); };
+    } catch(e) { if (cb) cb(); }
   }
   function dbGet(key, cb) {
     if (!db) { cb(null); return; }
-    var r = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(key);
-    r.onsuccess = function() { cb(r.result || null); };
-    r.onerror = function() { cb(null); };
+    try {
+      var r = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(key);
+      r.onsuccess = function() { cb(r.result !== undefined ? r.result : null); };
+      r.onerror = function() { cb(null); };
+    } catch(e) { cb(null); }
   }
   function dbDelete(key, cb) {
     if (!db) { if (cb) cb(); return; }
-    var tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).delete(key);
-    tx.oncomplete = function() { if (cb) cb(); };
+    try {
+      var tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).delete(key);
+      tx.oncomplete = function() { if (cb) cb(); };
+      tx.onerror = function() { if (cb) cb(); };
+    } catch(e) { if (cb) cb(); }
   }
 
   window.AppDB = { open: openDB, save: dbSave, get: dbGet, delete: dbDelete };
 
-  // ============ 跨实例登录凭证同步（localStorage） ============
-  function saveAuthToLocal(token, userInfo) {
-    try {
-      localStorage.setItem('app_auth_token', token);
-      localStorage.setItem('app_user_info', JSON.stringify(userInfo));
-    } catch(e) {}
+  // ============ 跨沙盒协议级 Cookie 读取工具 ============
+  function parseServerCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) === 0) {
+        try {
+          return JSON.parse(decodeURIComponent(c.substring(nameEQ.length, c.length)));
+        } catch(e) {
+          return decodeURIComponent(c.substring(nameEQ.length, c.length));
+        }
+      }
+    }
+    return null;
   }
 
-  function getAuthFromLocal() {
+  function getGlobalSession() {
     try {
       var token = localStorage.getItem('app_auth_token');
       var info = localStorage.getItem('app_user_info');
@@ -55,79 +83,64 @@
         return { token: token, userInfo: JSON.parse(info) };
       }
     } catch(e) {}
+
+    var session = parseServerCookie('niveous_session');
+    if (session && session.token && session.username) {
+      return {
+        token: session.token,
+        userInfo: { username: session.username }
+      };
+    }
+
     return null;
   }
 
-  function clearAuthFromLocal() {
+  function clearAllAuth() {
     try {
       localStorage.removeItem('app_auth_token');
       localStorage.removeItem('app_user_info');
     } catch(e) {}
+    document.cookie = 'niveous_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
   }
 
-  // ============ 强力抹杀 Netlify 绿色条 ============
-  function removeNetlifyDrawer() {
-    var kill = function() {
-      var targets = document.querySelectorAll(
-        '#netlify-drawer, .netlify-drawer, [data-netlify-deploy-id], iframe[src*="netlify"], iframe[id*="netlify"], div[id*="netlify"], div[class*="netlify-feedback"], netlify-drawer, [id*="feedback-drawer"], [class*="feedback-drawer"]'
-      );
-      targets.forEach(function(el) {
-        if (el && el.parentNode) el.parentNode.removeChild(el);
-      });
-    };
-    kill();
-    var timer = setInterval(kill, 100);
-    setTimeout(function() { clearInterval(timer); }, 6000);
-    if (window.MutationObserver) {
-      var observer = new MutationObserver(function() { kill(); });
-      observer.observe(document.documentElement, { childList: true, subtree: true });
-    }
-  }
-
-  // ============ 稳定硬件级设备指纹（纯硬件特征，跨浏览器一致） ============
+  // ============ 纯硬件设备指纹 ============
   function getStableDeviceId(callback) {
+    var cookieDev = parseServerCookie('shared_device_id');
+    if (cookieDev && typeof cookieDev === 'string') {
+      callback(cookieDev);
+      return;
+    }
+
+    try {
+      var localDev = localStorage.getItem('shared_device_id');
+      if (localDev) {
+        callback(localDev);
+        return;
+      }
+    } catch(e) {}
+
     dbGet('app_device_fingerprint', function(savedId) {
-      if (savedId) { callback(savedId); return; }
+      if (savedId) {
+        try { localStorage.setItem('shared_device_id', savedId); } catch(e){}
+        callback(savedId);
+        return;
+      }
 
       var components = [];
-
-      // 屏幕物理分辨率与像素密度
-      components.push(screen.width + 'x' + screen.height + '@' + (window.devicePixelRatio || 1));
-
-      // 时区偏移
+      components.push(screen.width + 'x' + screen.height);
+      components.push(window.devicePixelRatio || 1);
       components.push(new Date().getTimezoneOffset());
-
-      // 系统语言
       components.push(navigator.language || navigator.userLanguage || '');
-
-      // CPU 核心数
       components.push(navigator.hardwareConcurrency || 0);
-
-      // 设备内存
-      components.push(navigator.deviceMemory || 0);
-
-      // 触控点数量
       components.push(navigator.maxTouchPoints || 0);
-
-      // 屏幕色深
       components.push(screen.colorDepth || 0);
-
-      // Canvas GPU 渲染指纹
-      var canvas = document.createElement('canvas');
-      var ctx = canvas.getContext('2d');
-      if (ctx) {
-        canvas.width = 200; canvas.height = 50;
-        ctx.textBaseline = 'top'; ctx.font = '14px Arial';
-        ctx.fillStyle = '#f60'; ctx.fillRect(10, 10, 100, 30);
-        ctx.fillStyle = '#069'; ctx.fillText('Device Fingerprint', 15, 15);
-        components.push(canvas.toDataURL().substring(0, 100));
-      }
 
       var rawString = components.join('|');
       var hash = simpleHash(rawString);
       var deviceId = 'hw_' + hash.substring(0, 12);
 
       dbSave('app_device_fingerprint', deviceId, function() {
+        try { localStorage.setItem('shared_device_id', deviceId); } catch(e){}
         callback(deviceId);
       });
     });
@@ -143,6 +156,10 @@
     return Math.abs(hash).toString(36);
   }
 
+  function getApiEndpoint(action) {
+    return '/api/' + action;
+  }
+
   // ============ 登录门禁逻辑 ============
   function checkActivation() {
     var mask = document.getElementById('authGateMask');
@@ -154,7 +171,10 @@
     function onLoginVerified(token, userInfo) {
       dbSave('app_auth_token', token, function() {
         dbSave('app_user_info', userInfo, function() {
-          saveAuthToLocal(token, userInfo);
+          try {
+            localStorage.setItem('app_auth_token', token);
+            localStorage.setItem('app_user_info', JSON.stringify(userInfo));
+          } catch(e) {}
           mask.classList.remove('show');
         });
       });
@@ -163,16 +183,16 @@
     function kickOut(message) {
       dbDelete('app_auth_token', function() {
         dbDelete('app_user_info', function() {
-          clearAuthFromLocal();
+          clearAllAuth();
           mask.classList.add('show');
           if (message) showToast(message);
         });
       });
     }
 
-    function silentVerify(userInfo) {
+    function realTimeVerify(userInfo) {
       getStableDeviceId(function(deviceId) {
-        fetch('/.netlify/functions/login', {
+        fetch(getApiEndpoint('login') + '?_t=' + Date.now(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json; charset=utf-8' },
           body: JSON.stringify({
@@ -192,17 +212,16 @@
       });
     }
 
-    // 1. 检查登录状态
     dbGet('app_user_info', function(userInfo) {
       dbGet('app_auth_token', function(token) {
         if (token && userInfo && userInfo.username) {
           mask.classList.remove('show');
-          silentVerify(userInfo);
+          realTimeVerify(userInfo);
         } else {
-          var localAuth = getAuthFromLocal();
-          if (localAuth && localAuth.token && localAuth.userInfo && localAuth.userInfo.username) {
-            onLoginVerified(localAuth.token, localAuth.userInfo);
-            silentVerify(localAuth.userInfo);
+          var session = getGlobalSession();
+          if (session && session.token && session.userInfo && session.userInfo.username) {
+            onLoginVerified(session.token, session.userInfo);
+            realTimeVerify(session.userInfo);
           } else {
             mask.classList.add('show');
           }
@@ -210,7 +229,14 @@
       });
     });
 
-    // 2. 登录按钮
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        dbGet('app_user_info', function(userInfo) {
+          if (userInfo && userInfo.username) realTimeVerify(userInfo);
+        });
+      }
+    });
+
     if (submitBtn) {
       submitBtn.addEventListener('click', function() {
         var username = (usernameInput.value || '').trim();
@@ -221,7 +247,7 @@
           submitBtn.disabled = true;
           submitBtn.textContent = '进入中...';
 
-          fetch('/.netlify/functions/login', {
+          fetch(getApiEndpoint('login') + '?_t=' + Date.now(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json; charset=utf-8' },
             body: JSON.stringify({ username: username, password: password, deviceId: deviceId })
@@ -252,7 +278,6 @@
       });
     }
 
-    // 3. 登录/注册切换
     var loginBox = document.getElementById('authLoginBox');
     var registerBox = document.getElementById('authRegisterBox');
     var goRegisterBtn = document.getElementById('authGoRegister');
@@ -273,7 +298,6 @@
       });
     }
 
-    // 4. 注册按钮
     if (registerBtn) {
       registerBtn.addEventListener('click', function() {
         var inviteCode = (document.getElementById('authInviteInput').value || '').trim();
@@ -282,45 +306,39 @@
 
         if (!inviteCode || !regUser || !regPass) { showToast('请填写完整信息'); return; }
 
-        registerBtn.disabled = true;
-        registerBtn.textContent = '注册中...';
+        getStableDeviceId(function(deviceId) {
+          registerBtn.disabled = true;
+          registerBtn.textContent = '注册中...';
 
-        fetch('/.netlify/functions/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json; charset=utf-8' },
-          body: JSON.stringify({ inviteCode: inviteCode, username: regUser, password: regPass })
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          registerBtn.disabled = false;
-          registerBtn.textContent = '注册';
+          fetch(getApiEndpoint('register') + '?_t=' + Date.now(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=utf-8' },
+            body: JSON.stringify({
+              inviteCode: inviteCode,
+              username: regUser,
+              password: regPass,
+              deviceId: deviceId
+            })
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            registerBtn.disabled = false;
+            registerBtn.textContent = '注册并登录';
 
-          if (data.success) {
-            showToast('注册成功，正在登录...');
-            getStableDeviceId(function(deviceId) {
-              fetch('/.netlify/functions/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json; charset=utf-8' },
-                body: JSON.stringify({ username: regUser, password: regPass, deviceId: deviceId })
-              })
-              .then(function(res) { return res.json(); })
-              .then(function(loginData) {
-                if (loginData.success && loginData.token) {
-                  var info = { username: loginData.username, password: regPass };
-                  onLoginVerified(loginData.token, info);
-                  showToast('欢迎回来');
-                  window.dispatchEvent(new CustomEvent('loginSuccess'));
-                }
-              });
-            });
-          } else {
-            showToast(data.message || '注册失败');
-          }
-        })
-        .catch(function() {
-          registerBtn.disabled = false;
-          registerBtn.textContent = '注册';
-          showToast('网络异常，请重试');
+            if (data.success && data.token) {
+              var info = { username: data.username, password: regPass };
+              onLoginVerified(data.token, info);
+              showToast('注册成功，欢迎进入');
+              window.dispatchEvent(new CustomEvent('loginSuccess'));
+            } else {
+              showToast(data.message || '注册失败');
+            }
+          })
+          .catch(function() {
+            registerBtn.disabled = false;
+            registerBtn.textContent = '注册并登录';
+            showToast('网络异常，请重试');
+          });
         });
       });
     }
@@ -331,11 +349,11 @@
   var dockEditBtn = document.querySelector('.tabbar-edit-btn');
 
   function initAppShells() {
-    var appPages = ['wechat','offline','settings','check'];
+    var appPages = ['imgbed', 'wechat', 'offline', 'settings', 'check'];
     appPages.forEach(function(name) {
       var page = document.querySelector('[data-page="'+name+'"]');
       if (!page || page.querySelector('.app-header')) return;
-      var titleText = {wechat:'微信',offline:'线下',settings:'设置',check:'查岗'}[name];
+      var titleText = { imgbed: '图床', wechat: '微信', offline: '线下', settings: '设置', check: '查岗' }[name];
       page.innerHTML = '<div class="app-header"><button class="icon-back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="app-title">'+titleText+'</div></div><div class="app-content" id="'+name+'Content"></div>';
     });
 
@@ -367,12 +385,74 @@
     window.dispatchEvent(new CustomEvent('pageChange', { detail: { page: name } }));
   }
 
+  // ============ 桌面双屏滑动交互 ============
+  function setupDesktopSlider() {
+    var slider = document.getElementById('desktopSlider');
+    var dots = document.querySelectorAll('.desktop-dot');
+    var currentScreen = 0;
+    var startX = 0, startY = 0, distX = 0, distY = 0, isDragging = false;
+
+    function goToScreen(idx) {
+      currentScreen = idx;
+      if (slider) slider.style.transform = 'translateX(-' + (idx * 50) + '%)';
+      dots.forEach(function(dot, i) {
+        if (i === idx) dot.classList.add('active');
+        else dot.classList.remove('active');
+      });
+    }
+
+    dots.forEach(function(dot, idx) {
+      dot.addEventListener('click', function(e) {
+        e.stopPropagation();
+        goToScreen(idx);
+      });
+    });
+
+    if (slider) {
+      slider.addEventListener('touchstart', function(e) {
+        if (document.querySelector('.app-shell') && document.querySelector('.app-shell').classList.contains('edit-mode')) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        distX = 0;
+        distY = 0;
+        isDragging = true;
+      }, { passive: true });
+
+      slider.addEventListener('touchmove', function(e) {
+        if (!isDragging) return;
+        var curX = e.touches[0].clientX;
+        var curY = e.touches[0].clientY;
+        distX = curX - startX;
+        distY = curY - startY;
+      }, { passive: true });
+
+      slider.addEventListener('touchend', function() {
+        if (!isDragging) return;
+        isDragging = false;
+        // 只有横向滑动大于纵向滑动且滑移超过 35px 时翻页
+        if (Math.abs(distX) > Math.abs(distY) && Math.abs(distX) > 35) {
+          if (distX < 0 && currentScreen === 0) {
+            goToScreen(1);
+          } else if (distX > 0 && currentScreen === 1) {
+            goToScreen(0);
+          }
+        }
+      });
+    }
+  }
+
   function bindNavigation() {
     document.querySelectorAll('.tab-item').forEach(function(tab) {
       tab.addEventListener('click', function() { showPage(this.dataset.tab); });
     });
     document.addEventListener('click', function(e) { var b = e.target.closest('[data-back]'); if (b) showPage(b.dataset.back); });
     document.addEventListener('click', function(e) { var g = e.target.closest('[data-goto]'); if (g) showPage(g.dataset.goto); });
+    document.addEventListener('click', function(e) {
+      var appItem = e.target.closest('[data-open-app]');
+      if (appItem && appItem.dataset.openApp) {
+        showPage(appItem.dataset.openApp);
+      }
+    });
 
     document.querySelectorAll('.app-page').forEach(function(page) {
       var startX = 0, currentX = 0, isDragging = false;
@@ -438,8 +518,8 @@
     if (cropBox.h < CROP_MIN) cropBox.h = CROP_MIN;
     if (cropBox.x < 0) { cropBox.w += cropBox.x; cropBox.x = 0; }
     if (cropBox.y < 0) { cropBox.h += cropBox.y; cropBox.y = 0; }
-    if (cropBox.x + cropBox.w > cropDisplayW) cropBox.w = cropDisplayW - cropBox.x;
-    if (cropBox.y + cropBox.h > cropDisplayH) cropBox.h = cropDisplayH - cropBox.y;
+    if (cropBox.x + cropBox.w > cropDisplayW) { cropBox.w = cropDisplayW - cropBox.x; }
+    if (cropBox.y + cropBox.h > cropDisplayH) { cropBox.h = cropDisplayH - cropBox.y; }
   }
 
   function cropDraw() {
@@ -474,7 +554,7 @@
     if (px>=c.x-H&&px<=c.x+H&&py>=c.y-H&&py<=c.y+H) return 'tl';
     if (px>=c.x+c.w-H&&px<=c.x+c.w+H&&py>=c.y-H&&py<=c.y+H) return 'tr';
     if (px>=c.x-H&&px<=c.x+H&&py>=c.y+c.h-H&&py<=c.y+c.h+H) return 'bl';
-    if (px>=c.x+c.w-H&&px<=c.x+c.w+H&&py>=c.y+c.h-H&&py<=c.y+c.h+H) return 'br';
+    if (px>=c.x+c.w-H&&px<=c.x+c.w+H&&py>=c.y-H&&py<=c.y+H) return 'br';
     if (py>=c.y-H&&py<=c.y+H&&px>c.x+H&&px<c.x+c.w-H) return 't';
     if (py>=c.y+c.h-H&&py<=c.y+c.h+H&&px>c.x+H&&px<c.x+c.w-H) return 'b';
     if (px>=c.x-H&&px<=c.x+H&&py>c.y+H&&py<c.y+c.h-H) return 'l';
@@ -561,11 +641,11 @@
   function setupPhotoAction() {
     photoActionMask=document.createElement('div'); photoActionMask.className='photo-action-mask'; document.body.appendChild(photoActionMask);
     photoActionCard=document.createElement('div'); photoActionCard.className='photo-action-card';
-    photoActionCard.innerHTML='<button id="paSelectBtn">选择照片</button><button id="paDeleteBtn">删除照片</button>';
+    photoActionCard.innerHTML='<button id="paSelectBtn" type="button">选择照片</button><button id="paDeleteBtn" type="button">删除照片</button>';
     document.body.appendChild(photoActionCard);
     photoActionMask.addEventListener('click',function(){photoActionMask.classList.remove('show');photoActionCard.classList.remove('show');photoActionOnSelect=null;photoActionOnDelete=null;});
-    document.getElementById('paSelectBtn').addEventListener('click',function(){var cb=photoActionOnSelect;photoActionMask.classList.remove('show');photoActionCard.classList.remove('show');photoActionOnSelect=null;photoActionOnDelete=null;if(cb)cb();});
-    document.getElementById('paDeleteBtn').addEventListener('click',function(){var cb=photoActionOnDelete;photoActionMask.classList.remove('show');photoActionCard.classList.remove('show');photoActionOnSelect=null;photoActionOnDelete=null;if(cb)cb();});
+    document.getElementById('paSelectBtn').addEventListener('click',function(e){e.stopPropagation();var cb=photoActionOnSelect;photoActionMask.classList.remove('show');photoActionCard.classList.remove('show');photoActionOnSelect=null;photoActionOnDelete=null;if(cb)cb();});
+    document.getElementById('paDeleteBtn').addEventListener('click',function(e){e.stopPropagation();var cb=photoActionOnDelete;photoActionMask.classList.remove('show');photoActionCard.classList.remove('show');photoActionOnSelect=null;photoActionOnDelete=null;if(cb)cb();});
   }
   window.PhotoAction={show:function(onSelect,onDelete){photoActionOnSelect=onSelect;photoActionOnDelete=onDelete;photoActionMask.classList.add('show');photoActionCard.classList.add('show');}};
 
@@ -581,12 +661,11 @@
 
   // ============ 初始化 ============
   openDB(function() {
-    removeNetlifyDrawer();
     setupPhotoAction();
     initAppShells();
+    setupDesktopSlider();
     bindNavigation();
     checkActivation();
-    window.dispatchEvent(new CustomEvent('dbReady'));
   });
 
 })();
