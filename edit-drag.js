@@ -26,33 +26,45 @@
   });
 
   // ============ 长按空白处进入/退出编辑模式 ============
-  pageContainer.addEventListener('touchstart', function(e) {
-    var homePage = document.querySelector('.page[data-page="home"]');
-    if (!homePage || !homePage.classList.contains('active')) return;
+  if (pageContainer) {
+    pageContainer.addEventListener('touchstart', function(e) {
+      var homePage = document.querySelector('.page[data-page="home"]');
+      if (!homePage || !homePage.classList.contains('active')) return;
 
-    var target = e.target;
-    if (target === pageContainer || target.classList.contains('page')) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      longPressTimer = setTimeout(function() {
-        if (!isEditMode) enterEditMode();
-        else exitEditMode();
-      }, 200);
-    }
-  }, { passive: true });
+      var target = e.target;
+      var isBlank = (
+        target === pageContainer || 
+        target.classList.contains('page') ||
+        target.classList.contains('desktop-slider-wrapper') ||
+        target.classList.contains('desktop-slider') ||
+        target.classList.contains('desktop-screen') ||
+        target.classList.contains('desktop-apps-container')
+      );
 
-  pageContainer.addEventListener('touchend', function() { clearTimeout(longPressTimer); });
-  pageContainer.addEventListener('touchcancel', function() { clearTimeout(longPressTimer); });
-  pageContainer.addEventListener('touchmove', function(e) {
-    var dx = Math.abs(e.touches[0].clientX - touchStartX);
-    var dy = Math.abs(e.touches[0].clientY - touchStartY);
-    if (dx > 10 || dy > 10) clearTimeout(longPressTimer);
-  }, { passive: true });
+      if (isBlank) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        clearTimeout(longPressTimer);
+        longPressTimer = setTimeout(function() {
+          if (!isEditMode) enterEditMode();
+          else exitEditMode();
+        }, 170);
+      }
+    }, { passive: true });
+
+    pageContainer.addEventListener('touchend', function() { clearTimeout(longPressTimer); });
+    pageContainer.addEventListener('touchcancel', function() { clearTimeout(longPressTimer); });
+    pageContainer.addEventListener('touchmove', function(e) {
+      var dx = Math.abs(e.touches[0].clientX - touchStartX);
+      var dy = Math.abs(e.touches[0].clientY - touchStartY);
+      if (dx > 10 || dy > 10) clearTimeout(longPressTimer);
+    }, { passive: true });
+  }
 
   // ============ 编辑模式切换 ============
   function enterEditMode() {
     isEditMode = true;
-    appShell.classList.add('edit-mode');
+    if (appShell) appShell.classList.add('edit-mode');
     if (document.activeElement && document.activeElement.blur) {
       document.activeElement.blur();
     }
@@ -60,22 +72,22 @@
 
   function exitEditMode() {
     isEditMode = false;
-    appShell.classList.remove('edit-mode');
+    if (appShell) appShell.classList.remove('edit-mode');
   }
 
-  // ============ 恢复初始排布 ============
+  // ============ 恢复初始排布（只对第一屏生效） ============
   if (resetLayoutBtn) {
     resetLayoutBtn.addEventListener('click', function(e) {
       e.stopPropagation();
       var confirmed = confirm('确定要恢复初始排布吗？');
       if (!confirmed) return;
       
-      var page = document.querySelector('[data-page="home"]');
-      if (!page) return;
+      var screen0 = document.querySelector('.desktop-screen[data-screen-idx="0"]');
+      if (!screen0) return;
       
       defaultOrder.forEach(function(componentName) {
-        var el = page.querySelector('[data-component="' + componentName + '"]');
-        if (el) page.appendChild(el);
+        var el = screen0.querySelector('[data-component="' + componentName + '"]');
+        if (el) screen0.appendChild(el);
       });
       
       if (window.AppDB) {
@@ -132,8 +144,8 @@
     });
   }
 
-  // ============ 丝滑跟手拖拽 ============
-  var draggables = document.querySelectorAll('.draggable');
+  // ============ 丝滑拖拽（只对第一屏内部的 draggable 元素生效） ============
+  var draggables = document.querySelectorAll('.desktop-screen[data-screen-idx="0"] .draggable');
 
   draggables.forEach(function(el) {
     el.addEventListener('touchstart', function(e) {
@@ -145,7 +157,8 @@
           target.classList.contains('reset-layout-btn') ||
           target.closest('.reset-layout-btn') ||
           target.classList.contains('edit-tool-btn') ||
-          target.closest('.edit-tool-btn')) {
+          target.closest('.edit-tool-btn') ||
+          target.closest('.popup-card')) {
         return;
       }
 
@@ -208,9 +221,9 @@
   });
 
   function saveDragPositions() {
-    var page = document.querySelector('.page.active');
-    if (!page) return;
-    var items = Array.from(page.querySelectorAll('.draggable'));
+    var screen0 = document.querySelector('.desktop-screen[data-screen-idx="0"]');
+    if (!screen0) return;
+    var items = Array.from(screen0.querySelectorAll('.draggable'));
     var order = items.map(function(item) {
       return item.dataset.component;
     });
@@ -221,19 +234,20 @@
     if (!window.AppDB) return;
     AppDB.get('drag_order', function(order) {
       if (!order || !order.length) return;
-      var page = document.querySelector('[data-page="home"]');
-      if (!page) return;
+      var screen0 = document.querySelector('.desktop-screen[data-screen-idx="0"]');
+      if (!screen0) return;
 
       order.forEach(function(componentName) {
-        var el = page.querySelector('[data-component="' + componentName + '"]');
-        if (el) page.appendChild(el);
+        var el = screen0.querySelector('[data-component="' + componentName + '"]');
+        if (el) screen0.appendChild(el);
       });
     });
   }
 
   window.EditMode = {
     enter: enterEditMode,
-    exit: exitEditMode
+    exit: exitEditMode,
+    isEdit: function() { return isEditMode; }
   };
 
 })();
