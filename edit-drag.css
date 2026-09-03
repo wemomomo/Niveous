@@ -1,3 +1,9 @@
+
+/* ========== 消除移动端双击缩放 ========== */
+html, body, button, .edit-btn, .reset-layout-btn, .edit-tool-btn, .popup-card {
+  touch-action: manipulation;
+}
+
 /* ========== 编辑按钮（统一样式） ========== */
 .edit-btn {
   position: absolute;
@@ -14,14 +20,18 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.15s ease;
-  z-index: 10;
+  z-index: 50;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   font-family: inherit;
   white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
+.app-shell.edit-mode .edit-btn,
 .edit-mode .edit-btn {
-  opacity: 1;
-  pointer-events: auto;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 .edit-btn:active {
   transform: scale(0.95);
@@ -34,11 +44,11 @@
   top: auto;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 75px);
   right: 24px;
+  z-index: 600;
 }
 
 /* ========== 拖拽状态 ========== */
 .draggable {
-  touch-action: none;
   position: relative;
   transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -57,7 +67,7 @@
 
 .draggable.dragging {
   opacity: 0.92;
-  z-index: 100;
+  z-index: 100 !important;
   transition: none !important;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
 }
@@ -70,7 +80,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 15;
+  z-index: 500;
   pointer-events: none;
 }
 
@@ -94,6 +104,8 @@
   font-family: inherit;
   width: auto;
   max-width: fit-content;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .reset-layout-btn svg,
@@ -110,8 +122,8 @@
 
 .app-shell.edit-mode .reset-layout-btn,
 .app-shell.edit-mode .edit-tool-btn {
-  opacity: 1;
-  pointer-events: auto;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .reset-layout-btn:active,
@@ -125,7 +137,7 @@
   position: fixed;
   inset: 0;
   background: transparent;
-  z-index: 999;
+  z-index: 1500;
   display: none;
 }
 .popup-mask.show {
@@ -140,7 +152,7 @@
   border-radius: 18px;
   padding: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 0.5px rgba(0, 0, 0, 0.08);
-  z-index: 1000;
+  z-index: 1600;
   width: 240px;
   max-height: calc(100vh - 100px);
   overflow-y: auto;
@@ -151,7 +163,7 @@
   box-sizing: border-box;
 }
 .popup-card.show {
-  display: flex;
+  display: flex !important;
 }
 
 .popup-card-title {
