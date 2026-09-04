@@ -242,7 +242,6 @@
       + '</div>'
       + '</div>';
 
-    // 记录进入编辑页时的原始数据快照
     var originalSnapshot = JSON.stringify({
       name: cur.name || '',
       gender: cur.gender || '',
@@ -257,7 +256,6 @@
       background: cur.background || ''
     });
 
-    // 智能返回拦截：检测改动并提示
     document.getElementById('archBackBtn').addEventListener('click', function() {
       var currentSnapshot = JSON.stringify({
         name: document.getElementById('fieldName').value.trim(),
@@ -309,7 +307,6 @@
         }
       }
 
-      // 没改动，或者点击取消放弃保存：直接退回
       if (userList.length > 0 && cur.name && cur.name !== '你') {
         renderStep3();
       } else if (userList.length > 0) {
@@ -371,7 +368,6 @@
     var hasPhotoClass = cur.photo ? ' has-img' : '';
 
     var html = '<div class="archive-showcase-wrap">'
-      // 同层顶部导航行：左侧返回+标题，右侧新建+列表
       + '<div class="archive-integrated-header">'
       + '<div class="arch-header-left">'
       + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
@@ -383,19 +379,16 @@
       + '</div>'
       + '</div>'
 
-      // 统一标准小卡视窗
       + '<div class="archive-full-card-box" id="cardContainerBox">'
       + renderCardTemplateHtml(cur, currentTplIdx, hasPhotoClass)
       + '</div>'
 
-      // 底部吸底控制坞
       + '<div class="archive-bottom-dock">'
       + '<button class="dock-arrow-btn" id="prevTplBtn" type="button"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<button class="dock-edit-btn" id="dockEditBtn" type="button"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>编辑资料</span></button>'
       + '<button class="dock-arrow-btn" id="nextTplBtn" type="button"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>'
       + '</div>'
 
-      // 用户列表抽屉
       + '<div class="user-drawer-mask" id="userDrawerMask"></div>'
       + '<div class="user-drawer-card" id="userDrawerCard">'
       + '<div class="drawer-header"><div class="drawer-title">用户档案库</div><button class="drawer-close-btn" id="drawerCloseBtn" type="button">✕</button></div>'
@@ -417,7 +410,7 @@
     bindStep3Events(cur);
   }
 
-  // 严格还原第一款票根黑边框及其他模板
+  // 渲染 5 种模板（结构完全补齐）
   function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
     if (tplIdx === 0) {
       // 01. 冰蓝票根
@@ -483,7 +476,6 @@
   }
 
   function bindStep3Events(cur) {
-    // 退出返回桌面
     document.getElementById('archBackBtn').addEventListener('click', function() {
       syncDirectEdits(cur);
       saveCurrentToDB(function() {
@@ -491,7 +483,6 @@
       });
     });
 
-    // 左右切模板
     document.getElementById('prevTplBtn').addEventListener('click', function() {
       currentTplIdx = (currentTplIdx - 1 + 5) % 5;
       cur.tplIdx = currentTplIdx;
@@ -506,7 +497,6 @@
       renderStep3();
     });
 
-    // 屏幕横向手势切模板
     var cardBox = document.getElementById('cardContainerBox');
     if (cardBox) {
       var touchStartX = 0, touchEndX = 0;
@@ -529,13 +519,11 @@
       }, { passive: true });
     }
 
-    // 底部编辑按钮
     document.getElementById('dockEditBtn').addEventListener('click', function() {
       syncDirectEdits(cur);
       renderStep2();
     });
 
-    // 顶部新建
     var newBtn = document.getElementById('actionNewBtn');
     if (newBtn) {
       newBtn.addEventListener('click', function() {
@@ -544,7 +532,6 @@
       });
     }
 
-    // 顶部用户列表
     var listBtn = document.getElementById('actionListBtn');
     var drawerMask = document.getElementById('userDrawerMask');
     var drawerCard = document.getElementById('userDrawerCard');
@@ -564,7 +551,6 @@
     if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', closeDrawer);
     if (drawerMask) drawerMask.addEventListener('click', closeDrawer);
 
-    // 抽屉内切换用户
     if (drawerCard) {
       drawerCard.querySelectorAll('.drawer-user-item').forEach(function(item) {
         item.addEventListener('click', function(e) {
@@ -579,7 +565,6 @@
         });
       });
 
-      // 抽屉内删除用户
       drawerCard.querySelectorAll('.drawer-del-btn').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -597,7 +582,6 @@
       });
     }
 
-    // 照片上传与裁剪
     var photoBtn = document.getElementById('cardPhotoBtn');
     if (photoBtn) {
       photoBtn.addEventListener('click', function() {
