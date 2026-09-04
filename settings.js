@@ -255,11 +255,13 @@
     });
   }
 
+  // 纳入了用户档案库的全局持久化存储
   var VISUAL_THEME_KEYS = [
     'card_state', 'card_bg', 'card_avatar', 
     'message_avatar', 'message_preview', 'msg_badge_state',
     'couple_data', 'couple_style_state',
-    'tabbar_state', 'drag_order', 'home_bg_img'
+    'tabbar_state', 'drag_order', 'home_bg_img',
+    'user_archives_list_v3', 'user_archive_active_id_v3'
   ];
 
   var CONFIG_DATA_KEYS = ['api_configs', 'active_api', 'api_params'];
