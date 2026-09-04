@@ -126,7 +126,7 @@
 }
 
 /* ======================================================== */
-/* 风格 1：冰蓝条形码票根                                    */
+/* 风格 1：冰蓝条形码票根（基准比例）                        */
 /* ======================================================== */
 .t1-wrapper {
   width: 100%;
@@ -339,7 +339,7 @@
 .t1-tag.primary { background: #000; color: #ffffff; border: none; }
 
 /* ======================================================== */
-/* 风格 2：双对角冰蓝缎带亚克力（全面放大字体与间距）         */
+/* 风格 2：双对角冰蓝缎带亚克力（平衡比例，内容大舒展）     */
 /* ======================================================== */
 .t2-wrapper {
   width: 100%;
@@ -377,8 +377,8 @@
 }
 .t2-frame {
   position: relative; border: 1px solid rgba(30, 36, 45, 0.15);
-  background: #ffffff; border-radius: 20px; padding: 12px;
-  display: flex; flex-direction: column; gap: 10px; overflow: hidden;
+  background: #ffffff; border-radius: 20px; padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 12px; overflow: hidden;
 }
 .t2-cross {
   position: absolute; font-size: 11px; color: #94a3b8; font-weight: 300; pointer-events: none; z-index: 10;
@@ -392,9 +392,11 @@
 .t2-icons { display: flex; gap: 6px; color: #7fa5d1; font-size: 13px; }
 .t2-brand { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #7d8b99; text-transform: uppercase; }
 
+/* 优化后相框比例：高度约260px，不再撑爆 */
 .t2-photo-stage {
-  width: 100%; aspect-ratio: 1 / 1.25; border-radius: 14px; position: relative;
+  width: 100%; aspect-ratio: 1.2 / 1; border-radius: 14px; position: relative;
   overflow: hidden; background: #edf2f7; border: 1.2px solid #1e242d; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
 .t2-photo-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
 .t2-photo-stage.has-img img { display: block; }
@@ -415,7 +417,7 @@
 .t2-wave-bar:nth-child(3) { height: 6px; animation-delay: 0.4s; }
 @keyframes waveBounce { 0% { transform: scaleY(0.4); } 100% { transform: scaleY(1.2); } }
 
-.t2-footer { display: flex; flex-direction: column; gap: 8px; padding: 2px 4px 0; }
+.t2-footer { display: flex; flex-direction: column; gap: 10px; padding: 2px 4px 0; }
 .t2-user-row { display: flex; justify-content: space-between; align-items: center; }
 .t2-username { font-size: 20px; font-weight: 800; color: #1e242d; letter-spacing: 0.5px; }
 .t2-stars { color: #7fa5d1; font-size: 13px; letter-spacing: 2px; }
@@ -423,7 +425,7 @@
 
 .t2-barcode-deck {
   display: flex; align-items: center; justify-content: space-between;
-  padding-top: 8px; border-top: 1px solid #edf2f7; margin-top: 2px;
+  padding-top: 10px; border-top: 1px solid #edf2f7; margin-top: 2px;
 }
 .t2-barcode-wrap { display: flex; flex-direction: column; gap: 2px; }
 .t2-graphic { height: 16px; display: flex; gap: 1.5px; }
@@ -437,7 +439,7 @@
 }
 
 /* ======================================================== */
-/* 风格 3：极浅奶霜燕麦火漆邮票（全面放大字体与间距）       */
+/* 风格 3：极浅奶霜燕麦火漆邮票（平衡比例，火漆诗意舒展） */
 /* ======================================================== */
 .t3-wrapper {
   width: 100%; background: #faf8f5; border-radius: 14px;
@@ -456,8 +458,8 @@
   box-shadow: inset 0 1px 2px rgba(50, 45, 41, 0.12);
 }
 .t3-inner-box {
-  border: 1px solid #322d29; padding: 12px 10px 14px; position: relative;
-  display: flex; flex-direction: column; gap: 10px; background: #ffffff;
+  border: 1px solid #322d29; padding: 14px 12px; position: relative;
+  display: flex; flex-direction: column; gap: 12px; background: #ffffff;
   box-shadow: inset 0 0 0 2px #faf8f5, inset 0 0 0 3px rgba(50, 45, 41, 0.12);
 }
 .t3-header-row { display: flex; justify-content: space-between; align-items: center; }
@@ -474,9 +476,11 @@
   border-bottom: 1.5px solid #8a7e72; padding-bottom: 1px; display: flex; align-items: center; gap: 3px;
 }
 
+/* 优化后相框比例：高度约250px */
 .t3-photo-stage {
-  width: 100%; aspect-ratio: 1 / 1.25; position: relative; background: #f4f1eb;
+  width: 100%; aspect-ratio: 1.25 / 1; position: relative; background: #f4f1eb;
   border: 1.2px solid #322d29; cursor: pointer; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
 }
 .t3-photo-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
 .t3-photo-stage.has-img img { display: block; }
@@ -487,14 +491,14 @@
   color: #ffffff; font-size: 9.5px; font-weight: 600; padding: 3px 7px;
   border-radius: 3px; letter-spacing: 1px; display: flex; align-items: center; gap: 4px;
 }
-.t3-footer-body { display: flex; flex-direction: column; gap: 8px; padding-top: 2px; }
+.t3-footer-body { display: flex; flex-direction: column; gap: 10px; padding-top: 2px; }
 .t3-username { font-size: 20px; font-weight: 800; color: #322d29; }
 .t3-serial { font-size: 10px; font-family: monospace; color: #8a7e72; font-weight: 700; }
 .t3-bio { font-size: 13.5px; color: #5c544d; line-height: 1.55; font-weight: 500; }
 
 .t3-bottom-deck {
   display: flex; align-items: center; justify-content: space-between;
-  padding-top: 8px; border-top: 1px dashed rgba(50, 45, 41, 0.18); margin-top: 2px;
+  padding-top: 10px; border-top: 1px dashed rgba(50, 45, 41, 0.18); margin-top: 2px;
 }
 .t3-french-tags { display: flex; flex-direction: column; gap: 4px; }
 .t3-french-quote { font-size: 10px; font-style: italic; color: #8a7e72; }
@@ -504,19 +508,19 @@
   padding: 3px 7px; border-radius: 4px; border: 0.5px solid rgba(138, 126, 114, 0.3);
 }
 .t3-wax-seal {
-  width: 40px; height: 40px;
+  width: 42px; height: 42px;
   background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f4f0e8 50%, #e2dacd 100%);
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   box-shadow: 0 3px 8px rgba(138, 126, 114, 0.18), inset 0 1.5px 2px rgba(255,255,255,0.9), inset 0 -1.5px 2.5px rgba(181, 170, 155, 0.3);
   border: 1px solid rgba(222, 217, 207, 0.8); flex-shrink: 0;
 }
 .t3-wax-inner {
-  width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.85);
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.85);
   display: flex; align-items: center; justify-content: center; color: #8a7e72; font-size: 13px;
 }
 
 /* ======================================================== */
-/* 风格 4：浅灰粉晶哥特教堂圣殿（全面放大字体与间距）       */
+/* 风格 4：浅灰粉晶哥特教堂圣殿（平衡比例，属性矩阵舒展）   */
 /* ======================================================== */
 .t4-wrapper {
   width: 100%; background: #fcf8f9; border-radius: 20px; padding: 14px;
@@ -524,8 +528,8 @@
   border: 1px solid rgba(235, 219, 224, 0.8); display: flex; flex-direction: column;
 }
 .t4-inner-frame {
-  border: 1px solid #ebdbe0; border-radius: 14px; padding: 12px 10px 14px;
-  display: flex; flex-direction: column; gap: 10px; background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #ebdbe0; border-radius: 14px; padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 12px; background: rgba(255, 255, 255, 0.85);
   position: relative;
 }
 .t4-cross { position: absolute; color: #b88f9d; font-size: 11px; pointer-events: none; }
@@ -542,8 +546,9 @@
   padding: 2px 7px; border-radius: 4px; background: #f6edf0;
 }
 
+/* 优化后罗马拱门相框：高度约280px */
 .t4-arch-stage {
-  width: 100%; aspect-ratio: 1 / 1.25; position: relative; border-radius: 120px 120px 10px 10px;
+  width: 100%; aspect-ratio: 1.12 / 1; position: relative; border-radius: 100px 100px 10px 10px;
   border: 1.5px solid #b88f9d; box-shadow: 0 8px 20px rgba(150, 107, 122, 0.1);
   cursor: pointer; overflow: hidden; background: #ffffff; display: flex; align-items: center; justify-content: center;
 }
@@ -557,7 +562,7 @@
   text-shadow: 0 1px 4px rgba(58, 46, 51, 0.4); pointer-events: none; letter-spacing: 2px;
 }
 
-.t4-footer-body { display: flex; flex-direction: column; gap: 8px; padding-top: 2px; }
+.t4-footer-body { display: flex; flex-direction: column; gap: 10px; padding-top: 2px; }
 .t4-username { font-size: 20px; font-weight: 800; color: #3a2e33; letter-spacing: 1.5px; }
 .t4-serial { font-size: 10px; font-family: monospace; color: #966b7a; font-weight: 700; }
 .t4-bio { font-size: 13.5px; color: #695b60; line-height: 1.55; font-weight: 500; }
@@ -570,19 +575,19 @@
 }
 .t4-stats-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; }
 .t4-stat-box {
-  background: #ffffff; border: 0.8px solid #ebdbe0; border-radius: 8px; padding: 5px 4px;
+  background: #ffffff; border: 0.8px solid #ebdbe0; border-radius: 8px; padding: 6px 4px;
   display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
 .t4-stat-label { font-size: 8px; font-weight: 700; color: #b88f9d; text-transform: uppercase; }
 .t4-stat-val { font-size: 10.5px; font-weight: 800; color: #3a2e33; letter-spacing: 1px; }
 
 /* ======================================================== */
-/* 风格 5：白金冷银 35mm 电影特刊（全面放大字体与间距）       */
+/* 风格 5：白金冷银 35mm 电影特刊（电影宽幅，字幕舒展）     */
 /* ======================================================== */
 .t5-wrapper {
-  width: 100%; background: #141619; border-radius: 16px; padding: 12px 14px 16px;
+  width: 100%; background: #141619; border-radius: 16px; padding: 14px 14px 18px;
   box-shadow: 0 22px 55px rgba(20, 22, 25, 0.45); border: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex; flex-direction: column; gap: 8px; color: #f6f3ee;
+  display: flex; flex-direction: column; gap: 10px; color: #f6f3ee;
 }
 .t5-sprockets { display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; }
 .t5-hole {
@@ -598,9 +603,11 @@
 .t5-dot { width: 6px; height: 6px; background: #ffffff; border-radius: 50%; box-shadow: 0 0 6px #fff; }
 .t5-fps { font-family: monospace; font-size: 9px; color: #828a94; letter-spacing: 1px; }
 
+/* 优化后电影画幅相框：高度约230px，宽幅电影感极强 */
 .t5-frame-stage {
-  width: 100%; aspect-ratio: 1 / 1.22; position: relative; background: #000000;
+  width: 100%; aspect-ratio: 1.5 / 1; position: relative; background: #000000;
   border-radius: 6px; border: 1.5px solid #23272e; cursor: pointer; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
 }
 .t5-frame-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
 .t5-frame-stage.has-img img { display: block; }
@@ -611,20 +618,20 @@
   font-size: 8.5px; font-weight: 700; color: rgba(255, 255, 255, 0.7);
   letter-spacing: 1.5px; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
-.t5-footer-wrap { display: flex; flex-direction: column; gap: 8px; padding-top: 2px; }
+.t5-footer-wrap { display: flex; flex-direction: column; gap: 10px; padding-top: 2px; }
 .t5-username-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0 2px; }
 .t5-username { font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: 1px; }
 .t5-director { font-size: 9.5px; color: #dcdfe4; font-weight: 600; letter-spacing: 1px; }
 .t5-subtitles-box {
   background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px; padding: 7px 10px; display: flex; flex-direction: column; gap: 3px;
+  border-radius: 6px; padding: 8px 12px; display: flex; flex-direction: column; gap: 3px;
 }
 .t5-sub-cn { font-size: 13.5px; color: #f1f3f5; line-height: 1.55; font-weight: 500; }
 .t5-sub-en { font-size: 9px; color: #828a94; font-style: italic; letter-spacing: 0.5px; }
 
 .t5-stub {
   display: flex; align-items: center; justify-content: space-between;
-  padding-top: 6px; border-top: 1px dashed rgba(255, 255, 255, 0.15); margin-top: 2px;
+  padding-top: 8px; border-top: 1px dashed rgba(255, 255, 255, 0.15); margin-top: 2px;
 }
 .t5-admit-pill {
   background: #dcdfe4; color: #141619; font-size: 9px; font-weight: 900;
