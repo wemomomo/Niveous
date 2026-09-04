@@ -339,7 +339,7 @@
   color: #4a6b8f;
   border: 0.5px solid rgba(176, 204, 232, 0.6);
 }
-.t1-tag.primary { background: #2b333e; color: #ffffff; border: none; }
+.t1-tag.primary { background: #000; color: #ffffff; border: none; }
 
 /* ========== 底部吸底控制坞 ========== */
 .archive-bottom-dock {
