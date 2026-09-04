@@ -1,4 +1,3 @@
-
 (function(){
   'use strict';
 
@@ -8,9 +7,8 @@
   var container = null;
   var userList = [];
   var currentUserId = null;
-  var currentTplIdx = 0; // 0:票根(浅灰), 1:亚克力(灰蓝), 2:燕麦火漆(奶米), 3:粉晶圣殿(灰粉), 4:白金胶片(冷炭)
+  var currentTplIdx = 0; // 0:浅灰底页, 1:纯白底页, 2:纯白底页, 3:灰粉底页, 4:纯白底页
 
-  // 5 款模板各自专属的初始文案与台词
   var DEFAULT_BIOS = [
     '“在这清冷如霜的世界里，你是我唯一的满月与浪漫。”',
     '“把心动藏在银河的微光里，每一步都是奔向你的轨迹。”',
@@ -67,11 +65,8 @@
     if (!window.AppDB) return;
     AppDB.get(ARCHIVES_LIST_KEY, function(list) {
       userList = Array.isArray(list) ? list : [];
-      // 自动清洗历史误带的十字架符号
       userList.forEach(function(u) {
-        if (u.name) {
-          u.name = u.name.replace(/[✞✟✠]/g, '').trim();
-        }
+        if (u.name) u.name = u.name.replace(/[✞✟✠]/g, '').trim();
         for (var i = 0; i < 5; i++) {
           if (!u['bio' + i]) {
             u['bio' + i] = (i === 0 && u.bio) ? u.bio : DEFAULT_BIOS[i];
@@ -131,20 +126,13 @@
     renderStep2();
   }
 
-  function updatePageThemeBg(idx) {
-    if (!container) return;
-    var themeClasses = ['theme-bg-grey', 'theme-bg-blue', 'theme-bg-oat', 'theme-bg-pink', 'theme-bg-dark'];
-    themeClasses.forEach(function(cls) { container.classList.remove(cls); });
-    container.classList.add(themeClasses[idx] || 'theme-bg-grey');
-  }
-
   // ==========================================
   // 步骤 1：空状态凝聚冰晶
   // ==========================================
   function renderStep1() {
-    updatePageThemeBg(0);
-    container.className = 'app-content archive-page-wrap archive-panel-active theme-bg-grey';
-    container.innerHTML = '<div class="archive-integrated-header">'
+    container.className = 'app-content archive-page-wrap archive-panel-active';
+    container.innerHTML = '<div class="archive-page-screen screen-bg-0">'
+      + '<div class="archive-integrated-header">'
       + '<div class="arch-header-left">'
       + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
       + '<span class="arch-header-title">档案</span>'
@@ -191,6 +179,7 @@
       + '<span>新建用户档案</span>'
       + '</button>'
       + '</div>'
+      + '</div>'
       + '</div>';
 
     document.getElementById('archBackBtn').addEventListener('click', function() {
@@ -207,9 +196,9 @@
   // ==========================================
   function renderStep2() {
     var cur = getCurrentUser() || defaultProfile;
-    updatePageThemeBg(0);
-    container.className = 'app-content archive-page-wrap theme-bg-grey';
-    container.innerHTML = '<div class="archive-step-panel step-active" id="archStep2">'
+    container.className = 'app-content archive-page-wrap';
+    container.innerHTML = '<div class="archive-page-screen screen-bg-0">'
+      + '<div class="archive-step-panel step-active" id="archStep2">'
       + '<div class="journal-sheet">'
       
       + '<div class="journal-header">'
@@ -272,6 +261,7 @@
       + '<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>'
       + '<span>封存档案并生成小卡</span>'
       + '</button>'
+      + '</div>'
       + '</div>'
       + '</div>';
 
@@ -388,7 +378,7 @@
   }
 
   // ==========================================
-  // 步骤 3：全屏小卡展示、左右切模板、控制坞
+  // 步骤 3：5 个专属底页容器展示
   // ==========================================
   function renderStep3() {
     var cur = getCurrentUser();
@@ -397,14 +387,14 @@
       return;
     }
 
-    // 确保名字干净
     if (cur.name) cur.name = cur.name.replace(/[✞✟✠]/g, '').trim();
 
-    updatePageThemeBg(currentTplIdx);
     container.className = 'app-content archive-page-wrap';
     var hasPhotoClass = cur.photo ? ' has-img' : '';
 
-    var html = '<div class="archive-showcase-wrap">'
+    // 外层直接套上对应编号的独立底页：screen-bg-0, screen-bg-1, screen-bg-2, screen-bg-3, screen-bg-4
+    var html = '<div class="archive-page-screen screen-bg-' + currentTplIdx + '">'
+      + '<div class="archive-showcase-wrap">'
       + '<div class="archive-integrated-header">'
       + '<div class="arch-header-left">'
       + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
@@ -441,13 +431,14 @@
       + '</div>'
       + '</div>'
 
+      + '</div>'
       + '</div>';
 
     container.innerHTML = html;
     bindStep3Events(cur);
   }
 
-  // 渲染 5 种模板（已彻底移除名字后的十字架字符）
+  // 渲染 5 种模板
   function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
     if (tplIdx === 0) {
       // 01. 冰蓝票根
@@ -487,7 +478,7 @@
         + '<div class="t3-bottom-deck"><div class="t3-french-tags"><span class="t3-french-quote">« Pour toujours et à jamais »</span><div class="t3-chips"><span class="t3-chip">✦ 燕麦手作</span><span class="t3-chip">♡ 典藏信笺</span></div></div><div class="t3-wax-seal"><div class="t3-wax-inner">✦</div></div></div>'
         + '</div></div></div>';
     } else if (tplIdx === 3) {
-      // 04. 粉晶圣殿（已彻底去掉原先名称后的 ✞ 字符）
+      // 04. 粉晶圣殿
       return '<div class="arch-card-wrapper t4-wrapper">'
         + '<div class="t4-inner-frame"><div class="t4-cross tl">✟</div><div class="t4-cross tr">✟</div><div class="t4-cross bl">✟</div><div class="t4-cross br">✟</div>'
         + '<div class="t4-header"><div class="t4-title-wrap"><span>✠</span><span class="t4-title">SANCTUARY</span></div><div class="t4-stamp">ROSE · ' + esc(cur.birthday || '0000') + '</div></div>'
