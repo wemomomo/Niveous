@@ -181,7 +181,6 @@
     container.innerHTML = '<div class="archive-integrated-header">'
       + '<div class="arch-header-left">'
       + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
-      + '<span class="arch-header-title">手账填单</span>'
       + '</div>'
       + '</div>'
       + '<div class="archive-step-panel step-active" id="archStep2">'
