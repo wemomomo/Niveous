@@ -1,3 +1,4 @@
+
 (function(){
   'use strict';
 
@@ -20,11 +21,11 @@
   var defaultProfile = {
     id: '',
     name: '你',
-    gender: '女',
-    age: '18',
-    height: '165cm',
+    gender: '',
+    age: '',
+    height: '',
     birthday: '',
-    zodiac: '天秤座',
+    zodiac: '',
     appearance: '',
     personality: '',
     tags: '',
@@ -192,7 +193,7 @@
   }
 
   // ==========================================
-  // 步骤 2：手账录入填单
+  // 步骤 2：手账录入填单（支持右滑返回）
   // ==========================================
   function renderStep2() {
     var cur = getCurrentUser() || defaultProfile;
@@ -279,7 +280,8 @@
       background: cur.background || ''
     });
 
-    document.getElementById('archBackBtn').addEventListener('click', function() {
+    // 核心通用返回处理（点击返回键 & 右滑手势共用）
+    function handleStep2Back() {
       var currentSnapshot = JSON.stringify({
         name: document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, ''),
         gender: document.getElementById('fieldGender').value.trim(),
@@ -343,7 +345,34 @@
       } else {
         renderStep1();
       }
-    });
+    }
+
+    document.getElementById('archBackBtn').addEventListener('click', handleStep2Back);
+
+    // 绑定右滑返回手势（防误触：横向位移大于50px且横向倾斜度明显大于纵向滑动）
+    var step2Panel = document.getElementById('archStep2');
+    if (step2Panel) {
+      var sStartX = 0, sStartY = 0, sEndX = 0, sEndY = 0;
+      step2Panel.addEventListener('touchstart', function(e) {
+        sStartX = e.touches[0].clientX;
+        sStartY = e.touches[0].clientY;
+        sEndX = sStartX;
+        sEndY = sStartY;
+      }, { passive: true });
+
+      step2Panel.addEventListener('touchmove', function(e) {
+        sEndX = e.touches[0].clientX;
+        sEndY = e.touches[0].clientY;
+      }, { passive: true });
+
+      step2Panel.addEventListener('touchend', function() {
+        var diffX = sEndX - sStartX;
+        var diffY = sEndY - sStartY;
+        if (diffX > 55 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+          handleStep2Back();
+        }
+      });
+    }
 
     document.getElementById('generateCardBtn').addEventListener('click', function() {
       var nameVal = document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, '');
@@ -392,7 +421,6 @@
     container.className = 'app-content archive-page-wrap';
     var hasPhotoClass = cur.photo ? ' has-img' : '';
 
-    // 外层直接套上对应编号的独立底页：screen-bg-0, screen-bg-1, screen-bg-2, screen-bg-3, screen-bg-4
     var html = '<div class="archive-page-screen screen-bg-' + currentTplIdx + '">'
       + '<div class="archive-showcase-wrap">'
       + '<div class="archive-integrated-header">'
