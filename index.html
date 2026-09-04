@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Niveous">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffffff">
+<meta http-equiv="Content-Security-Policy" content="frame-src 'none';">
+
+<!-- 苹果 iOS PWA 桌面原生高清图标 -->
+<link rel="apple-touch-icon" href="https://niveousmoon.top/images/img_1788303212186_2hm3q.jpg">
+<link rel="apple-touch-icon" sizes="152x152" href="https://niveousmoon.top/images/img_1788303212186_2hm3q.jpg">
+<link rel="apple-touch-icon" sizes="180x180" href="https://niveousmoon.top/images/img_1788303212186_2hm3q.jpg">
+<link rel="apple-touch-icon" sizes="167x167" href="https://niveousmoon.top/images/img_1788303212186_2hm3q.jpg">
+<link rel="icon" type="image/jpeg" href="https://niveousmoon.top/images/img_1788303212186_2hm3q.jpg">
+
+<link rel="manifest" href="manifest.json">
 <title>Niveous</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="components.css">
@@ -13,8 +26,54 @@
 <link rel="stylesheet" href="edit-drag.css">
 <link rel="stylesheet" href="settings.css">
 <link rel="stylesheet" href="wechat.css">
+<link rel="stylesheet" href="imgbed.css">
+<link rel="stylesheet" href="beautify.css">
+<link rel="stylesheet" href="worldbook.css">
+<link rel="stylesheet" href="forum.css">
+<link rel="stylesheet" href="couplespace.css">
 </head>
 <body>
+
+<!-- 全局登录/注册门禁层 -->
+<div class="auth-gate-mask" id="authGateMask">
+  <div class="auth-gate-card">
+    <div class="auth-glow-top"></div>
+    <div class="auth-glow-bottom"></div>
+
+    <!-- 1. 登录表单 -->
+    <div class="auth-content-box" id="authLoginBox">
+      <div class="auth-subtitle">WELCOME</div>
+      <div class="auth-title">账号登录</div>
+      <div class="auth-divider"></div>
+
+      <div class="auth-inputs-wrap">
+        <input type="text" id="authUsernameInput" placeholder="账号" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+        <input type="password" id="authPasswordInput" placeholder="密码" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+      </div>
+
+      <button class="auth-submit-btn" id="authSubmitBtn" type="button">进入</button>
+
+      <div class="auth-switch-text" id="authGoRegister">激活码点这里<span>点此注册</span></div>
+    </div>
+
+    <!-- 2. 注册表单 -->
+    <div class="auth-content-box auth-hidden" id="authRegisterBox">
+      <div class="auth-subtitle">REGISTER</div>
+      <div class="auth-title">新用户注册</div>
+      <div class="auth-divider"></div>
+
+      <div class="auth-inputs-wrap">
+        <input type="text" id="authInviteInput" placeholder="邀请码" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+        <input type="text" id="authRegUserInput" placeholder="设置账号" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+        <input type="password" id="authRegPassInput" placeholder="设置密码" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+      </div>
+
+      <button class="auth-submit-btn" id="authRegisterBtn" type="button">注册并登录</button>
+
+      <div class="auth-switch-text" id="authGoLogin">已有账号？<span>返回登录</span></div>
+    </div>
+  </div>
+</div>
 
 <!-- 全局全屏壁纸层 -->
 <div class="home-bg-layer" id="homeBgLayer"></div>
@@ -45,142 +104,175 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 桌面 (Home) -->
+    <!-- 桌面 (Home) - 真正双屏滑动容器 -->
     <!-- ========================================== -->
     <div class="page active" data-page="home">
 
-      <!-- 1. 个人卡片 -->
-      <div class="profile-card draggable" id="profileCard" data-component="card">
-        <div class="card-bg" id="cardBg"></div>
-        <div class="card-upper" id="cardUpper"></div>
-        <div class="card-lower">
-          <div class="lower-overlay" id="lowerOverlay"></div>
-          <div class="avatar-wrapper" id="avatarBtn">
-            <img id="avatarImg" alt="头像">
-            <svg class="avatar-placeholder" viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-          </div>
-          <div class="info-area">
-            <div class="info-text line-1" contenteditable="true" data-key="line1" data-placeholder="单击头像上方加载卡片背景"></div>
-            <div class="info-text line-2" contenteditable="true" data-key="line2" data-placeholder="长按进入编辑模式"></div>
-            <div class="info-text line-3" contenteditable="true" data-key="line3" data-placeholder="组件可进行上下拖拽"></div>
-            <div class="info-text line-4">
-              <svg class="location-icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <span class="location-text" contenteditable="true"></span>
+      <div class="desktop-slider-wrapper">
+        <div class="desktop-slider" id="desktopSlider">
+          
+          <!-- 桌面第 1 屏 (3个大组件卡片) -->
+          <div class="desktop-screen" data-screen-idx="0">
+            <!-- 1. 个人卡片 -->
+            <div class="profile-card draggable" id="profileCard" data-component="card">
+              <div class="card-bg" id="cardBg"></div>
+              <div class="card-upper" id="cardUpper"></div>
+              <div class="card-lower">
+                <div class="lower-overlay" id="lowerOverlay"></div>
+                <div class="avatar-wrapper" id="avatarBtn">
+                  <img id="avatarImg" alt="头像">
+                  <svg class="avatar-placeholder" viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                </div>
+                <div class="info-area">
+                  <div class="info-text line-1" contenteditable="true" data-key="line1" data-placeholder="点击头像上方加载卡片背景"></div>
+                  <div class="info-text line-2" contenteditable="true" data-key="line2" data-placeholder="长按空白处进入美化编辑"></div>
+                  <div class="info-text line-3" contenteditable="true" data-key="line3" data-placeholder="组件可进行上下拖拽"></div>
+                  <div class="info-text line-4">
+                    <svg class="location-icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span class="location-text" contenteditable="true"></span>
+                  </div>
+                </div>
+              </div>
+              <button class="edit-btn" data-edit-target="card">编辑</button>
             </div>
-          </div>
-        </div>
-        <button class="edit-btn" data-edit-target="card">编辑</button>
-      </div>
 
-      <!-- 2. 消息卡片 -->
-      <div class="message-card draggable" id="messageCard" data-component="message">
-        <div class="message-avatar" id="messageAvatar">
-          <img id="messageAvatarImg" alt="角色头像">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
-        </div>
-        <div class="message-content">
-          <div class="message-preview" id="messagePreview" contenteditable="true">暂未联通角色...</div>
-        </div>
-        <div class="message-badge" id="messageBadge">
-          <svg class="badge-icon" id="messageBadgeIcon" viewBox="0 0 20 22">
-            <path d="M4 2 L16 2 Q18 2 18 4 L18 12 Q18 14 16 14 L11 14 L10 17 L9 14 L4 14 Q2 14 2 12 L2 4 Q2 2 4 2 Z" 
-                  stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="6" cy="8" r="1" fill="currentColor"/>
-            <circle cx="10" cy="8" r="1" fill="currentColor"/>
-            <circle cx="14" cy="8" r="1" fill="currentColor"/>
-          </svg>
-          <span id="messageBadgeText">最新讯息</span>
-        </div>
-        <button class="edit-btn" data-edit-target="message">编辑</button>
-      </div>
-
-      <!-- 3. 头像展示区 -->
-      <div class="couple-section draggable" id="coupleSection" data-component="couple">
-        <div class="couple-left">
-          <div class="couple-icons">
-            <div class="couple-icon-item" data-action="beautify">
-              <div class="couple-icon-circle">
-                <svg viewBox="0 0 24 24">
-                  <polygon class="star-fill" points="12,2 14.5,9 22,9.5 16.5,14 18,21.5 12,17.5 6,21.5 7.5,14 2,9.5 9.5,9"/>
-                  <circle cx="19" cy="4" r="1.5" stroke-width="1.2"/>
-                  <circle cx="20" cy="8" r="1" stroke-width="1"/>
-                </svg>
-              </div>
-              <span>美化</span>
-            </div>
-            <div class="couple-icon-item" data-action="worldbook">
-              <div class="couple-icon-circle">
-                <svg viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="9"/>
-                  <path d="M3.6 9h16.8"/>
-                  <path d="M3.6 15h16.8"/>
-                  <ellipse cx="12" cy="12" rx="4.5" ry="9"/>
-                </svg>
-              </div>
-              <span>世界书</span>
-            </div>
-            <div class="couple-icon-item" data-action="forum">
-              <div class="couple-icon-circle">
-                <svg viewBox="0 0 24 24">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  <path d="M8 9h8"/>
-                  <path d="M8 13h5"/>
-                </svg>
-              </div>
-              <span>论坛</span>
-            </div>
-            <div class="couple-icon-item" data-action="couple-space">
-              <div class="couple-icon-circle">
-                <svg viewBox="0 0 24 24">
-                  <path class="heart-fill" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-              </div>
-              <span>情侣空间</span>
-            </div>
-          </div>
-        </div>
-        <div class="couple-right">
-          <div class="couple-avatars">
-            <div class="couple-avatar-item">
-              <div class="couple-speech" contenteditable="true" id="coupleSpeech1">♡</div>
-              <div class="couple-avatar-circle" id="coupleAvatar1">
-                <img id="coupleAvatarImg1" alt="">
+            <!-- 2. 消息卡片 -->
+            <div class="message-card draggable" id="messageCard" data-component="message">
+              <div class="message-avatar" id="messageAvatar">
+                <img id="messageAvatarImg" alt="角色头像">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
               </div>
-              <div class="couple-name" contenteditable="true" id="coupleName1">TA</div>
-            </div>
-            <div class="couple-avatar-item">
-              <div class="couple-speech" contenteditable="true" id="coupleSpeech2">♡</div>
-              <div class="couple-avatar-circle" id="coupleAvatar2">
-                <img id="coupleAvatarImg2" alt="">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+              <div class="message-content">
+                <div class="message-preview" id="messagePreview" contenteditable="true">暂未联通角色...</div>
               </div>
-              <div class="couple-name" contenteditable="true" id="coupleName2">你</div>
+              <div class="message-badge" id="messageBadge">
+                <svg class="badge-icon" id="messageBadgeIcon" viewBox="0 0 20 22">
+                  <path d="M4 2 L16 2 Q18 2 18 4 L18 12 Q18 14 16 14 L11 14 L10 17 L9 14 L4 14 Q2 14 2 12 L2 4 Q2 2 4 2 Z" 
+                        stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle cx="6" cy="8" r="1" fill="currentColor"/>
+                  <circle cx="10" cy="8" r="1" fill="currentColor"/>
+                  <circle cx="14" cy="8" r="1" fill="currentColor"/>
+                </svg>
+                <span id="messageBadgeText">最新讯息</span>
+              </div>
+              <button class="edit-btn" data-edit-target="message">编辑</button>
+            </div>
+
+            <!-- 3. 头像展示区 -->
+            <div class="couple-section draggable" id="coupleSection" data-component="couple">
+              <div class="couple-left">
+                <div class="couple-icons">
+                  <div class="couple-icon-item" data-action="beautify">
+                    <div class="couple-icon-circle">
+                      <svg viewBox="0 0 24 24">
+                        <polygon class="star-fill" points="12,2 14.5,9 22,9.5 16.5,14 18,21.5 12,17.5 6,21.5 7.5,14 2,9.5 9.5,9"/>
+                        <circle cx="19" cy="4" r="1.5" stroke-width="1.2"/>
+                        <circle cx="20" cy="8" r="1" stroke-width="1"/>
+                      </svg>
+                    </div>
+                    <span>美化</span>
+                  </div>
+                  <div class="couple-icon-item" data-action="worldbook">
+                    <div class="couple-icon-circle">
+                      <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M3.6 9h16.8"/>
+                        <path d="M3.6 15h16.8"/>
+                        <ellipse cx="12" cy="12" rx="4.5" ry="9"/>
+                      </svg>
+                    </div>
+                    <span>世界书</span>
+                  </div>
+                  <div class="couple-icon-item" data-action="forum">
+                    <div class="couple-icon-circle">
+                      <svg viewBox="0 0 24 24">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        <path d="M8 9h8"/>
+                        <path d="M8 13h5"/>
+                      </svg>
+                    </div>
+                    <span>论坛</span>
+                  </div>
+                  <div class="couple-icon-item" data-action="couple-space">
+                    <div class="couple-icon-circle">
+                      <svg viewBox="0 0 24 24">
+                        <path class="heart-fill" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                    </div>
+                    <span>情侣空间</span>
+                  </div>
+                </div>
+              </div>
+              <div class="couple-right">
+                <div class="couple-avatars">
+                  <div class="couple-avatar-item">
+                    <div class="couple-speech" contenteditable="true" id="coupleSpeech1">对话1</div>
+                    <div class="couple-avatar-circle" id="coupleAvatar1">
+                      <img id="coupleAvatarImg1" alt="">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                    </div>
+                    <div class="couple-name" contenteditable="true" id="coupleName1">TA</div>
+                  </div>
+                  <div class="couple-avatar-item">
+                    <div class="couple-speech" contenteditable="true" id="coupleSpeech2">对话2</div>
+                    <div class="couple-avatar-circle" id="coupleAvatar2">
+                      <img id="coupleAvatarImg2" alt="">
+                      <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+                    </div>
+                    <div class="couple-name" contenteditable="true" id="coupleName2">你</div>
+                  </div>
+                </div>
+                <div class="couple-date-card" id="coupleDateCard">
+                  <div class="date-card-header">
+                    <span class="date-card-text">和<span class="date-card-name" id="datePartnerName">TA</span>在一起 已经</span>
+                    <span class="date-card-days" id="dateDaysCount">0</span>
+                    <span class="date-card-unit">天</span>
+                    <input type="date" id="dateStartInput" class="date-hidden-input">
+                  </div>
+                  <div class="date-card-calendar">
+                    <div class="date-card-labels">
+                      <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                    </div>
+                    <div class="date-card-dates" id="dateWeekDates"></div>
+                  </div>
+                </div>
+              </div>
+              <button class="edit-btn" data-edit-target="couple">编辑</button>
             </div>
           </div>
-          <div class="couple-date-card" id="coupleDateCard">
-            <div class="date-card-header">
-              <span class="date-card-text">和<span class="date-card-name" id="datePartnerName">TA</span>在一起 已经</span>
-              <span class="date-card-days" id="dateDaysCount">0</span>
-              <span class="date-card-unit">天</span>
-              <input type="date" id="dateStartInput" class="date-hidden-input">
-            </div>
-            <div class="date-card-calendar">
-              <div class="date-card-labels">
-                <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+
+          <!-- 桌面第 2 屏 (图床等应用专属屏幕) -->
+          <div class="desktop-screen" data-screen-idx="1">
+            <div class="desktop-apps-container">
+              
+              <!-- 图标：图床 -->
+              <div class="couple-icon-item" data-goto="imgbed" data-open-app="imgbed">
+                <div class="couple-icon-circle">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <span>图床</span>
               </div>
-              <div class="date-card-dates" id="dateWeekDates"></div>
+
             </div>
           </div>
+
         </div>
-        <button class="edit-btn" data-edit-target="couple">编辑</button>
+      </div>
+
+      <!-- 桌面指示小圆点 -->
+      <div class="desktop-pagination" id="desktopPagination">
+        <span class="desktop-dot active" data-screen="0"></span>
+        <span class="desktop-dot" data-screen="1"></span>
       </div>
 
     </div>
 
-    <!-- ========================================== -->
     <!-- App 空壳页面 -->
-    <!-- ========================================== -->
+    <div class="page app-page" data-page="imgbed"></div>
     <div class="page app-page" data-page="wechat"></div>
     <div class="page app-page" data-page="offline"></div>
     <div class="page app-page" data-page="settings"></div>
@@ -215,16 +307,17 @@
       </div>
       <div class="tab-item" data-tab="settings">
         <div class="tab-icon">
-          <svg viewBox="0 0 24 24">
+          <!-- 经典原版齿轮 · 严格闭合平滑无倾斜 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
           </svg>
         </div>
         <div class="tab-label">设置</div>
       </div>
       <div class="tab-item" data-tab="check">
         <div class="tab-icon">
-          <svg viewBox="0 0 24 24">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
             <path d="M12 18h.01"/>
             <path d="M9 6h6"/>
@@ -262,5 +355,10 @@
 <script src="tabbar.js"></script>
 <script src="settings.js"></script>
 <script src="wechat.js"></script>
+<script src="imgbed.js"></script>
+<script src="beautify.js"></script>
+<script src="worldbook.js"></script>
+<script src="forum.js"></script>
+<script src="couplespace.js"></script>
 </body>
 </html>
