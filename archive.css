@@ -1,8 +1,15 @@
-/* ========== 档案页面专属顶层容器 ========== */
-.archive-fullscreen-mode {
-  padding: 0 16px calc(12px + var(--safe-bottom)) !important;
+/* ========== 彻底隐藏全局白色遮挡顶栏 ========== */
+[data-page="archive"] .app-header {
+  display: none !important;
+}
+
+/* ========== 档案页面专属滚动容器 ========== */
+.archive-page-wrap {
+  padding: calc(10px + var(--safe-top)) 16px calc(14px + var(--safe-bottom)) !important;
   display: flex;
   flex-direction: column;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .archive-showcase-wrap {
@@ -15,13 +22,55 @@
   gap: 10px;
 }
 
-/* ========== 顶部规整悬浮工具栏 ========== */
-.archive-floating-toolbar {
+/* ========== 真正同层的精致顶栏 ========== */
+.archive-integrated-header {
   width: 100%;
+  max-width: 360px;
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 2px 0 4px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 8px;
+  margin: 0 auto;
+}
+
+.arch-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.arch-native-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3c3c43;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  margin-left: -6px;
+}
+.arch-native-back:active { opacity: 0.5; }
+.arch-native-back svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.arch-header-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1c1c1e;
+  letter-spacing: -0.5px;
+}
+
+.arch-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .arch-tool-pill {
@@ -30,7 +79,7 @@
   gap: 4px;
   background: #f1f3f5;
   border: 1px solid rgba(24, 25, 28, 0.12);
-  padding: 5px 11px;
+  padding: 5px 10px;
   border-radius: 16px;
   font-size: 11px;
   font-weight: 700;
@@ -60,7 +109,6 @@
   touch-action: pan-y;
 }
 
-/* 5 种模板统一的外框骨架 */
 .arch-card-wrapper {
   width: 100%;
   box-sizing: border-box;
@@ -68,7 +116,6 @@
   flex-direction: column;
 }
 
-/* 5 种模板统一的相框比例 */
 .arch-shared-photo-box {
   width: 100%;
   aspect-ratio: 1 / 1.32;
@@ -299,7 +346,7 @@
 .journal-seal-stamp { width: 38px; height: 38px; border: 1.5px solid #18191c; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 6px; font-weight: 900; letter-spacing: 0.5px; transform: rotate(-8deg); color: #18191c; opacity: 0.85; }
 .seal-star { font-size: 8px; line-height: 1; }
 
-/* ========== 5 种模板纯正原版内部样式 ========== */
+/* ========== 5 种模板内部原生样式 ========== */
 
 /* --- 模板 1：冰蓝票根 --- */
 .t1-wrapper { background: #ffffff; border-radius: 20px; padding: 14px 12px 16px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.07); border: 1px solid rgba(255, 255, 255, 0.9); position: relative; overflow: hidden; }
@@ -402,7 +449,7 @@
 .t4-title { font-size: 12px; font-weight: 800; letter-spacing: 2.5px; color: #3a2e33; text-transform: uppercase; }
 .t4-stamp { font-size: 7.5px; font-weight: 700; border: 1px solid #b88f9d; color: #966b7a; padding: 1.5px 5px; border-radius: 3px; background: #f6edf0; }
 .t4-arch-stage { border-radius: 100px 100px 8px 8px; border: 1.2px solid #b88f9d; box-shadow: 0 6px 16px rgba(150, 107, 122, 0.1); background: #ffffff; }
-.t4-arch-overlay { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: rgba(255, 255, 255, 0.95); text-shadow: 0 1px 3px rgba(58, 46, 51, 0.4); pointer-events: none; letter-spacing: 1.5px; }
+.t4-arch-overlay { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 700; color: rgba(255, 255, 255, 0.95); text-shadow: 0 1px 4px rgba(58, 46, 51, 0.4); pointer-events: none; letter-spacing: 1.5px; }
 .t4-footer-body { display: flex; flex-direction: column; gap: 6px; padding-top: 2px; }
 .t4-username { font-size: 15px; font-weight: 800; color: #3a2e33; letter-spacing: 1px; }
 .t4-serial { font-size: 8.5px; font-family: monospace; color: #966b7a; font-weight: 700; }
