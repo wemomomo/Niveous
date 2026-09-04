@@ -1,16 +1,57 @@
-
 /* ========== 彻底隐藏全局 app-header ========== */
 [data-page="archive"] .app-header {
   display: none !important;
 }
 
-/* ========== 档案页面专属滚动页面 ========== */
+/* ========== 档案页面整体滚动视口 ========== */
 .archive-page-wrap {
   padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom)) !important;
   display: flex;
   flex-direction: column;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+  transition: background 0.35s ease;
+}
+
+/* ========== 5 套模板的专属动态页面背景色 ========== */
+/* 第一张：浅灰色背景 */
+.archive-page-wrap.theme-bg-grey {
+  background: #eef2f7;
+  background-image: 
+    radial-gradient(circle at 20% 15%, rgba(176, 204, 232, 0.45) 0%, transparent 40%),
+    radial-gradient(circle at 80% 85%, rgba(136, 171, 218, 0.35) 0%, transparent 40%);
+}
+/* 第二张：灰蓝背景 */
+.archive-page-wrap.theme-bg-blue {
+  background: #e9edf3;
+  background-image: 
+    radial-gradient(#cbd5e1 1px, transparent 1px),
+    linear-gradient(135deg, #eef2f7 0%, #dfe7f1 100%);
+  background-size: 16px 16px, 100% 100%;
+}
+/* 第三张：奶米燕麦背景 */
+.archive-page-wrap.theme-bg-oat {
+  background: #eae6df;
+  background-image: 
+    radial-gradient(#cfc9be 1.2px, transparent 1.2px),
+    linear-gradient(135deg, #f2eee8 0%, #e3ded6 100%);
+  background-size: 18px 18px, 100% 100%;
+}
+/* 第四张：灰粉色背景 */
+.archive-page-wrap.theme-bg-pink {
+  background: #f2e8eb;
+  background-image: 
+    radial-gradient(circle at 50% 15%, rgba(184, 143, 157, 0.22) 0%, transparent 60%),
+    radial-gradient(#e2d3d8 1.2px, transparent 1.2px);
+  background-size: 100% 100%, 16px 16px;
+}
+/* 第五张：冷炭背景 */
+.archive-page-wrap.theme-bg-dark {
+  background: #e7e4dc;
+  background-image: 
+    radial-gradient(#cfcbbf 1.2px, transparent 1.2px),
+    linear-gradient(135deg, #edeae3 0%, #dbd6cb 100%);
+  background-size: 18px 18px, 100% 100%;
 }
 
 .archive-showcase-wrap {
@@ -23,7 +64,7 @@
   gap: 12px;
 }
 
-/* ========== 顶部栏（保持原版完全不动） ========== */
+/* ========== 顶部栏 ========== */
 .archive-integrated-header {
   width: 100%;
   max-width: 370px;
@@ -126,7 +167,7 @@
 }
 
 /* ======================================================== */
-/* 风格 1：冰蓝条形码票根（基准比例）                        */
+/* 风格 1：冰蓝条形码票根                                    */
 /* ======================================================== */
 .t1-wrapper {
   width: 100%;
@@ -339,11 +380,10 @@
 .t1-tag.primary { background: #000; color: #ffffff; border: none; }
 
 /* ======================================================== */
-/* 风格 2：双对角冰蓝缎带亚克力（平衡比例，内容大舒展）     */
+/* 风格 2：双对角冰蓝缎带亚克力                             */
 /* ======================================================== */
 .t2-wrapper {
   width: 100%;
-  /* 专属清冷灰蓝双层渐变 + 柔焦冰蓝微粒光晕 */
   background: 
     radial-gradient(circle at 85% 15%, rgba(136, 171, 218, 0.45) 0%, transparent 55%),
     radial-gradient(circle at 15% 85%, rgba(160, 190, 225, 0.35) 0%, transparent 60%),
@@ -377,7 +417,7 @@
 .t2-top-ring {
   width: 32px;
   height: 8px;
-  background: #ffffff; /* 改成白色 */
+  background: #ffffff;
   border-radius: 4px;
   margin: 0 auto -4px;
   position: relative;
@@ -403,7 +443,6 @@
 .t2-icons { display: flex; gap: 6px; color: #7fa5d1; font-size: 13px; }
 .t2-brand { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #7d8b99; text-transform: uppercase; }
 
-/* 优化后相框比例：高度约260px，不再撑爆 */
 .t2-photo-stage {
   width: 100%; aspect-ratio: 1 / 1.1; border-radius: 14px; position: relative;
   overflow: hidden; background: #edf2f7; border: 1.2px solid #1e242d; cursor: pointer;
@@ -450,7 +489,7 @@
 }
 
 /* ======================================================== */
-/* 风格 3：极浅奶霜燕麦火漆邮票（平衡比例，火漆诗意舒展） */
+/* 风格 3：极浅奶霜燕麦火漆邮票                            */
 /* ======================================================== */
 .t3-wrapper {
   width: 100%; background: #faf8f5; border-radius: 14px;
@@ -465,7 +504,7 @@
 .t3-perfs-left { left: -5px; }
 .t3-perfs-right { right: -5px; }
 .t3-perf-hole {
-  width: 9px; height: 9px; background: #eef2f7; border-radius: 50%;
+  width: 9px; height: 9px; background: #eae6df; border-radius: 50%;
   box-shadow: inset 0 1px 2px rgba(50, 45, 41, 0.12);
 }
 .t3-inner-box {
@@ -487,7 +526,6 @@
   border-bottom: 1.5px solid #8a7e72; padding-bottom: 1px; display: flex; align-items: center; gap: 3px;
 }
 
-/* 优化后相框比例：高度约250px */
 .t3-photo-stage {
   width: 100%; aspect-ratio: 1 / 1.1; position: relative; background: #f4f1eb;
   border: 1.2px solid #322d29; cursor: pointer; overflow: hidden;
@@ -531,7 +569,7 @@
 }
 
 /* ======================================================== */
-/* 风格 4：浅灰粉晶哥特教堂圣殿（平衡比例，属性矩阵舒展）   */
+/* 风格 4：浅灰粉晶哥特教堂圣殿                            */
 /* ======================================================== */
 .t4-wrapper {
   width: 100%; background: #fcf8f9; border-radius: 20px; padding: 14px;
@@ -557,9 +595,8 @@
   padding: 2px 7px; border-radius: 4px; background: #f6edf0;
 }
 
-/* 优化后罗马拱门相框：高度约280px */
 .t4-arch-stage {
-  width: 100%; aspect-ratio: 1/ 1.1; position: relative; border-radius: 100px 100px 10px 10px;
+  width: 100%; aspect-ratio: 1 / 1.1; position: relative; border-radius: 100px 100px 10px 10px;
   border: 1.5px solid #b88f9d; box-shadow: 0 8px 20px rgba(150, 107, 122, 0.1);
   cursor: pointer; overflow: hidden; background: #ffffff; display: flex; align-items: center; justify-content: center;
 }
@@ -593,7 +630,7 @@
 .t4-stat-val { font-size: 10.5px; font-weight: 800; color: #3a2e33; letter-spacing: 1px; }
 
 /* ======================================================== */
-/* 风格 5：白金冷银 35mm 电影特刊（电影宽幅，字幕舒展）     */
+/* 风格 5：白金冷银 35mm 电影特刊                          */
 /* ======================================================== */
 .t5-wrapper {
   width: 100%; background: #141619; border-radius: 16px; padding: 14px 14px 18px;
@@ -602,7 +639,7 @@
 }
 .t5-sprockets { display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; }
 .t5-hole {
-  width: 14px; height: 9px; background: #eef2f7; border-radius: 2.5px;
+  width: 14px; height: 9px; background: #e7e4dc; border-radius: 2.5px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 .t5-sprocket-code { font-family: monospace; font-size: 8px; font-weight: 700; color: #dcdfe4; letter-spacing: 2px; }
@@ -614,9 +651,8 @@
 .t5-dot { width: 6px; height: 6px; background: #ffffff; border-radius: 50%; box-shadow: 0 0 6px #fff; }
 .t5-fps { font-family: monospace; font-size: 9px; color: #828a94; letter-spacing: 1px; }
 
-/* 优化后电影画幅相框：高度约230px，宽幅电影感极强 */
 .t5-frame-stage {
-  width: 100%; aspect-ratio: 1/ 1; position: relative; background: #000000;
+  width: 100%; aspect-ratio: 1 / 1; position: relative; background: #000000;
   border-radius: 6px; border: 1.5px solid #23272e; cursor: pointer; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
 }
@@ -811,13 +847,13 @@
 .action-trigger-btn:active { transform: scale(0.97); background: #000000; }
 .action-trigger-btn svg { width: 15px; height: 15px; stroke: #ffffff; stroke-width: 2.2; fill: none; }
 
-/* ========== 法式手账填单本面 ========== */
+/* ========== 法式手账填单本面 (左侧内联返回按钮) ========== */
 .journal-sheet {
   width: 100%;
   max-width: 370px;
   background: #ffffff;
   border-radius: 20px;
-  padding: 22px 18px 24px;
+  padding: 20px 18px 24px;
   box-shadow: 0 16px 45px rgba(0, 0, 0, 0.07);
   display: flex;
   flex-direction: column;
@@ -825,9 +861,45 @@
 }
 
 .journal-header { display: flex; flex-direction: column; align-items: center; text-align: center; }
-.journal-header-top { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+
+.journal-header-top {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.journal-header-top-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.journal-inline-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3c3c43;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  margin-left: -4px;
+}
+.journal-inline-back:active { opacity: 0.5; }
+.journal-inline-back svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .brand-confidential { font-size: 8px; font-family: monospace; font-weight: 800; color: #18191c; background: #f1f3f5; padding: 2.5px 7px; border-radius: 4px; letter-spacing: 1.5px; }
-.brand-serial { font-size: 8.5px; font-family: monospace; font-weight: 700; color: #5c6470; letter-spacing: 1px; }
+.brand-serial { font-size: 9px; font-family: monospace; font-weight: 700; color: #5c6470; letter-spacing: 0.5px; }
+
 .journal-main-title { font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #18191c; font-family: "Didot", "Playfair Display", "Times New Roman", "PingFang SC", serif; margin-bottom: 4px; }
 .journal-desc-text { font-size: 11px; color: #5c6470; line-height: 1.5; max-width: 280px; margin-bottom: 12px; }
 .journal-header-divider { width: 100%; display: flex; align-items: center; gap: 8px; }
