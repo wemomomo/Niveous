@@ -8,7 +8,7 @@
   var container = null;
   var userList = [];
   var currentUserId = null;
-  var currentTplIdx = 0; // 0:票根, 1:亚克力, 2:燕麦火漆, 3:粉晶圣殿, 4:白金胶片
+  var currentTplIdx = 0; // 0:票根(浅灰), 1:亚克力(灰蓝), 2:燕麦火漆(奶米), 3:粉晶圣殿(灰粉), 4:白金胶片(冷炭)
 
   var defaultProfile = {
     id: '',
@@ -106,11 +106,20 @@
     renderStep2();
   }
 
+  // 动态更新页面背景色
+  function updatePageThemeBg(idx) {
+    if (!container) return;
+    var themeClasses = ['theme-bg-grey', 'theme-bg-blue', 'theme-bg-oat', 'theme-bg-pink', 'theme-bg-dark'];
+    themeClasses.forEach(function(cls) { container.classList.remove(cls); });
+    container.classList.add(themeClasses[idx] || 'theme-bg-grey');
+  }
+
   // ==========================================
   // 步骤 1：空状态凝聚冰晶
   // ==========================================
   function renderStep1() {
-    container.className = 'app-content archive-page-wrap archive-panel-active';
+    updatePageThemeBg(0);
+    container.className = 'app-content archive-page-wrap archive-panel-active theme-bg-grey';
     container.innerHTML = '<div class="archive-integrated-header">'
       + '<div class="arch-header-left">'
       + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
@@ -170,22 +179,23 @@
   }
 
   // ==========================================
-  // 步骤 2：手账录入填单
+  // 步骤 2：手账录入填单 (返回箭头移至RECORD左边)
   // ==========================================
   function renderStep2() {
     var cur = getCurrentUser() || defaultProfile;
-    container.className = 'app-content archive-page-wrap';
-    container.innerHTML = '<div class="archive-integrated-header">'
-      + '<div class="arch-header-left">'
-      + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
-      + '</div>'
-      + '</div>'
-      + '<div class="archive-step-panel step-active" id="archStep2">'
+    updatePageThemeBg(0);
+    container.className = 'app-content archive-page-wrap theme-bg-grey';
+    container.innerHTML = '<div class="archive-step-panel step-active" id="archStep2">'
       + '<div class="journal-sheet">'
+      
+      // 头部：返回箭头挪到了 RECORD // ARCHIVE 左侧
       + '<div class="journal-header">'
       + '<div class="journal-header-top">'
+      + '<div class="journal-header-top-left">'
+      + '<button class="journal-inline-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
       + '<span class="brand-confidential">RECORD // ARCHIVE</span>'
-      + '<span class="brand-serial">№ NV-' + esc(cur.createDate || getTodayDateStr()) + '</span>'
+      + '</div>'
+      + '<span class="brand-serial">创檔日期：' + esc(cur.createDate || getTodayDateStr()) + '</span>'
       + '</div>'
       + '<h1 class="journal-main-title">档案录入手札</h1>'
       + '<p class="journal-desc-text">在这里提笔，将关于你的每一缕呼吸、性格轮廓与灵魂羁绊落于纸上。</p>'
@@ -364,6 +374,7 @@
       return;
     }
 
+    updatePageThemeBg(currentTplIdx);
     container.className = 'app-content archive-page-wrap';
     var hasPhotoClass = cur.photo ? ' has-img' : '';
 
@@ -410,7 +421,7 @@
     bindStep3Events(cur);
   }
 
-  // 渲染 5 种模板（结构完全补齐）
+  // 渲染 5 种模板
   function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
     if (tplIdx === 0) {
       // 01. 冰蓝票根
