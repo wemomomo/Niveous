@@ -258,7 +258,7 @@
 }
 
 .t1-left-rail {
-  width: 24px;
+  width: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -296,13 +296,13 @@
   transform: rotate(180deg);
 }
 
-/* 第 1 款相框：固定高度 330px */
+/* 第 1 款相框：固定高度 */
 .t1-photo-stage,
 .arch-shared-photo-box {
   flex: 1;
   min-width: 0;
   width: 100%;
-  height: 330px;
+  height: 360px;
   position: relative;
   border-radius: 16px;
   overflow: hidden;
@@ -341,7 +341,7 @@
 .t1-photo-empty span { font-size: 11.5px; font-weight: 500; }
 
 .t1-right-rail {
-  width: 20px;
+  width: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -356,10 +356,14 @@
 .t1-footer {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   padding-top: 8px;
   border-top: 1px dashed rgba(43, 51, 62, 0.25);
   position: relative;
+  flex-shrink: 0;
+
+  /* 👈 重点在这里：控制图片底部跟这条虚线之间的距离 */
+  margin-top: 12px !important; 
 }
 .t1-cutout-left, .t1-cutout-right {
   position: absolute;
@@ -402,7 +406,7 @@
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   border-radius: 28px;
-  padding: 18px 14px 18px;
+  padding: 18px 15px 18px;
   border: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 25px 60px rgba(70, 95, 125, 0.22), inset 0 1px 3px rgba(255, 255, 255, 0.8);
   position: relative;
@@ -457,7 +461,7 @@
 /* 第 2 款相框：固定高度 */
 .t2-photo-stage {
   width: 100%;
-  height: 310px;
+  height: 340px;
   border-radius: 14px;
   position: relative;
   overflow: hidden;
@@ -549,7 +553,7 @@
 /* 第 3 款相框：固定高度 */
 .t3-photo-stage {
   width: 100%;
-  height: 310px;
+  height: 340px;
   position: relative;
   background: #f4f1eb;
   border: 1.2px solid #322d29;
@@ -638,7 +642,7 @@
 /* 第 4 款拱门相框：固定高度 */
 .t4-arch-stage {
   width: 100%;
-  height: 300px;
+  height: 330px;
   position: relative;
   border-radius: 130px 130px 10px 10px;
   border: 1.5px solid #b88f9d;
@@ -685,7 +689,7 @@
 .t5-wrapper {
   background: #141619;
   border-radius: 16px;
-  padding: 12px 17px 14px;
+  padding: 12px 20px 14px;
   box-shadow: 0 22px 55px rgba(20, 22, 25, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.08);
   gap: 8px;
@@ -749,7 +753,7 @@
 /* 胶片相框 */
 .t5-frame-stage {
   flex: 1;
-  height: 310px !important; 
+  height: 340px !important; 
   width: 100%;
   position: relative;
   background: #000000;
@@ -789,10 +793,10 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  padding: 0 2px;
+  padding: 3px;
 }
 .t5-username {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
   color: #ffffff;
   letter-spacing: 1px;
