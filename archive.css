@@ -1,71 +1,64 @@
-
 /* ========== 彻底隐藏全局 app-header ========== */
 [data-page="archive"] .app-header {
   display: none !important;
 }
 
-/* 核心修复：外壳容器实心遮挡桌面，并随主题平滑变色 */
+/* 外壳容器实心纯白兜底，严禁透出桌面 */
 .page[data-page="archive"] {
-  background-color: #eef2f7 !important; /* 默认实心浅灰，绝对不透首页 */
-  transition: background 0.35s ease;
+  background: #ffffff !important;
 }
 
-/* ========== 5 套模板的专属实心动态背景色（直接赋给外壳） ========== */
-/* 第一张：实心浅灰光晕背景 */
-.page[data-page="archive"]:has(.theme-bg-grey),
-.page[data-page="archive"].theme-bg-grey {
+/* ========== 档案页面滚动容器 ========== */
+.archive-page-wrap {
+  width: 100%;
+  height: 100%;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ========== 5 个真正的独立实心底页容器 (100% 满屏实心铺满) ========== */
+.archive-page-screen {
+  width: 100%;
+  min-height: 100%;
+  padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* 第 1 个底页：实心浅灰色 */
+.archive-page-screen.screen-bg-0 {
   background-color: #eef2f7 !important;
   background-image: 
     radial-gradient(circle at 20% 15%, rgba(176, 204, 232, 0.45) 0%, transparent 40%),
     radial-gradient(circle at 80% 85%, rgba(136, 171, 218, 0.35) 0%, transparent 40%) !important;
 }
-/* 第二张：实心灰蓝网点背景 */
-.page[data-page="archive"]:has(.theme-bg-blue),
-.page[data-page="archive"].theme-bg-blue {
-  background-color: #e9edf3 !important;
-  background-image: 
-    radial-gradient(#cbd5e1 1px, transparent 1px),
-    linear-gradient(135deg, #eef2f7 0%, #dfe7f1 100%) !important;
-  background-size: 16px 16px, 100% 100% !important;
+
+/* 第 2 个底页：实心纯白色 */
+.archive-page-screen.screen-bg-1 {
+  background: #ffffff !important;
 }
-/* 第三张：实心奶米燕麦背景 */
-.page[data-page="archive"]:has(.theme-bg-oat),
-.page[data-page="archive"].theme-bg-oat {
-  background-color: #eae6df !important;
-  background-image: 
-    radial-gradient(#cfc9be 1.2px, transparent 1.2px),
-    linear-gradient(135deg, #f2eee8 0%, #e3ded6 100%) !important;
-  background-size: 18px 18px, 100% 100% !important;
+
+/* 第 3 个底页：实心纯白色 */
+.archive-page-screen.screen-bg-2 {
+  background: #ffffff !important;
 }
-/* 第四张：实心灰粉色背景 */
-.page[data-page="archive"]:has(.theme-bg-pink),
-.page[data-page="archive"].theme-bg-pink {
+
+/* 第 4 个底页：实心灰粉色 */
+.archive-page-screen.screen-bg-3 {
   background-color: #f2e8eb !important;
   background-image: 
     radial-gradient(circle at 50% 15%, rgba(184, 143, 157, 0.28) 0%, transparent 60%),
     radial-gradient(#e2d3d8 1.2px, transparent 1.2px) !important;
   background-size: 100% 100%, 16px 16px !important;
 }
-/* 第五张：实心冷炭电影背景 */
-.page[data-page="archive"]:has(.theme-bg-dark),
-.page[data-page="archive"].theme-bg-dark {
-  background-color: #e7e4dc !important;
-  background-image: 
-    radial-gradient(#cfcbbf 1.2px, transparent 1.2px),
-    linear-gradient(135deg, #edeae3 0%, #dbd6cb 100%) !important;
-  background-size: 18px 18px, 100% 100% !important;
-}
 
-/* ========== 档案页面整体滚动视口 ========== */
-.archive-page-wrap {
-  width: 100%;
-  height: 100%;
-  background: transparent !important; /* 内部透明，透出外壳的实心背景 */
-  padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom)) !important;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
+/* 第 5 个底页：实心纯白色 */
+.archive-page-screen.screen-bg-4 {
+  background: #ffffff !important;
 }
 
 .archive-showcase-wrap {
@@ -300,17 +293,18 @@
   transform: rotate(180deg);
 }
 
+/* 第 1 款相框：固定高度 330px */
 .t1-photo-stage,
 .arch-shared-photo-box {
   flex: 1;
   min-width: 0;
   width: 100%;
+  height: 330px;
   position: relative;
   border-radius: 16px;
   overflow: hidden;
   background: #f7fafc;
   border: 1.5px solid #2b333e;
-  aspect-ratio: 1.1 / 1.38;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -457,10 +451,19 @@
 .t2-icons { display: flex; gap: 6px; color: #7fa5d1; font-size: 13px; }
 .t2-brand { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; color: #7d8b99; text-transform: uppercase; }
 
+/* 第 2 款相框：固定高度 260px */
 .t2-photo-stage {
-  width: 100%; aspect-ratio: 0.95 / 1.05; border-radius: 14px; position: relative;
-  overflow: hidden; background: #edf2f7; border: 1.2px solid #1e242d; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+  width: 100%;
+  height: 260px;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  background: #edf2f7;
+  border: 1.2px solid #1e242d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .t2-photo-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
 .t2-photo-stage.has-img img { display: block; }
@@ -540,10 +543,18 @@
   border-bottom: 1.5px solid #8a7e72; padding-bottom: 1px; display: flex; align-items: center; gap: 3px;
 }
 
+/* 第 3 款相框：固定高度 260px */
 .t3-photo-stage {
-  width: 100%; aspect-ratio: 0.95 / 1.05; position: relative; background: #f4f1eb;
-  border: 1.2px solid #322d29; cursor: pointer; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
+  width: 100%;
+  height: 260px;
+  position: relative;
+  background: #f4f1eb;
+  border: 1.2px solid #322d29;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .t3-photo-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
 .t3-photo-stage.has-img img { display: block; }
@@ -609,10 +620,20 @@
   padding: 2px 7px; border-radius: 4px; background: #f6edf0;
 }
 
+/* 第 4 款拱门相框：固定高度 270px */
 .t4-arch-stage {
-  width: 100%; aspect-ratio: 0.95 / 1; position: relative; border-radius: 100px 100px 10px 10px;
-  border: 1.5px solid #b88f9d; box-shadow: 0 8px 20px rgba(150, 107, 122, 0.1);
-  cursor: pointer; overflow: hidden; background: #ffffff; display: flex; align-items: center; justify-content: center;
+  width: 100%;
+  height: 270px;
+  position: relative;
+  border-radius: 100px 100px 10px 10px;
+  border: 1.5px solid #b88f9d;
+  box-shadow: 0 8px 20px rgba(150, 107, 122, 0.1);
+  cursor: pointer;
+  overflow: hidden;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .t4-arch-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
 .t4-arch-stage.has-img img { display: block; }
@@ -665,10 +686,19 @@
 .t5-dot { width: 6px; height: 6px; background: #ffffff; border-radius: 50%; box-shadow: 0 0 6px #fff; }
 .t5-fps { font-family: monospace; font-size: 9px; color: #828a94; letter-spacing: 1px; }
 
+/* 第 5 款相框：固定高度 230px */
 .t5-frame-stage {
-  width: 100%; aspect-ratio: 0.95 / 0.98; position: relative; background: #000000;
-  border-radius: 6px; border: 1.5px solid #23272e; cursor: pointer; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
+  width: 100%;
+  height: 230px;
+  position: relative;
+  background: #000000;
+  border-radius: 6px;
+  border: 1.5px solid #23272e;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .t5-frame-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
 .t5-frame-stage.has-img img { display: block; }
