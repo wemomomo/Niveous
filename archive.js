@@ -1,720 +1,965 @@
 
-(function(){
-  'use strict';
+/* ========== 彻底隐藏全局 app-header ========== */
+[data-page="archive"] .app-header {
+  display: none !important;
+}
 
-  var ARCHIVES_LIST_KEY = 'user_archives_list_v3';
-  var ACTIVE_USER_ID_KEY = 'user_archive_active_id_v3';
+/* 外壳容器实心纯白兜底，严禁透出桌面 */
+.page[data-page="archive"] {
+  background: #ffffff !important;
+  z-index: 200 !important;
+  position: absolute !important;
+  inset: 0 !important;
+}
 
-  var container = null;
-  var userList = [];
-  var currentUserId = null;
-  var currentTplIdx = 0; // 0:浅灰底页, 1:纯白底页, 2:纯白底页, 3:灰粉底页, 4:纯白底页
+/* ========== 档案页面滚动容器 ========== */
+.archive-page-wrap {
+  width: 100%;
+  height: 100%;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
 
-  var DEFAULT_BIOS = [
-    '“在这清冷如霜的世界里，你是我唯一的满月与浪漫。”',
-    '“把心动藏在银河的微光里，每一步都是奔向你的轨迹。”',
-    '“岁月在信笺里酿成了诗，而你是我写给余生最温柔的篇章。”',
-    '“以粉晶与月光为誓，将灵魂刻入永恒的冠冕，唯你是我至高无上的偏爱。”',
-    '“在这漫长胶片的每一帧里，我都只为你聚焦。”'
-  ];
+/* ========== 5 个真正的独立实心底页容器 (100% 满屏实心铺满) ========== */
+.archive-page-screen {
+  width: 100%;
+  min-height: 100%;
+  padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
 
-  var defaultProfile = {
-    id: '',
-    name: '你',
-    gender: '',
-    age: '',
-    height: '',
-    birthday: '',
-    zodiac: '',
-    appearance: '',
-    personality: '',
-    tags: '',
-    hobbies: '',
-    background: '',
-    bio0: DEFAULT_BIOS[0],
-    bio1: DEFAULT_BIOS[1],
-    bio2: DEFAULT_BIOS[2],
-    bio3: DEFAULT_BIOS[3],
-    bio4: DEFAULT_BIOS[4],
-    photo: '',
-    createDate: '',
-    userid: '@NIVEOUSMOON',
-    tag1: '✦ 专属',
-    tag2: '♡ 奔赴',
-    tag3: '✧ 宇宙漫游',
-    serial: 'NO. 0000-NIVEOUS',
-    tplIdx: 0
-  };
+/* 第 1 个底页：实心浅灰色 */
+.archive-page-screen.screen-bg-0 {
+  background-color: #eef2f7 !important;
+  background-image: 
+    radial-gradient(circle at 20% 15%, rgba(176, 204, 232, 0.45) 0%, transparent 40%),
+    radial-gradient(circle at 80% 85%, rgba(136, 171, 218, 0.35) 0%, transparent 40%) !important;
+}
 
-  function tryInit() {
-    container = document.getElementById('archiveContent');
-    if (!container) {
-      window.addEventListener('dbReady', tryInit);
-      return;
-    }
-    loadAllData();
+/* 第 2 个底页：实心纯白色 */
+.archive-page-screen.screen-bg-1 {
+  background: #ffffff !important;
+}
+
+/* 第 3 个底页：实心纯白色 */
+.archive-page-screen.screen-bg-2 {
+  background: #ffffff !important;
+}
+
+/* 第 4 个底页：实心灰粉色 */
+.archive-page-screen.screen-bg-3 {
+  background-color: #f2e8eb !important;
+  background-image: 
+    radial-gradient(circle at 50% 15%, rgba(184, 143, 157, 0.28) 0%, transparent 60%),
+    radial-gradient(#e2d3d8 1.2px, transparent 1.2px) !important;
+  background-size: 100% 100%, 16px 16px !important;
+}
+
+/* 第 5 个底页：实心纯白色 */
+.archive-page-screen.screen-bg-4 {
+  background: #ffffff !important;
+}
+
+.archive-showcase-wrap {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ========== 顶部栏 ========== */
+.archive-integrated-header {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 2px;
+  margin: 0 auto;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0;
+}
+
+.arch-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.arch-native-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3c3c43;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  margin-left: -6px;
+}
+.arch-native-back:active { opacity: 0.5; }
+.arch-native-back svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.arch-header-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1c1c1e;
+  letter-spacing: -0.5px;
+}
+
+.arch-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0;
+}
+
+.arch-tool-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f3f5;
+  border: 1px solid rgba(24, 25, 28, 0.12);
+  padding: 5px 10px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #18191c;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  transition: all 0.15s ease;
+}
+.arch-tool-pill:active {
+  background: #e2e6ea;
+  transform: scale(0.96);
+}
+.arch-tool-pill svg {
+  width: 12px;
+  height: 12px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  fill: none;
+}
+
+/* ======================================================== */
+/* 核心：5 张卡片外轮廓 100% 绝对统一高度 (520px)           */
+/* ======================================================== */
+.archive-full-card-box {
+  width: 100%;
+  max-width: 360px;
+  height: 520px;
+  display: flex;
+  justify-content: center;
+  touch-action: pan-y;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.arch-card-wrapper {
+  width: 100%;
+  height: 520px !important;
+  max-height: 520px !important;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 通用相框：吃满中间所有剩余空间，不多也不少 */
+.arch-shared-photo-box {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.arch-shared-photo-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+.arch-shared-photo-box.has-img img { display: block; }
+.arch-shared-photo-box.has-img .t1-photo-empty { display: none; }
+
+.t1-photo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  text-align: center;
+}
+.t1-photo-empty svg { width: 28px; height: 28px; stroke: currentColor; fill: none; stroke-width: 1.2; }
+.t1-photo-empty span { font-size: 11px; font-weight: 500; }
+
+/* ======================================================== */
+/* 风格 1：冰蓝条形码票根                                    */
+/* ======================================================== */
+.t1-wrapper {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 14px 12px 16px;
+  box-shadow: 0 20px 50px rgba(74, 107, 143, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  position: relative;
+  overflow: hidden;
+}
+
+.t1-inner {
+  height: 100%;
+  box-sizing: border-box;
+  border: 1.2px solid #2b333e;
+  border-radius: 18px;
+  padding: 12px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #ffffff;
+  position: relative;
+}
+
+.t1-inner::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 60px;
+  height: 60px;
+  background-image: radial-gradient(#2b333e 1px, transparent 1px);
+  background-size: 5px 5px;
+  opacity: 0.18;
+  pointer-events: none;
+  border-radius: 0 14px 0 0;
+}
+
+.t1-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+.t1-serial { font-size: 9px; font-weight: 700; letter-spacing: 2px; color: #7a9ec7; font-family: monospace; }
+.t1-title { font-size: 15px; font-weight: 800; letter-spacing: 2.5px; color: #242b35; display: flex; align-items: center; gap: 4px; }
+.t1-stamp { font-size: 9.5px; font-weight: 700; background: #242b35; color: #ffffff; padding: 2px 7px; border-radius: 5px; letter-spacing: 1px; }
+
+.t1-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  position: relative;
+}
+
+.t1-left-rail {
+  width: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+  flex-shrink: 0;
+}
+.t1-qr-icon { width: 18px; height: 18px; border: 1px solid #2b333e; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #2b333e; }
+.t1-qr-icon svg { width: 12px; height: 12px; fill: currentColor; }
+.t1-barcode-lines { display: flex; flex-direction: column; gap: 1.5px; width: 12px; padding: 4px 0; }
+.t1-bline { height: 1px; background: #2b333e; width: 100%; }
+.t1-bline.thick { height: 2.2px; }
+.t1-bline.thin { height: 0.6px; }
+.t1-vertical-code { writing-mode: vertical-rl; font-family: monospace; font-size: 8px; letter-spacing: 1.5px; color: #4a5568; transform: rotate(180deg); }
+
+.t1-photo-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f7fafc;
+  border: 1.2px solid #2b333e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.t1-photo-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.t1-photo-stage.has-img img { display: block; }
+.t1-photo-stage.has-img .t1-photo-empty { display: none; }
+
+.t1-right-rail {
+  width: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  padding: 4px 0;
+  flex-shrink: 0;
+}
+.t1-star { font-size: 11px; color: #242b35; }
+.t1-dash { width: 1px; height: 24px; border-left: 1px dashed #a0aec0; }
+.t1-rail-dot { width: 3px; height: 3px; background: #a0aec0; border-radius: 50%; }
+
+.t1-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(43, 51, 62, 0.25);
+  position: relative;
+  flex-shrink: 0;
+}
+.t1-cutout-left, .t1-cutout-right {
+  position: absolute;
+  top: -7px;
+  width: 13px;
+  height: 13px;
+  background: #eef2f7;
+  border-radius: 50%;
+  border: 1.2px solid #2b333e;
+  z-index: 5;
+}
+.t1-cutout-left { left: -17px; border-left: none; }
+.t1-cutout-right { right: -17px; border-right: none; }
+
+.t1-user-row { display: flex; justify-content: space-between; align-items: baseline; }
+.t1-username { font-size: 18px; font-weight: 800; color: #242b35; letter-spacing: 0.5px; }
+.t1-userid { font-size: 10px; font-family: monospace; font-weight: 600; color: #7a9ec7; }
+.t1-bio { font-size: 12px; color: #3a424e; line-height: 1.45; font-weight: 500; }
+.t1-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 1px; }
+.t1-tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f0f5fa;
+  color: #4a6b8f;
+  border: 0.5px solid rgba(176, 204, 232, 0.6);
+}
+.t1-tag.primary { background: #000; color: #ffffff; border: none; }
+
+/* ======================================================== */
+/* 风格 2：双对角冰蓝缎带亚克力                             */
+/* ======================================================== */
+.t2-wrapper {
+  background: 
+    radial-gradient(circle at 85% 15%, rgba(136, 171, 218, 0.45) 0%, transparent 55%),
+    radial-gradient(circle at 15% 85%, rgba(160, 190, 225, 0.35) 0%, transparent 60%),
+    linear-gradient(145deg, #e3ebf5 0%, #cfdceb 50%, #b8cde3 100%);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-radius: 28px;
+  padding: 12px 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 25px 60px rgba(70, 95, 125, 0.22), inset 0 1px 3px rgba(255, 255, 255, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+.t2-ribbon-tr {
+  position: absolute; top: 16px; right: -36px; width: 130px;
+  background: linear-gradient(135deg, #b0cce8, #7fa5d1);
+  color: #ffffff; font-size: 10px; font-weight: 800; letter-spacing: 2px;
+  text-align: center; padding: 5px 0; transform: rotate(45deg);
+  box-shadow: 0 3px 8px rgba(127, 165, 209, 0.45); z-index: 20; user-select: none;
+}
+.t2-ribbon-bl {
+  position: absolute; bottom: 16px; left: -36px; width: 130px;
+  background: linear-gradient(135deg, #7fa5d1, #b0cce8);
+  color: #ffffff; font-size: 10px; font-weight: 800; letter-spacing: 2px;
+  text-align: center; padding: 5px 0; transform: rotate(45deg);
+  box-shadow: 0 -3px 8px rgba(127, 165, 209, 0.35); z-index: 20; user-select: none;
+}
+.t2-top-ring {
+  width: 30px;
+  height: 6px;
+  background: #ffffff;
+  border-radius: 4px;
+  margin: 0 auto -2px;
+  position: relative;
+  flex-shrink: 0;
+}
+.t2-frame {
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(30, 36, 45, 0.15);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.t2-cross { position: absolute; font-size: 10px; color: #94a3b8; pointer-events: none; z-index: 10; }
+.t2-cross.tl { top: 5px; left: 6px; }
+.t2-cross.tr { top: 5px; right: 6px; }
+.t2-cross.bl { bottom: 5px; left: 6px; }
+.t2-cross.br { bottom: 5px; right: 6px; }
+
+.t2-top-bar { display: flex; justify-content: space-between; align-items: center; padding: 1px 4px; flex-shrink: 0; }
+.t2-icons { display: flex; gap: 5px; color: #7fa5d1; font-size: 12px; }
+.t2-brand { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #7d8b99; text-transform: uppercase; }
+
+.t2-photo-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  background: #edf2f7;
+  border: 1.2px solid #1e242d;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.t2-photo-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.t2-photo-stage.has-img img { display: block; }
+.t2-photo-stage.has-img .t1-photo-empty { display: none; }
+
+.t2-music-pill {
+  position: absolute; bottom: 8px; right: 8px; background: rgba(30, 36, 45, 0.85);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #ffffff;
+  padding: 3px 8px; border-radius: 16px; font-size: 9px; font-weight: 600;
+  display: flex; align-items: center; gap: 5px;
+}
+.t2-music-wave { display: flex; gap: 1.5px; align-items: center; }
+.t2-wave-bar { width: 1.5px; height: 7px; background: #a1c4fd; border-radius: 1px; animation: waveBounce 1s ease-in-out infinite alternate; }
+.t2-wave-bar:nth-child(2) { height: 10px; animation-delay: 0.2s; }
+.t2-wave-bar:nth-child(3) { height: 5px; animation-delay: 0.4s; }
+@keyframes waveBounce { 0% { transform: scaleY(0.4); } 100% { transform: scaleY(1.2); } }
+
+.t2-footer { display: flex; flex-direction: column; gap: 6px; padding: 2px 2px 0; flex-shrink: 0; }
+.t2-user-row { display: flex; justify-content: space-between; align-items: center; }
+.t2-username { font-size: 18px; font-weight: 800; color: #1e242d; }
+.t2-stars { color: #7fa5d1; font-size: 11px; letter-spacing: 1.5px; }
+.t2-bio { font-size: 12px; color: #5c6773; line-height: 1.45; font-weight: 500; }
+
+.t2-barcode-deck {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 6px; border-top: 1px solid #edf2f7; margin-top: 2px;
+}
+.t2-barcode-wrap { display: flex; flex-direction: column; gap: 1.5px; }
+.t2-graphic { height: 14px; display: flex; gap: 1.5px; }
+.t2-bar { width: 1.5px; background: #1e242d; }
+.t2-bar.w2 { width: 2.5px; }
+.t2-bar.w3 { width: 4px; }
+.t2-digits { font-family: monospace; font-size: 7.5px; color: #7d8b99; letter-spacing: 1px; }
+.t2-tag {
+  font-size: 9px; font-weight: 700; background: #f1f5f9; color: #475569;
+  padding: 3px 6px; border-radius: 5px; border: 0.5px solid #cbd5e1; display: flex; align-items: center; gap: 3px;
+}
+
+/* ======================================================== */
+/* 风格 3：极浅奶霜燕麦火漆邮票                            */
+/* ======================================================== */
+.t3-wrapper {
+  background: #faf8f5; border-radius: 16px;
+  padding: 14px 12px 16px; box-shadow: 0 20px 45px rgba(50, 45, 41, 0.1);
+  position: relative; border: 1px solid #ded9cf;
+}
+.t3-perfs-left, .t3-perfs-right {
+  position: absolute; top: 20px; bottom: 20px; width: 6px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  pointer-events: none; z-index: 10;
+}
+.t3-perfs-left { left: -4px; }
+.t3-perfs-right { right: -4px; }
+.t3-perf-hole { width: 8px; height: 8px; background: #eef2f7; border-radius: 50%; box-shadow: inset 0 1px 2px rgba(50, 45, 41, 0.12); }
+
+.t3-inner-box {
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #322d29; padding: 12px 10px; position: relative;
+  display: flex; flex-direction: column; gap: 8px; background: #ffffff;
+  box-shadow: inset 0 0 0 2px #faf8f5;
+}
+.t3-header-row { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.t3-postmark { display: flex; align-items: center; gap: 5px; color: #8a7e72; }
+.t3-pm-circle {
+  width: 24px; height: 24px; border: 1px dashed #8a7e72; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 7.5px;
+  font-weight: 700; transform: rotate(-12deg);
+}
+.t3-pm-lines { display: flex; flex-direction: column; gap: 2px; }
+.t3-pm-line { width: 18px; height: 1px; background: #8a7e72; opacity: 0.7; }
+.t3-tag-text {
+  font-size: 9px; font-weight: 700; color: #322d29; letter-spacing: 1.5px;
+  border-bottom: 1.5px solid #8a7e72; padding-bottom: 1px; display: flex; align-items: center; gap: 2px;
+}
+
+.t3-photo-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  background: #f4f1eb;
+  border: 1.2px solid #322d29;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.t3-photo-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.t3-photo-stage.has-img img { display: block; }
+.t3-photo-stage.has-img .t1-photo-empty { display: none; }
+
+.t3-photo-tag {
+  position: absolute; top: 6px; left: 6px; background: rgba(50, 45, 41, 0.88);
+  color: #ffffff; font-size: 8.5px; font-weight: 600; padding: 2.5px 6px;
+  border-radius: 3px; letter-spacing: 1px;
+}
+.t3-footer-body { display: flex; flex-direction: column; gap: 6px; padding-top: 2px; flex-shrink: 0; }
+.t3-username { font-size: 18px; font-weight: 800; color: #322d29; }
+.t3-serial { font-size: 9px; font-family: monospace; color: #8a7e72; font-weight: 700; }
+.t3-bio { font-size: 12px; color: #5c544d; line-height: 1.45; font-weight: 500; }
+
+.t3-bottom-deck {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 6px; border-top: 1px dashed rgba(50, 45, 41, 0.18); margin-top: 2px;
+}
+.t3-french-tags { display: flex; flex-direction: column; gap: 3px; }
+.t3-french-quote { font-size: 9px; font-style: italic; color: #8a7e72; }
+.t3-chips { display: flex; gap: 4px; }
+.t3-chip {
+  font-size: 9px; font-weight: 700; background: #f0ece6; color: #8a7e72;
+  padding: 2px 6px; border-radius: 3px;
+}
+.t3-wax-seal {
+  width: 36px; height: 36px;
+  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #f4f0e8 50%, #e2dacd 100%);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(138, 126, 114, 0.18); border: 1px solid rgba(222, 217, 207, 0.8); flex-shrink: 0;
+}
+.t3-wax-inner {
+  width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.85);
+  display: flex; align-items: center; justify-content: center; color: #8a7e72; font-size: 11px;
+}
+
+/* ======================================================== */
+/* 风格 4：浅灰粉晶哥特教堂圣殿                            */
+/* ======================================================== */
+.t4-wrapper {
+  background: #fcf8f9; border-radius: 20px; padding: 12px;
+  box-shadow: 0 20px 45px rgba(150, 107, 122, 0.15), inset 0 1px 2px #ffffff;
+  border: 1px solid rgba(235, 219, 224, 0.8);
+}
+.t4-inner-frame {
+  height: 100%;
+  box-sizing: border-box;
+  border: 1px solid #ebdbe0; border-radius: 14px; padding: 12px 10px;
+  display: flex; flex-direction: column; gap: 8px; background: rgba(255, 255, 255, 0.85);
+  position: relative;
+}
+.t4-cross { position: absolute; color: #b88f9d; font-size: 10px; pointer-events: none; }
+.t4-cross.tl { top: 4px; left: 6px; }
+.t4-cross.tr { top: 4px; right: 6px; }
+.t4-cross.bl { bottom: 4px; left: 6px; }
+.t4-cross.br { bottom: 4px; right: 6px; }
+
+.t4-header { display: flex; justify-content: space-between; align-items: center; padding: 0 2px; flex-shrink: 0; }
+.t4-title-wrap { display: flex; align-items: center; gap: 5px; }
+.t4-title { font-size: 13px; font-weight: 800; letter-spacing: 2.5px; color: #3a2e33; text-transform: uppercase; }
+.t4-stamp {
+  font-size: 8.5px; font-weight: 700; border: 1px solid #b88f9d; color: #966b7a;
+  padding: 2px 6px; border-radius: 3px; background: #f6edf0;
+}
+
+.t4-arch-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  border-radius: 90px 90px 8px 8px;
+  border: 1.2px solid #b88f9d;
+  box-shadow: 0 6px 16px rgba(150, 107, 122, 0.1);
+  cursor: pointer;
+  overflow: hidden;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.t4-arch-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.t4-arch-stage.has-img img { display: block; }
+.t4-arch-stage.has-img .t1-photo-empty { display: none; }
+
+.t4-arch-overlay {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 4px rgba(58, 46, 51, 0.4); pointer-events: none; letter-spacing: 1.5px;
+}
+
+.t4-footer-body { display: flex; flex-direction: column; gap: 6px; padding-top: 2px; flex-shrink: 0; }
+.t4-username { font-size: 18px; font-weight: 800; color: #3a2e33; letter-spacing: 1px; }
+.t4-serial { font-size: 9px; font-family: monospace; color: #966b7a; font-weight: 700; }
+.t4-bio { font-size: 12px; color: #695b60; line-height: 1.45; font-weight: 500; }
+
+.t4-plague-bar {
+  width: 100%; background: linear-gradient(90deg, rgba(246, 237, 240, 0.2), rgba(235, 219, 224, 0.8), rgba(246, 237, 240, 0.2));
+  border-top: 1px solid #ebdbe0; border-bottom: 1px solid #ebdbe0; padding: 3px 0;
+  display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 7.5px;
+  font-weight: 800; letter-spacing: 2px; color: #966b7a; text-transform: uppercase;
+}
+.t4-stats-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 100%; }
+.t4-stat-box {
+  background: #ffffff; border: 0.8px solid #ebdbe0; border-radius: 6px; padding: 4px 2px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.t4-stat-label { font-size: 7px; font-weight: 700; color: #b88f9d; text-transform: uppercase; }
+.t4-stat-val { font-size: 9px; font-weight: 800; color: #3a2e33; }
+
+/* ======================================================== */
+/* 风格 5：白金冷银 35mm 电影特刊                          */
+/* ======================================================== */
+.t5-wrapper {
+  background: #141619; border-radius: 16px; padding: 12px 12px 14px;
+  box-shadow: 0 22px 55px rgba(20, 22, 25, 0.45); border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 8px; color: #f6f3ee;
+}
+.t5-sprockets { display: flex; justify-content: space-between; align-items: center; padding: 1px 2px; flex-shrink: 0; }
+.t5-hole { width: 12px; height: 7.5px; background: #eef2f7; border-radius: 2px; }
+.t5-sprocket-code { font-family: monospace; font-size: 7px; font-weight: 700; color: #dcdfe4; letter-spacing: 1.5px; }
+.t5-header-bar { display: flex; justify-content: space-between; align-items: center; padding: 1px 2px 0; flex-shrink: 0; }
+.t5-scene { font-size: 9px; font-weight: 800; color: #dcdfe4; letter-spacing: 1.5px; display: flex; align-items: center; gap: 5px; }
+.t5-dot { width: 5px; height: 5px; background: #ffffff; border-radius: 50%; }
+.t5-fps { font-family: monospace; font-size: 8px; color: #828a94; letter-spacing: 1px; }
+
+.t5-frame-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  background: #000000;
+  border-radius: 5px;
+  border: 1.2px solid #23272e;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.t5-frame-stage img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.t5-frame-stage.has-img img { display: block; }
+.t5-frame-stage.has-img .t1-photo-empty { display: none; }
+
+.t5-edge-mark {
+  position: absolute; top: 5px; left: 6px; font-family: monospace;
+  font-size: 7.5px; font-weight: 700; color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 1px; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+.t5-footer-wrap { display: flex; flex-direction: column; gap: 6px; padding-top: 2px; flex-shrink: 0; }
+.t5-username-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0 2px; }
+.t5-username { font-size: 18px; font-weight: 800; color: #ffffff; letter-spacing: 1px; }
+.t5-director { font-size: 8.5px; color: #dcdfe4; font-weight: 600; }
+.t5-subtitles-box {
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px; padding: 6px 10px; display: flex; flex-direction: column; gap: 2px;
+}
+.t5-sub-cn { font-size: 12px; color: #f1f3f5; line-height: 1.45; font-weight: 500; }
+.t5-sub-en { font-size: 8px; color: #828a94; font-style: italic; }
+
+.t5-stub {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 5px; border-top: 1px dashed rgba(255, 255, 255, 0.15); margin-top: 1px;
+}
+.t5-admit-pill { background: #dcdfe4; color: #141619; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 2.5px; }
+
+/* ========== 底部吸底控制坞 ========== */
+.archive-bottom-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+  padding-top: 4px;
+}
+
+.dock-arrow-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid rgba(24, 25, 28, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #18191c;
+  cursor: pointer;
+}
+.dock-arrow-btn:active { transform: scale(0.92); background: #f8f9fa; }
+.dock-arrow-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2.5; fill: none; }
+
+.dock-edit-btn {
+  flex: 1;
+  height: 42px;
+  border-radius: 21px;
+  background: #18191c;
+  color: #ffffff;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(24, 25, 28, 0.2);
+  cursor: pointer;
+  font-family: inherit;
+}
+.dock-edit-btn:active { transform: scale(0.97); background: #000000; }
+.dock-edit-btn svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+/* 仅限 PWA 桌面端生效：拉开编辑按钮与卡片的距离 */
+@media (display-mode: standalone) {
+  .archive-bottom-dock {
+    margin-top: 24px !important;
+    padding-bottom: calc(14px + var(--safe-bottom)) !important;
   }
-
-  if (window._dbReady) {
-    tryInit();
-  } else {
-    window.addEventListener('dbReady', tryInit);
-    setTimeout(tryInit, 500);
-  }
-
-  function loadAllData() {
-    if (!window.AppDB) return;
-    AppDB.get(ARCHIVES_LIST_KEY, function(list) {
-      userList = Array.isArray(list) ? list : [];
-      userList.forEach(function(u) {
-        if (u.name) u.name = u.name.replace(/[✞✟✠]/g, '').trim();
-        for (var i = 0; i < 5; i++) {
-          if (!u['bio' + i]) {
-            u['bio' + i] = (i === 0 && u.bio) ? u.bio : DEFAULT_BIOS[i];
-          }
-        }
-      });
-
-      AppDB.get(ACTIVE_USER_ID_KEY, function(activeId) {
-        currentUserId = activeId;
-        var activeUser = getCurrentUser();
-        if (activeUser) {
-          currentTplIdx = activeUser.tplIdx || 0;
-          renderStep3();
-        } else if (userList.length > 0) {
-          currentUserId = userList[0].id;
-          currentTplIdx = userList[0].tplIdx || 0;
-          renderStep3();
-        } else {
-          renderStep1();
-        }
-      });
-    });
-  }
-
-  function getCurrentUser() {
-    if (!currentUserId || !userList.length) return null;
-    for (var i = 0; i < userList.length; i++) {
-      if (userList[i].id === currentUserId) return userList[i];
-    }
-    return null;
-  }
-
-  function saveCurrentToDB(callback) {
-    if (!window.AppDB) return;
-    AppDB.save(ARCHIVES_LIST_KEY, userList, function() {
-      AppDB.save(ACTIVE_USER_ID_KEY, currentUserId, function() {
-        if (callback) callback();
-      });
-    });
-  }
-
-  function getTodayDateStr() {
-    var now = new Date();
-    var m = String(now.getMonth() + 1).padStart(2, '0');
-    var d = String(now.getDate()).padStart(2, '0');
-    return m + d;
-  }
-
-  function createNewUser() {
-    var newObj = JSON.parse(JSON.stringify(defaultProfile));
-    newObj.id = 'user_' + Date.now();
-    newObj.createDate = getTodayDateStr();
-    newObj.serial = 'NO. 0000-NIVEOUS';
-    userList.push(newObj);
-    currentUserId = newObj.id;
-    currentTplIdx = 0;
-    renderStep2();
-  }
-
-  // ==========================================
-  // 步骤 1：空状态凝聚冰晶
-  // ==========================================
-  function renderStep1() {
-    container.className = 'app-content archive-page-wrap archive-panel-active';
-    container.innerHTML = '<div class="archive-page-screen screen-bg-0">'
-      + '<div class="archive-integrated-header">'
-      + '<div class="arch-header-left">'
-      + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
-      + '<span class="arch-header-title">档案</span>'
-      + '</div>'
-      + '</div>'
-      + '<div class="archive-step-panel step-active" id="archStep1">'
-      + '<div class="empty-card-stage">'
-      + '<div class="deco-cross tl">+</div><div class="deco-cross tr">+</div>'
-      + '<div class="deco-cross bl">+</div><div class="deco-cross br">+</div>'
-      + '<div class="empty-illustration-box">'
-      + '<span class="empty-sparkle s1">✦</span><span class="empty-sparkle s2">✧</span>'
-      + '<div class="empty-illustration-circle">'
-      + '<svg class="frost-crystal-svg" viewBox="0 0 48 48">'
-      + '<g class="crystal-core">'
-      + '<circle cx="24" cy="24" r="1.5" fill="#18191c" />'
-      + '<polygon points="24,19.5 28.5,24 24,28.5 19.5,24" class="crystal-stroke" />'
-      + '<circle cx="24" cy="24" r="9" class="crystal-stroke" stroke-dasharray="1.5 2" stroke-width="0.8" opacity="0.6" />'
-      + '</g>'
-      + '<g class="crystal-spears crystal-stroke">'
-      + '<polygon points="24,3 27,15 24,19.5 21,15" />'
-      + '<polygon points="24,45 27,33 24,28.5 21,33" />'
-      + '<polygon points="3,24 15,21 19.5,24 15,27" />'
-      + '<polygon points="45,24 33,21 28.5,24 33,27" />'
-      + '</g>'
-      + '<g class="crystal-petals crystal-stroke">'
-      + '<polygon points="35,13 36.5,19 30.5,20.5 29,14.5" />'
-      + '<polygon points="13,13 14.5,19 20.5,20.5 19,14.5" />'
-      + '<polygon points="35,35 36.5,29 30.5,27.5 29,33.5" />'
-      + '<polygon points="13,35 14.5,29 20.5,27.5 19,33.5" />'
-      + '</g>'
-      + '<g class="crystal-sparkles">'
-      + '<circle cx="24" cy="3" r="1" fill="#18191c" />'
-      + '<circle cx="24" cy="45" r="1" fill="#18191c" />'
-      + '<circle cx="3" cy="24" r="1" fill="#18191c" />'
-      + '<circle cx="45" cy="24" r="1" fill="#18191c" />'
-      + '</g>'
-      + '</svg>'
-      + '</div>'
-      + '</div>'
-      + '<h2 class="empty-title">尚未建立用户档案</h2>'
-      + '<p class="empty-desc">记录你的专属身份、立绘特写与心动寄语，生成独一无二的高定纸质票根小卡。</p>'
-      + '<button class="action-trigger-btn" id="goToStep2Btn" type="button">'
-      + '<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-      + '<span>新建用户档案</span>'
-      + '</button>'
-      + '</div>'
-      + '</div>'
-      + '</div>';
-
-    document.getElementById('archBackBtn').addEventListener('click', function() {
-      if (window.AppNav) AppNav.showPage('home');
-    });
-
-    document.getElementById('goToStep2Btn').addEventListener('click', function() {
-      createNewUser();
-    });
-  }
-
-  // ==========================================
-  // 步骤 2：手账录入填单（支持右滑返回）
-  // ==========================================
-  function renderStep2() {
-    var cur = getCurrentUser() || defaultProfile;
-    container.className = 'app-content archive-page-wrap';
-    container.innerHTML = '<div class="archive-page-screen screen-bg-0">'
-      + '<div class="archive-step-panel step-active" id="archStep2">'
-      + '<div class="journal-sheet">'
-      
-      + '<div class="journal-header">'
-      + '<div class="journal-header-top">'
-      + '<div class="journal-header-top-left">'
-      + '<button class="journal-inline-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
-      + '<span class="brand-confidential">RECORD // ARCHIVE</span>'
-      + '</div>'
-      + '<span class="brand-serial">创檔日期：' + esc(cur.createDate || getTodayDateStr()) + '</span>'
-      + '</div>'
-      + '<h1 class="journal-main-title">档案录入手札</h1>'
-      + '<p class="journal-desc-text">在这里提笔，将关于你的每一缕呼吸、性格轮廓与灵魂羁绊落于纸上。</p>'
-      + '<div class="journal-header-divider"><span class="divider-line"></span><span class="divider-star">✦</span><span class="divider-line"></span></div>'
-      + '</div>'
-
-      // 01. 基础身份
-      + '<div class="journal-section">'
-      + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">01.</span><span>基础身份</span></div><span class="section-tag-en">IDENTITY</span></div>'
-      + '<div class="ruled-row-grid">'
-      + '<div class="ruled-item"><span class="ruled-label">姓名 / 专属称呼</span><input type="text" class="ruled-input" id="fieldName" value="' + esc(cur.name) + '" placeholder="如：墨墨"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">性别</span><input type="text" class="ruled-input" id="fieldGender" value="' + esc(cur.gender) + '" placeholder="如：女"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">年龄</span><input type="text" class="ruled-input" id="fieldAge" value="' + esc(cur.age) + '" placeholder="如：18"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">身高</span><input type="text" class="ruled-input" id="fieldHeight" value="' + esc(cur.height) + '" placeholder="如：165cm"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">生日</span><input type="text" class="ruled-input" id="fieldBirthday" value="' + esc(cur.birthday) + '" placeholder="如：09.24"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">星座</span><input type="text" class="ruled-input" id="fieldZodiac" value="' + esc(cur.zodiac) + '" placeholder="如：天秤座"></div>'
-      + '</div>'
-      + '</div>'
-
-      // 02. 外貌长相
-      + '<div class="journal-section">'
-      + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">02.</span><span>长相与外貌特征</span></div><span class="section-tag-en">APPEARANCE</span></div>'
-      + '<textarea class="ruled-textarea" id="fieldAppearance" rows="2" placeholder="发型、眸色、五官气质、穿搭风格、身形特点...">' + esc(cur.appearance) + '</textarea>'
-      + '</div>'
-
-      // 03. 性格特质
-      + '<div class="journal-section">'
-      + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">03.</span><span>性格特质与语气习惯</span></div><span class="section-tag-en">PERSONALITY</span></div>'
-      + '<div class="ruled-item" style="margin-bottom:6px;"><span class="ruled-label">性格标签</span><input type="text" class="ruled-input" id="fieldTags" value="' + esc(cur.tags) + '" placeholder="多个关键词用空格分隔"></div>'
-      + '<textarea class="ruled-textarea" id="fieldPersonality" rows="2" placeholder="日常性格表现、说话习惯、专属的互动方式与情绪特点...">' + esc(cur.personality) + '</textarea>'
-      + '</div>'
-
-      // 04. 兴趣爱好
-      + '<div class="journal-section">'
-      + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">04.</span><span>兴趣爱好与日常偏好</span></div><span class="section-tag-en">HOBBIES & LIKES</span></div>'
-      + '<textarea class="ruled-textarea" id="fieldHobbies" rows="2" placeholder="喜欢的食物、日常兴趣爱好、喜恶偏好、特殊习惯...">' + esc(cur.hobbies) + '</textarea>'
-      + '</div>'
-
-      // 05. 深度背景
-      + '<div class="journal-section">'
-      + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">05.</span><span>深度背景渊源与人设</span></div><span class="section-tag-en">BACKGROUND & LORE</span></div>'
-      + '<textarea class="ruled-textarea" id="fieldBackground" rows="3" placeholder="身份背景、过往经历、故事渊源与深度设定...">' + esc(cur.background) + '</textarea>'
-      + '</div>'
-
-      + '<div class="journal-tear-strip">'
-      + '<div class="journal-sign-box"><span class="sign-label">AUTHENTICATED PROTOCOL</span><span class="sign-handwriting">✦ Verified Confidential Dossier</span></div>'
-      + '<div class="journal-seal-stamp"><span class="seal-star">✦</span><span>NIVEOUS</span><span>OFFICIAL</span></div>'
-      + '</div>'
-
-      + '<button class="action-trigger-btn" id="generateCardBtn" style="max-width:100%; height:44px; border-radius:12px;" type="button">'
-      + '<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>'
-      + '<span>封存档案并生成小卡</span>'
-      + '</button>'
-      + '</div>'
-      + '</div>'
-      + '</div>';
-
-    var originalSnapshot = JSON.stringify({
-      name: cur.name || '',
-      gender: cur.gender || '',
-      age: cur.age || '',
-      height: cur.height || '',
-      birthday: cur.birthday || '',
-      zodiac: cur.zodiac || '',
-      appearance: cur.appearance || '',
-      personality: cur.personality || '',
-      tags: cur.tags || '',
-      hobbies: cur.hobbies || '',
-      background: cur.background || ''
-    });
-
-    // 核心通用返回处理（点击返回键 & 右滑手势共用）
-    function handleStep2Back() {
-      var currentSnapshot = JSON.stringify({
-        name: document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, ''),
-        gender: document.getElementById('fieldGender').value.trim(),
-        age: document.getElementById('fieldAge').value.trim(),
-        height: document.getElementById('fieldHeight').value.trim(),
-        birthday: document.getElementById('fieldBirthday').value.trim(),
-        zodiac: document.getElementById('fieldZodiac').value.trim(),
-        appearance: document.getElementById('fieldAppearance').value.trim(),
-        personality: document.getElementById('fieldPersonality').value.trim(),
-        tags: document.getElementById('fieldTags').value.trim(),
-        hobbies: document.getElementById('fieldHobbies').value.trim(),
-        background: document.getElementById('fieldBackground').value.trim()
-      });
-
-      var isModified = (originalSnapshot !== currentSnapshot);
-
-      if (isModified) {
-        var shouldSave = confirm('检测到内容已修改，是否保存？');
-        if (shouldSave) {
-          var nameVal = document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, '');
-          if (!nameVal) {
-            AppNav.showToast('姓名不能为空哦');
-            return;
-          }
-          cur.name = nameVal;
-          cur.gender = document.getElementById('fieldGender').value.trim() || '女';
-          cur.age = document.getElementById('fieldAge').value.trim() || '18';
-          cur.height = document.getElementById('fieldHeight').value.trim() || '165cm';
-          cur.birthday = document.getElementById('fieldBirthday').value.trim();
-          cur.zodiac = document.getElementById('fieldZodiac').value.trim() || '天秤座';
-          cur.appearance = document.getElementById('fieldAppearance').value.trim();
-          cur.personality = document.getElementById('fieldPersonality').value.trim();
-          cur.tags = document.getElementById('fieldTags').value.trim();
-          cur.hobbies = document.getElementById('fieldHobbies').value.trim();
-          cur.background = document.getElementById('fieldBackground').value.trim();
-
-          if (cur.birthday) {
-            var cleanDigits = cur.birthday.replace(/[^0-9]/g, '');
-            cur.serial = 'NO. ' + (cleanDigits || cur.birthday) + '-NIVEOUS';
-          } else {
-            cur.serial = 'NO. 0000-NIVEOUS';
-          }
-
-          saveCurrentToDB(function() {
-            renderStep3();
-          });
-          return;
-        }
-      }
-
-      if (userList.length > 0 && cur.name && cur.name !== '你') {
-        renderStep3();
-      } else if (userList.length > 0) {
-        userList = userList.filter(function(u) { return u.id !== cur.id; });
-        if (userList.length) {
-          currentUserId = userList[0].id;
-          renderStep3();
-        } else {
-          renderStep1();
-        }
-      } else {
-        renderStep1();
-      }
-    }
-
-    document.getElementById('archBackBtn').addEventListener('click', handleStep2Back);
-
-    // 绑定右滑返回手势（防误触：横向位移大于50px且横向倾斜度明显大于纵向滑动）
-    var step2Panel = document.getElementById('archStep2');
-    if (step2Panel) {
-      var sStartX = 0, sStartY = 0, sEndX = 0, sEndY = 0;
-      step2Panel.addEventListener('touchstart', function(e) {
-        sStartX = e.touches[0].clientX;
-        sStartY = e.touches[0].clientY;
-        sEndX = sStartX;
-        sEndY = sStartY;
-      }, { passive: true });
-
-      step2Panel.addEventListener('touchmove', function(e) {
-        sEndX = e.touches[0].clientX;
-        sEndY = e.touches[0].clientY;
-      }, { passive: true });
-
-      step2Panel.addEventListener('touchend', function() {
-        var diffX = sEndX - sStartX;
-        var diffY = sEndY - sStartY;
-        if (diffX > 55 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
-          handleStep2Back();
-        }
-      });
-    }
-
-    document.getElementById('generateCardBtn').addEventListener('click', function() {
-      var nameVal = document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, '');
-      if (!nameVal) {
-        AppNav.showToast('墨墨，请在第一栏写下姓名哦');
-        return;
-      }
-
-      cur.name = nameVal;
-      cur.gender = document.getElementById('fieldGender').value.trim() || '女';
-      cur.age = document.getElementById('fieldAge').value.trim() || '18';
-      cur.height = document.getElementById('fieldHeight').value.trim() || '165cm';
-      cur.birthday = document.getElementById('fieldBirthday').value.trim();
-      cur.zodiac = document.getElementById('fieldZodiac').value.trim() || '天秤座';
-      cur.appearance = document.getElementById('fieldAppearance').value.trim();
-      cur.personality = document.getElementById('fieldPersonality').value.trim();
-      cur.tags = document.getElementById('fieldTags').value.trim();
-      cur.hobbies = document.getElementById('fieldHobbies').value.trim();
-      cur.background = document.getElementById('fieldBackground').value.trim();
-
-      if (cur.birthday) {
-        var cleanDigits = cur.birthday.replace(/[^0-9]/g, '');
-        cur.serial = 'NO. ' + (cleanDigits || cur.birthday) + '-NIVEOUS';
-      } else {
-        cur.serial = 'NO. 0000-NIVEOUS';
-      }
-
-      saveCurrentToDB(function() {
-        renderStep3();
-      });
-    });
-  }
-
-  // ==========================================
-  // 步骤 3：5 个专属底页容器展示
-  // ==========================================
-  function renderStep3() {
-    var cur = getCurrentUser();
-    if (!cur) {
-      renderStep1();
-      return;
-    }
-
-    if (cur.name) cur.name = cur.name.replace(/[✞✟✠]/g, '').trim();
-
-    container.className = 'app-content archive-page-wrap';
-    var hasPhotoClass = cur.photo ? ' has-img' : '';
-
-    var html = '<div class="archive-page-screen screen-bg-' + currentTplIdx + '">'
-      + '<div class="archive-showcase-wrap">'
-      + '<div class="archive-integrated-header">'
-      + '<div class="arch-header-left">'
-      + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
-      + '<span class="arch-header-title">档案</span>'
-      + '</div>'
-      + '<div class="arch-header-right">'
-      + '<button class="arch-tool-pill" id="actionNewBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>'
-      + '<button class="arch-tool-pill" id="actionListBtn" type="button"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>用户列表 (' + userList.length + ')</span></button>'
-      + '</div>'
-      + '</div>'
-
-      + '<div class="archive-full-card-box" id="cardContainerBox">'
-      + renderCardTemplateHtml(cur, currentTplIdx, hasPhotoClass)
-      + '</div>'
-
-      + '<div class="archive-bottom-dock">'
-      + '<button class="dock-arrow-btn" id="prevTplBtn" type="button"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
-      + '<button class="dock-edit-btn" id="dockEditBtn" type="button"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>编辑资料</span></button>'
-      + '<button class="dock-arrow-btn" id="nextTplBtn" type="button"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>'
-      + '</div>'
-
-      + '<div class="user-drawer-mask" id="userDrawerMask"></div>'
-      + '<div class="user-drawer-card" id="userDrawerCard">'
-      + '<div class="drawer-header"><div class="drawer-title">用户档案库</div><button class="drawer-close-btn" id="drawerCloseBtn" type="button">✕</button></div>'
-      + '<div class="drawer-list">'
-      + userList.map(function(u) {
-          var isActive = u.id === cur.id;
-          return '<div class="drawer-user-item' + (isActive ? ' active' : '') + '" data-user-id="' + u.id + '">'
-            + '<div class="drawer-avatar">' + (u.photo ? '<img src="' + esc(u.photo) + '">' : '✦') + '</div>'
-            + '<div class="drawer-user-info"><div class="drawer-user-name">' + esc(u.name) + (isActive ? '<span class="drawer-active-tag">当前</span>' : '') + '</div><div class="drawer-user-date">建档：' + esc(u.createDate || '0000') + '</div></div>'
-            + '<button class="drawer-del-btn" data-del-id="' + u.id + '" type="button">删除</button>'
-            + '</div>';
-        }).join('')
-      + '</div>'
-      + '</div>'
-
-      + '</div>'
-      + '</div>';
-
-    container.innerHTML = html;
-    bindStep3Events(cur);
-  }
-
-  // 渲染 5 种模板
-  function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
-    if (tplIdx === 0) {
-      // 01. 冰蓝票根
-      return '<div class="arch-card-wrapper t1-wrapper">'
-        + '<div class="t1-inner">'
-        + '<div class="t1-header"><div><div class="t1-serial" id="cardSerial" contenteditable="true" spellcheck="false">' + esc(cur.serial) + '</div><div class="t1-title" contenteditable="true" spellcheck="false"><span>MEMORIES</span><span>✦</span></div></div><div class="t1-stamp" contenteditable="true" spellcheck="false">★ SPECIAL</div></div>'
-        + '<div class="t1-body">'
-        + '<div class="t1-left-rail"><div class="t1-qr-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="15" y="15" width="5" height="5" fill="currentColor"/></svg></div><div class="t1-barcode-lines"><div class="t1-bline thick"></div><div class="t1-bline thin"></div><div class="t1-bline"></div><div class="t1-bline thick"></div><div class="t1-bline"></div><div class="t1-bline thin"></div><div class="t1-bline thick"></div></div><div class="t1-vertical-code" contenteditable="true" spellcheck="false">LUCKY-TODAY</div></div>'
-        + '<div class="t1-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
-        + '<div class="t1-right-rail"><span class="t1-star">✦</span><span class="t1-dash"></span><span class="t1-rail-dot"></span><span class="t1-star">✧</span><span class="t1-rail-dot"></span><span class="t1-dash"></span><span class="t1-star">✦</span></div>'
-        + '</div>'
-        + '<div class="t1-footer"><div class="t1-cutout-left"></div><div class="t1-cutout-right"></div>'
-        + '<div class="t1-user-row"><div class="t1-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t1-userid" id="cardUserId" contenteditable="true" spellcheck="false">' + esc(cur.userid) + '</div></div>'
-        + '<div class="t1-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio0 || DEFAULT_BIOS[0]) + '</div>'
-        + '<div class="t1-tags"><span class="t1-tag primary" id="cardTag1" contenteditable="true" spellcheck="false">' + esc(cur.tag1) + '</span><span class="t1-tag" id="cardTag2" contenteditable="true" spellcheck="false">' + esc(cur.tag2) + '</span><span class="t1-tag" id="cardTag3" contenteditable="true" spellcheck="false">' + esc(cur.tag3) + '</span></div>'
-        + '</div></div></div>';
-    } else if (tplIdx === 1) {
-      // 02. 缎带亚克力
-      return '<div class="arch-card-wrapper t2-wrapper">'
-        + '<div class="t2-ribbon-tr">✦ SPECIAL</div><div class="t2-ribbon-bl">✦ MEMORIES</div><div class="t2-top-ring"></div>'
-        + '<div class="t2-frame"><div class="t2-cross tl">+</div><div class="t2-cross tr">+</div><div class="t2-cross bl">+</div><div class="t2-cross br">+</div>'
-        + '<div class="t2-top-bar"><div class="t2-icons"><span>♡</span><span>★</span><span>♪</span><span>☆</span></div><div class="t2-brand">NIVEOUS ARCHIVE</div></div>'
-        + '<div class="t2-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t2-music-pill"><div class="t2-music-wave"><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div></div><span>PLAYING</span></div></div>'
-        + '<div class="t2-footer"><div class="t2-user-row"><div class="t2-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t2-stars">✦ ✦ ✦</div></div>'
-        + '<div class="t2-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio1 || DEFAULT_BIOS[1]) + '</div>'
-        + '<div class="t2-barcode-deck"><div class="t2-barcode-wrap"><div class="t2-graphic"><div class="t2-bar w2"></div><div class="t2-bar"></div><div class="t2-bar w3"></div><div class="t2-bar"></div><div class="t2-bar w2"></div><div class="t2-bar"></div></div><span class="t2-digits">4 892019 330219</span></div><div class="t2-tag"><span>♡</span><span>SPECIAL EDITION</span></div></div>'
-        + '</div></div></div>';
-    } else if (tplIdx === 2) {
-      // 03. 燕麦火漆
-      return '<div class="arch-card-wrapper t3-wrapper">'
-        + '<div class="t3-perfs-left"><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div></div>'
-        + '<div class="t3-perfs-right"><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div></div>'
-        + '<div class="t3-inner-box"><div class="t3-header-row"><div class="t3-postmark"><div class="t3-pm-circle">PARIS</div><div class="t3-pm-lines"><div class="t3-pm-line"></div><div class="t3-pm-line"></div><div class="t3-pm-line"></div></div></div><div class="t3-tag-text"><span>♡</span><span>LETTRE D\'AMOUR</span></div></div>'
-        + '<div class="t3-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t3-photo-tag"><span>♥</span><span>NO. ' + esc(cur.birthday || '0000') + '</span></div></div>'
-        + '<div class="t3-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t3-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t3-serial">POSTAGE</div></div>'
-        + '<div class="t3-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio2 || DEFAULT_BIOS[2]) + '</div>'
-        + '<div class="t3-bottom-deck"><div class="t3-french-tags"><span class="t3-french-quote">« Pour toujours et à jamais »</span><div class="t3-chips"><span class="t3-chip">✦ 燕麦手作</span><span class="t3-chip">♡ 典藏信笺</span></div></div><div class="t3-wax-seal"><div class="t3-wax-inner">✦</div></div></div>'
-        + '</div></div></div>';
-    } else if (tplIdx === 3) {
-      // 04. 粉晶圣殿
-      return '<div class="arch-card-wrapper t4-wrapper">'
-        + '<div class="t4-inner-frame"><div class="t4-cross tl">✟</div><div class="t4-cross tr">✟</div><div class="t4-cross bl">✟</div><div class="t4-cross br">✟</div>'
-        + '<div class="t4-header"><div class="t4-title-wrap"><span>✠</span><span class="t4-title">SANCTUARY</span></div><div class="t4-stamp">ROSE · ' + esc(cur.birthday || '0000') + '</div></div>'
-        + '<div class="t4-arch-stage' + hasPhotoClass + '" id="cardPhotoBtn"><div class="t4-arch-overlay">✦ ETERNAL ✦</div><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
-        + '<div class="t4-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t4-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t4-serial">ROSE #001</div></div>'
-        + '<div class="t4-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio3 || DEFAULT_BIOS[3]) + '</div>'
-        + '<div class="t4-plague-bar">✟ SACRED OATH · IN PERPETUUM ✟</div>'
-        + '<div class="t4-stats-matrix"><div class="t4-stat-box"><span class="t4-stat-label">DEVOTION</span><span class="t4-stat-val">100% 纯粹</span></div><div class="t4-stat-box"><span class="t4-stat-label">BOUND</span><span class="t4-stat-val">灵魂共鸣</span></div><div class="t4-stat-box"><span class="t4-stat-label">STATUS</span><span class="t4-stat-val">永恒偏爱</span></div></div>'
-        + '</div></div></div>';
-    } else {
-      // 05. 白金胶片
-      return '<div class="arch-card-wrapper t5-wrapper">'
-        + '<div class="t5-sprockets"><div class="t5-hole"></div><div class="t5-hole"></div><span class="t5-sprocket-code">▶ NIVEOUS 35mm</span><div class="t5-hole"></div><div class="t5-hole"></div></div>'
-        + '<div class="t5-header-bar"><div class="t5-scene"><span class="t5-dot"></span><span>SCENE 01</span></div><span class="t5-fps">ISO 400 · 24 FPS</span></div>'
-        + '<div class="t5-frame-stage' + hasPhotoClass + '" id="cardPhotoBtn"><span class="t5-edge-mark">SAFETY FILM ★</span><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
-        + '<div class="t5-footer-wrap"><div class="t5-username-row"><div class="t5-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><span class="t5-director">PROD. BY LOVE</span></div>'
-        + '<div class="t5-subtitles-box"><div class="t5-sub-cn" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio4 || DEFAULT_BIOS[4]) + '</div><div class="t5-sub-en">"In every frame of this endless reel, you are my only focus."</div></div>'
-        + '<div class="t5-stub"><div style="display:flex; align-items:center; gap:6px;"><span class="t5-admit-pill">ADMIT ONE</span><span style="font-size:8.5px; color:#a0aec0; font-family:monospace;">SEAT: VIP</span></div><span style="font-size:8px; color:#828a94; font-family:monospace;">№ 9248-FILM</span></div>'
-        + '</div>'
-        + '<div class="t5-sprockets" style="margin-top:2px;"><div class="t5-hole"></div><div class="t5-hole"></div><span class="t5-sprocket-code">KODAK FRAME 24A</span><div class="t5-hole"></div><div class="t5-hole"></div></div>'
-        + '</div>';
-    }
-  }
-
-  function bindStep3Events(cur) {
-    document.getElementById('archBackBtn').addEventListener('click', function() {
-      syncDirectEdits(cur);
-      saveCurrentToDB(function() {
-        if (window.AppNav) AppNav.showPage('home');
-      });
-    });
-
-    document.getElementById('prevTplBtn').addEventListener('click', function() {
-      syncDirectEdits(cur);
-      currentTplIdx = (currentTplIdx - 1 + 5) % 5;
-      cur.tplIdx = currentTplIdx;
-      saveCurrentToDB();
-      renderStep3();
-    });
-
-    document.getElementById('nextTplBtn').addEventListener('click', function() {
-      syncDirectEdits(cur);
-      currentTplIdx = (currentTplIdx + 1) % 5;
-      cur.tplIdx = currentTplIdx;
-      saveCurrentToDB();
-      renderStep3();
-    });
-
-    var cardBox = document.getElementById('cardContainerBox');
-    if (cardBox) {
-      var touchStartX = 0, touchEndX = 0;
-      cardBox.addEventListener('touchstart', function(e) {
-        touchStartX = e.touches[0].clientX;
-      }, { passive: true });
-      cardBox.addEventListener('touchend', function(e) {
-        touchEndX = e.changedTouches[0].clientX;
-        var diff = touchEndX - touchStartX;
-        if (Math.abs(diff) > 50) {
-          syncDirectEdits(cur);
-          if (diff < 0) {
-            currentTplIdx = (currentTplIdx + 1) % 5;
-          } else {
-            currentTplIdx = (currentTplIdx - 1 + 5) % 5;
-          }
-          cur.tplIdx = currentTplIdx;
-          saveCurrentToDB();
-          renderStep3();
-        }
-      }, { passive: true });
-    }
-
-    document.getElementById('dockEditBtn').addEventListener('click', function() {
-      syncDirectEdits(cur);
-      renderStep2();
-    });
-
-    var newBtn = document.getElementById('actionNewBtn');
-    if (newBtn) {
-      newBtn.addEventListener('click', function() {
-        syncDirectEdits(cur);
-        createNewUser();
-      });
-    }
-
-    var listBtn = document.getElementById('actionListBtn');
-    var drawerMask = document.getElementById('userDrawerMask');
-    var drawerCard = document.getElementById('userDrawerCard');
-    var drawerCloseBtn = document.getElementById('drawerCloseBtn');
-
-    function openDrawer() {
-      if (drawerMask) drawerMask.classList.add('show');
-      if (drawerCard) drawerCard.classList.add('show');
-    }
-
-    function closeDrawer() {
-      if (drawerMask) drawerMask.classList.remove('show');
-      if (drawerCard) drawerCard.classList.remove('show');
-    }
-
-    if (listBtn) listBtn.addEventListener('click', openDrawer);
-    if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', closeDrawer);
-    if (drawerMask) drawerMask.addEventListener('click', closeDrawer);
-
-    if (drawerCard) {
-      drawerCard.querySelectorAll('.drawer-user-item').forEach(function(item) {
-        item.addEventListener('click', function(e) {
-          if (e.target.closest('.drawer-del-btn')) return;
-          syncDirectEdits(cur);
-          currentUserId = this.dataset.userId;
-          var selected = getCurrentUser();
-          if (selected) currentTplIdx = selected.tplIdx || 0;
-          saveCurrentToDB(function() {
-            closeDrawer();
-            renderStep3();
-          });
-        });
-      });
-
-      drawerCard.querySelectorAll('.drawer-del-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          var delId = this.dataset.delId;
-          if (!confirm('确定要删除这位用户的档案吗？')) return;
-          userList = userList.filter(function(u) { return u.id !== delId; });
-          if (currentUserId === delId) {
-            currentUserId = userList.length ? userList[0].id : null;
-          }
-          saveCurrentToDB(function() {
-            if (userList.length) renderStep3();
-            else renderStep1();
-          });
-        });
-      });
-    }
-
-    var photoBtn = document.getElementById('cardPhotoBtn');
-    if (photoBtn) {
-      photoBtn.addEventListener('click', function() {
-        var fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
-        document.body.appendChild(fileInput);
-
-        fileInput.addEventListener('change', function() {
-          var file = this.files[0];
-          if (!file) return;
-
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            if (window.AppCropper) {
-              AppCropper.open(e.target.result, { aspectRatio: 1 / 1.35 }, function(croppedData) {
-                cur.photo = croppedData;
-                saveCurrentToDB(function() {
-                  renderStep3();
-                });
-              });
-            } else {
-              cur.photo = e.target.result;
-              saveCurrentToDB(function() {
-                renderStep3();
-              });
-            }
-          };
-          reader.readAsDataURL(file);
-          if (fileInput.parentNode) document.body.removeChild(fileInput);
-        });
-
-        fileInput.click();
-      });
-    }
-
-    bindLiveEdits(cur);
-  }
-
-  function bindLiveEdits(cur) {
-    ['cardName', 'cardBio', 'cardSerial', 'cardUserId', 'cardTag1', 'cardTag2', 'cardTag3'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) {
-        el.addEventListener('blur', function() {
-          syncDirectEdits(cur);
-          saveCurrentToDB();
-        });
-      }
-    });
-  }
-
-  function syncDirectEdits(cur) {
-    var nameNode = document.getElementById('cardName');
-    var bioNode = document.getElementById('cardBio');
-    var serialNode = document.getElementById('cardSerial');
-    var userIdNode = document.getElementById('cardUserId');
-    var tag1Node = document.getElementById('cardTag1');
-    var tag2Node = document.getElementById('cardTag2');
-    var tag3Node = document.getElementById('cardTag3');
-
-    if (nameNode) cur.name = nameNode.textContent.replace(/[✞✟✠]/g, '').trim();
-    if (bioNode) cur['bio' + currentTplIdx] = bioNode.textContent.trim();
-    if (serialNode) cur.serial = serialNode.textContent.trim();
-    if (userIdNode) cur.userid = userIdNode.textContent.trim();
-    if (tag1Node) cur.tag1 = tag1Node.textContent.trim();
-    if (tag2Node) cur.tag2 = tag2Node.textContent.trim();
-    if (tag3Node) cur.tag3 = tag3Node.textContent.trim();
-  }
-
-  function esc(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-})();
+}
+
+/* ========== 通用多步骤 SPA 动画 ========== */
+.archive-step-panel {
+  display: none;
+  width: 100%;
+  animation: archPanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.archive-step-panel.step-active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@keyframes archPanelIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ========== 空状态凝聚冰晶卡片 ========== */
+.empty-card-stage {
+  width: 100%;
+  max-width: 360px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px 20px 30px;
+  border: 1px solid rgba(24, 25, 28, 0.12);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.deco-cross {
+  position: absolute;
+  font-size: 11px;
+  color: #ced4da;
+  font-weight: 300;
+  pointer-events: none;
+}
+.deco-cross.tl { top: 10px; left: 12px; }
+.deco-cross.tr { top: 10px; right: 12px; }
+.deco-cross.bl { bottom: 10px; left: 12px; }
+.deco-cross.br { bottom: 10px; right: 12px; }
+
+.empty-illustration-box {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.empty-illustration-circle {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  color: #18191c;
+}
+
+.frost-crystal-svg { width: 46px; height: 46px; overflow: visible; }
+.crystal-stroke { stroke: #18191c; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+.archive-panel-active .crystal-core { opacity: 0; transform-origin: 24px 24px; animation: crystalCoreSlow 1.4s cubic-bezier(0.2, 0.8, 0.3, 1) 0.5s forwards; }
+@keyframes crystalCoreSlow { 0% { opacity: 0; transform: scale(0.2) rotate(-45deg); } 100% { opacity: 1; transform: scale(1) rotate(0deg); } }
+.archive-panel-active .crystal-spears { stroke-dasharray: 60; stroke-dashoffset: 60; animation: crystalDrawSpears 2.0s cubic-bezier(0.3, 0, 0.2, 1) 1.6s forwards; }
+@keyframes crystalDrawSpears { to { stroke-dashoffset: 0; } }
+.archive-panel-active .crystal-petals { stroke-dasharray: 50; stroke-dashoffset: 50; animation: crystalDrawPetals 2.0s cubic-bezier(0.3, 0, 0.2, 1) 3.2s forwards; }
+@keyframes crystalDrawPetals { to { stroke-dashoffset: 0; } }
+.archive-panel-active .crystal-sparkles { opacity: 0; transform-origin: 24px 24px; animation: crystalSparkleSlow 1.2s ease-out 4.8s forwards; }
+@keyframes crystalSparkleSlow { 0% { opacity: 0; transform: scale(0.3); } 100% { opacity: 1; transform: scale(1); } }
+
+.empty-sparkle { position: absolute; font-size: 11px; color: #868e96; opacity: 0; }
+.archive-panel-active .empty-sparkle.s1 { top: 4px; right: 6px; animation: sparkleSlowIn 1.2s ease 4.8s forwards; }
+.archive-panel-active .empty-sparkle.s2 { bottom: 6px; left: 4px; animation: sparkleSlowIn 1.2s ease 5.2s forwards; }
+@keyframes sparkleSlowIn { 0% { opacity: 0; transform: scale(0.4); } 100% { opacity: 0.85; transform: scale(1); } }
+
+.empty-title { font-size: 17px; font-weight: 700; color: #18191c; letter-spacing: 0.5px; margin-bottom: 6px; }
+.empty-desc { font-size: 12px; color: #5c6470; line-height: 1.6; max-width: 250px; margin-bottom: 24px; }
+
+.action-trigger-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 220px;
+  height: 42px;
+  background: #18191c;
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(24, 25, 28, 0.22);
+  font-family: inherit;
+}
+.action-trigger-btn:active { transform: scale(0.97); background: #000000; }
+.action-trigger-btn svg { width: 15px; height: 15px; stroke: #ffffff; stroke-width: 2.2; fill: none; }
+
+/* ========== 法式手账填单本面 ========== */
+.journal-sheet {
+  width: 100%;
+  max-width: 360px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 20px 18px 24px;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.journal-header { display: flex; flex-direction: column; align-items: center; text-align: center; }
+
+.journal-header-top {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.journal-header-top-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.journal-inline-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #3c3c43;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  margin-left: -4px;
+}
+.journal-inline-back:active { opacity: 0.5; }
+.journal-inline-back svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brand-confidential { font-size: 8px; font-family: monospace; font-weight: 800; color: #18191c; background: #f1f3f5; padding: 2.5px 7px; border-radius: 4px; letter-spacing: 1.5px; }
+.brand-serial { font-size: 9px; font-family: monospace; font-weight: 700; color: #5c6470; letter-spacing: 0.5px; }
+
+.journal-main-title { font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #18191c; font-family: "Didot", "Playfair Display", "Times New Roman", "PingFang SC", serif; margin-bottom: 4px; }
+.journal-desc-text { font-size: 11px; color: #5c6470; line-height: 1.5; max-width: 280px; margin-bottom: 12px; }
+.journal-header-divider { width: 100%; display: flex; align-items: center; gap: 8px; }
+.divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(24, 25, 28, 0.22), transparent); }
+.divider-star { font-size: 9px; color: #18191c; }
+
+.journal-section { display: flex; flex-direction: column; gap: 8px; }
+.section-lead-title { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid rgba(24, 25, 28, 0.12); padding-bottom: 3px; }
+.section-name { font-size: 13px; font-weight: 800; letter-spacing: 1.5px; color: #18191c; display: flex; align-items: center; gap: 4px; }
+.section-name .sec-index { font-family: monospace; font-size: 10px; color: #5c6470; }
+.section-tag-en { font-size: 8px; font-family: monospace; color: #5c6470; letter-spacing: 1px; }
+
+.ruled-row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.ruled-item { display: flex; flex-direction: column; gap: 2px; }
+.ruled-label { font-size: 9.5px; font-weight: 700; color: #5c6470; letter-spacing: 0.5px; }
+.ruled-input { width: 100%; border: none; border-bottom: 1px dashed rgba(24, 25, 28, 0.22); padding: 3px 0; font-size: 13px; font-weight: 600; color: #18191c; background: transparent; outline: none; font-family: inherit; }
+.ruled-input:focus { border-bottom-color: #18191c; border-bottom-style: solid; }
+.ruled-input::placeholder { color: #cbd5e1; font-weight: 400; font-size: 11px; }
+
+.ruled-textarea { width: 100%; border: none; background: transparent; font-size: 13px; line-height: 22px; color: #18191c; font-family: inherit; outline: none; resize: none; padding: 0; background-image: linear-gradient(transparent, transparent 21px, rgba(24, 25, 28, 0.22) 21px, rgba(24, 25, 28, 0.22) 22px); background-size: 100% 22px; }
+.ruled-textarea::placeholder { color: #cbd5e1; line-height: 22px; font-size: 11px; }
+
+.journal-tear-strip { border-top: 1.5px dashed rgba(24, 25, 28, 0.22); padding-top: 12px; display: flex; align-items: center; justify-content: space-between; }
+.journal-sign-box { display: flex; flex-direction: column; gap: 2px; }
+.sign-label { font-size: 8px; font-family: monospace; color: #5c6470; letter-spacing: 1px; }
+.sign-handwriting { font-size: 12px; font-weight: 700; letter-spacing: 0.5px; color: #18191c; font-style: italic; }
+.journal-seal-stamp { width: 38px; height: 38px; border: 1.5px solid #18191c; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 6.5px; font-weight: 900; letter-spacing: 0.5px; transform: rotate(-8deg); color: #18191c; opacity: 0.85; }
+.seal-star { font-size: 8px; line-height: 1; }
+
+/* ========== 用户档案抽屉 ========== */
+.user-drawer-mask { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 2500; display: none; }
+.user-drawer-mask.show { display: block; }
+.user-drawer-card { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; border-radius: 20px 20px 0 0; padding: 18px 18px calc(20px + var(--safe-bottom)); z-index: 2600; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); max-height: 65vh; display: flex; flex-direction: column; }
+.user-drawer-card.show { transform: translateY(0); }
+.drawer-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+.drawer-title { font-size: 15px; font-weight: 800; color: #18191c; }
+.drawer-close-btn { background: none; border: none; font-size: 15px; color: #94a3b8; cursor: pointer; padding: 3px; }
+.drawer-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px 0 4px; }
+.drawer-user-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: #f8fafc; border: 1px solid rgba(0,0,0,0.04); cursor: pointer; }
+.drawer-user-item.active { background: #f1f5f9; border-color: #18191c; }
+.drawer-avatar { width: 38px; height: 38px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: #64748b; overflow: hidden; font-size: 13px; flex-shrink: 0; }
+.drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.drawer-user-info { flex: 1; min-width: 0; }
+.drawer-user-name { font-size: 13.5px; font-weight: 800; color: #18191c; display: flex; align-items: center; gap: 5px; }
+.drawer-active-tag { font-size: 8.5px; font-weight: 700; color: #ffffff; background: #18191c; padding: 1px 5px; border-radius: 3px; }
+.drawer-user-date { font-size: 9.5px; color: #94a3b8; font-family: monospace; margin-top: 1px; }
+.drawer-del-btn { background: none; border: none; color: #ef4444; font-size: 11.5px; font-weight: 600; padding: 5px 8px; cursor: pointer; border-radius: 5px; }
+.drawer-del-btn:active { background: rgba(239, 68, 68, 0.1); }
