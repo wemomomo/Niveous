@@ -34,7 +34,6 @@
     tplIdx: 0
   };
 
-  // 初始化监听
   function tryInit() {
     container = document.getElementById('archiveContent');
     if (!container) {
@@ -51,7 +50,6 @@
     setTimeout(tryInit, 500);
   }
 
-  // 1. 读取数据库
   function loadAllData() {
     if (!window.AppDB) return;
     AppDB.get(ARCHIVES_LIST_KEY, function(list) {
@@ -97,10 +95,61 @@
     return m + d;
   }
 
+  // 动态同步顶部的“新建”与“用户列表”按钮到 Header
+  function updateHeaderNav(showActions) {
+    var page = document.querySelector('[data-page="archive"]');
+    if (!page) return;
+    var header = page.querySelector('.app-header');
+    if (!header) return;
+
+    var extraWrap = header.querySelector('.archive-header-actions');
+    if (showActions) {
+      if (!extraWrap) {
+        extraWrap = document.createElement('div');
+        extraWrap.className = 'archive-header-actions';
+        header.appendChild(extraWrap);
+      }
+      extraWrap.innerHTML = '<button class="arch-header-btn" id="headerNewBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>'
+        + '<button class="arch-header-btn" id="headerListBtn" type="button"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>列表 (' + userList.length + ')</span></button>';
+
+      var newBtn = document.getElementById('headerNewBtn');
+      var listBtn = document.getElementById('headerListBtn');
+
+      if (newBtn) {
+        newBtn.onclick = function() {
+          var cur = getCurrentUser();
+          if (cur) syncDirectEdits(cur);
+          createNewUser();
+        };
+      }
+      if (listBtn) {
+        listBtn.onclick = function() {
+          openUserDrawer();
+        };
+      }
+    } else {
+      if (extraWrap) {
+        header.removeChild(extraWrap);
+      }
+    }
+  }
+
+  function createNewUser() {
+    var newObj = JSON.parse(JSON.stringify(defaultProfile));
+    newObj.id = 'user_' + Date.now();
+    newObj.createDate = getTodayDateStr();
+    newObj.serial = 'NO. 0000-NIVEOUS';
+    userList.push(newObj);
+    currentUserId = newObj.id;
+    currentTplIdx = 0;
+    renderStep2();
+  }
+
   // ==========================================
-  // 步骤 1：慢速凝聚雪花空状态
+  // 步骤 1：空状态凝聚冰晶
   // ==========================================
   function renderStep1() {
+    updateHeaderNav(false);
     container.className = 'app-content archive-panel-active';
     container.innerHTML = '<div class="archive-step-panel step-active" id="archStep1">'
       + '<div class="empty-card-stage">'
@@ -150,21 +199,11 @@
     });
   }
 
-  function createNewUser() {
-    var newObj = JSON.parse(JSON.stringify(defaultProfile));
-    newObj.id = 'user_' + Date.now();
-    newObj.createDate = getTodayDateStr();
-    newObj.serial = 'NO. 0000-NIVEOUS';
-    userList.push(newObj);
-    currentUserId = newObj.id;
-    currentTplIdx = 0;
-    renderStep2();
-  }
-
   // ==========================================
-  // 步骤 2：法式高定手账填单
+  // 步骤 2：手账录入填单
   // ==========================================
   function renderStep2() {
+    updateHeaderNav(false);
     var cur = getCurrentUser() || defaultProfile;
     container.className = 'app-content';
     container.innerHTML = '<div class="archive-step-panel step-active" id="archStep2">'
@@ -262,7 +301,7 @@
   }
 
   // ==========================================
-  // 步骤 3：全屏小卡展示、左右切模板、右上角多用户管理
+  // 步骤 3：全屏小卡展示、左右切模板、底部贴底控制坞
   // ==========================================
   function renderStep3() {
     var cur = getCurrentUser();
@@ -271,34 +310,29 @@
       return;
     }
 
+    updateHeaderNav(true);
     container.className = 'app-content archive-fullscreen-mode';
     var hasPhotoClass = cur.photo ? ' has-img' : '';
 
     var html = '<div class="archive-showcase-wrap">'
-      // 1. 右上角功能栏
-      + '<div class="archive-top-actions">'
-      + '<button class="arch-action-pill" id="actionNewBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>'
-      + '<button class="arch-action-pill" id="actionListBtn" type="button"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>用户列表 (' + userList.length + ')</span></button>'
-      + '</div>'
-
-      // 2. 全屏大卡片容器 (根据 currentTplIdx 渲染不同模板)
+      // 统一标准大卡片容器（高度额外拉长20px）
       + '<div class="archive-full-card-box" id="cardContainerBox">'
       + renderCardTemplateHtml(cur, currentTplIdx, hasPhotoClass)
       + '</div>'
 
-      // 3. 底部悬浮控制坞 (左箭头 · 编辑 · 右箭头)
+      // 底部吸底控制坞
       + '<div class="archive-bottom-dock">'
       + '<button class="dock-arrow-btn" id="prevTplBtn" type="button"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
       + '<button class="dock-edit-btn" id="dockEditBtn" type="button"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>编辑资料</span></button>'
       + '<button class="dock-arrow-btn" id="nextTplBtn" type="button"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>'
       + '</div>'
 
-      // 4. 用户列表弹出抽屉 (默认隐藏)
+      // 用户列表弹出抽屉
       + '<div class="user-drawer-mask" id="userDrawerMask"></div>'
       + '<div class="user-drawer-card" id="userDrawerCard">'
       + '<div class="drawer-header"><div class="drawer-title">用户档案库</div><button class="drawer-close-btn" id="drawerCloseBtn" type="button">✕</button></div>'
       + '<div class="drawer-list">'
-      + userList.map(function(u, idx) {
+      + userList.map(function(u) {
           var isActive = u.id === cur.id;
           return '<div class="drawer-user-item' + (isActive ? ' active' : '') + '" data-user-id="' + u.id + '">'
             + '<div class="drawer-avatar">' + (u.photo ? '<img src="' + esc(u.photo) + '">' : '✦') + '</div>'
@@ -315,16 +349,16 @@
     bindStep3Events(cur);
   }
 
-  // 渲染 5 种高定模板中的某一种
+  // 严格统一 5 种模板的外壳尺寸与结构
   function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
     if (tplIdx === 0) {
       // 01. 冰蓝票根
-      return '<div class="t1-wrapper">'
+      return '<div class="arch-card-wrapper t1-wrapper">'
         + '<div class="t1-inner">'
         + '<div class="t1-header"><div><div class="t1-serial" id="cardSerial" contenteditable="true" spellcheck="false">' + esc(cur.serial) + '</div><div class="t1-title" contenteditable="true" spellcheck="false"><span>MEMORIES</span><span>✦</span></div></div><div class="t1-stamp" contenteditable="true" spellcheck="false">★ SPECIAL</div></div>'
         + '<div class="t1-body">'
         + '<div class="t1-left-rail"><div class="t1-qr-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="15" y="15" width="5" height="5" fill="currentColor"/></svg></div><div class="t1-barcode-lines"><div class="t1-bline thick"></div><div class="t1-bline thin"></div><div class="t1-bline"></div><div class="t1-bline thick"></div><div class="t1-bline"></div><div class="t1-bline thin"></div><div class="t1-bline thick"></div></div><div class="t1-vertical-code" contenteditable="true" spellcheck="false">LUCKY-TODAY</div></div>'
-        + '<div class="t1-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
+        + '<div class="arch-shared-photo-box' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
         + '<div class="t1-right-rail"><span class="t1-star">✦</span><span class="t1-dash"></span><span class="t1-rail-dot"></span><span class="t1-star">✧</span><span class="t1-rail-dot"></span><span class="t1-dash"></span><span class="t1-star">✦</span></div>'
         + '</div>'
         + '<div class="t1-footer"><div class="t1-cutout-left"></div><div class="t1-cutout-right"></div>'
@@ -334,32 +368,32 @@
         + '</div></div></div>';
     } else if (tplIdx === 1) {
       // 02. 缎带亚克力
-      return '<div class="t2-wrapper">'
+      return '<div class="arch-card-wrapper t2-wrapper">'
         + '<div class="t2-ribbon-tr">✦ SPECIAL</div><div class="t2-ribbon-bl">✦ MEMORIES</div><div class="t2-top-ring"></div>'
         + '<div class="t2-frame"><div class="t2-cross tl">+</div><div class="t2-cross tr">+</div><div class="t2-cross bl">+</div><div class="t2-cross br">+</div>'
         + '<div class="t2-top-bar"><div class="t2-icons"><span>♡</span><span>★</span><span>♪</span><span>☆</span></div><div class="t2-brand">NIVEOUS ARCHIVE</div></div>'
-        + '<div class="t2-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t2-music-pill"><div class="t2-music-wave"><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div></div><span>PLAYING</span></div></div>'
+        + '<div class="arch-shared-photo-box' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t2-music-pill"><div class="t2-music-wave"><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div></div><span>PLAYING</span></div></div>'
         + '<div class="t2-footer"><div class="t2-user-row"><div class="t2-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t2-stars">✦ ✦ ✦</div></div>'
         + '<div class="t2-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio) + '</div>'
         + '<div class="t2-barcode-deck"><div class="t2-barcode-wrap"><div class="t2-graphic"><div class="t2-bar w2"></div><div class="t2-bar"></div><div class="t2-bar w3"></div><div class="t2-bar"></div><div class="t2-bar w2"></div><div class="t2-bar"></div></div><span class="t2-digits">4 892019 330219</span></div><div class="t2-tag"><span>♡</span><span>SPECIAL EDITION</span></div></div>'
         + '</div></div></div>';
     } else if (tplIdx === 2) {
       // 03. 燕麦火漆
-      return '<div class="t3-wrapper">'
+      return '<div class="arch-card-wrapper t3-wrapper">'
         + '<div class="t3-perfs-left"><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div></div>'
         + '<div class="t3-perfs-right"><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div></div>'
         + '<div class="t3-inner-box"><div class="t3-header-row"><div class="t3-postmark"><div class="t3-pm-circle">PARIS</div><div class="t3-pm-lines"><div class="t3-pm-line"></div><div class="t3-pm-line"></div><div class="t3-pm-line"></div></div></div><div class="t3-tag-text"><span>♡</span><span>LETTRE D\'AMOUR</span></div></div>'
-        + '<div class="t3-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t3-photo-tag"><span>♥</span><span>NO. ' + esc(cur.birthday || '0000') + '</span></div></div>'
+        + '<div class="arch-shared-photo-box' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t3-photo-tag"><span>♥</span><span>NO. ' + esc(cur.birthday || '0000') + '</span></div></div>'
         + '<div class="t3-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t3-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t3-serial">POSTAGE</div></div>'
         + '<div class="t3-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio) + '</div>'
         + '<div class="t3-bottom-deck"><div class="t3-french-tags"><span class="t3-french-quote">« Pour toujours et à jamais »</span><div class="t3-chips"><span class="t3-chip">✦ 燕麦手作</span><span class="t3-chip">♡ 典藏信笺</span></div></div><div class="t3-wax-seal"><div class="t3-wax-inner">✦</div></div></div>'
         + '</div></div></div>';
     } else if (tplIdx === 3) {
       // 04. 粉晶圣殿
-      return '<div class="t4-wrapper">'
+      return '<div class="arch-card-wrapper t4-wrapper">'
         + '<div class="t4-inner-frame"><div class="t4-cross tl">✟</div><div class="t4-cross tr">✟</div><div class="t4-cross bl">✟</div><div class="t4-cross br">✟</div>'
         + '<div class="t4-header"><div class="t4-title-wrap"><span>✠</span><span class="t4-title">SANCTUARY</span></div><div class="t4-stamp">ROSE · ' + esc(cur.birthday || '0000') + '</div></div>'
-        + '<div class="t4-arch-stage' + hasPhotoClass + '" id="cardPhotoBtn"><div class="t4-arch-overlay">✦ ETERNAL ✦</div><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
+        + '<div class="arch-shared-photo-box t4-arch-stage' + hasPhotoClass + '" id="cardPhotoBtn"><div class="t4-arch-overlay">✦ ETERNAL ✦</div><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
         + '<div class="t4-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t4-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + ' ✞</div><div class="t4-serial">ROSE #001</div></div>'
         + '<div class="t4-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio) + '</div>'
         + '<div class="t4-plague-bar">✟ SACRED OATH · IN PERPETUUM ✟</div>'
@@ -367,16 +401,25 @@
         + '</div></div></div>';
     } else {
       // 05. 白金胶片
-      return '<div class="t5-wrapper">'
+      return '<div class="arch-card-wrapper t5-wrapper">'
         + '<div class="t5-sprockets"><div class="t5-hole"></div><div class="t5-hole"></div><span class="t5-sprocket-code">▶ NIVEOUS 35mm</span><div class="t5-hole"></div><div class="t5-hole"></div></div>'
         + '<div class="t5-header-bar"><div class="t5-scene"><span class="t5-dot"></span><span>SCENE 01</span></div><span class="t5-fps">ISO 400 · 24 FPS</span></div>'
-        + '<div class="t5-frame-stage' + hasPhotoClass + '" id="cardPhotoBtn"><span class="t5-edge-mark">SAFETY FILM ★</span><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
+        + '<div class="arch-shared-photo-box t5-frame-stage' + hasPhotoClass + '" id="cardPhotoBtn"><span class="t5-edge-mark">SAFETY FILM ★</span><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
         + '<div class="t5-footer-wrap"><div class="t5-username-row"><div class="t5-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><span class="t5-director">PROD. BY LOVE</span></div>'
         + '<div class="t5-subtitles-box"><div class="t5-sub-cn" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio) + '</div><div class="t5-sub-en">"In every frame of this endless reel, you are my only focus."</div></div>'
         + '<div class="t5-stub"><div style="display:flex; align-items:center; gap:6px;"><span class="t5-admit-pill">ADMIT ONE</span><span style="font-size:8.5px; color:#a0aec0; font-family:monospace;">SEAT: VIP</span></div><span style="font-size:8px; color:#828a94; font-family:monospace;">№ 9248-FILM</span></div>'
         + '</div>'
         + '<div class="t5-sprockets" style="margin-top:2px;"><div class="t5-hole"></div><div class="t5-hole"></div><span class="t5-sprocket-code">KODAK FRAME 24A</span><div class="t5-hole"></div><div class="t5-hole"></div></div>'
         + '</div>';
+    }
+  }
+
+  function openUserDrawer() {
+    var drawerMask = document.getElementById('userDrawerMask');
+    var drawerCard = document.getElementById('userDrawerCard');
+    if (drawerMask && drawerCard) {
+      drawerMask.classList.add('show');
+      drawerCard.classList.add('show');
     }
   }
 
@@ -396,65 +439,80 @@
       renderStep3();
     });
 
-    // 底部编辑
+    // 屏幕上直接横向手势切模板
+    var cardBox = document.getElementById('cardContainerBox');
+    if (cardBox) {
+      var touchStartX = 0, touchEndX = 0;
+      cardBox.addEventListener('touchstart', function(e) {
+        touchStartX = e.touches[0].clientX;
+      }, { passive: true });
+      cardBox.addEventListener('touchend', function(e) {
+        touchEndX = e.changedTouches[0].clientX;
+        var diff = touchEndX - touchStartX;
+        if (Math.abs(diff) > 50) {
+          if (diff < 0) {
+            currentTplIdx = (currentTplIdx + 1) % 5;
+          } else {
+            currentTplIdx = (currentTplIdx - 1 + 5) % 5;
+          }
+          cur.tplIdx = currentTplIdx;
+          saveCurrentToDB();
+          renderStep3();
+        }
+      }, { passive: true });
+    }
+
+    // 底部编辑按钮
     document.getElementById('dockEditBtn').addEventListener('click', function() {
       syncDirectEdits(cur);
       renderStep2();
     });
 
-    // 右上角新建
-    document.getElementById('actionNewBtn').addEventListener('click', function() {
-      syncDirectEdits(cur);
-      createNewUser();
-    });
-
-    // 右上角用户列表抽屉
+    // 抽屉关闭
     var drawerMask = document.getElementById('userDrawerMask');
     var drawerCard = document.getElementById('userDrawerCard');
-
-    document.getElementById('actionListBtn').addEventListener('click', function() {
-      drawerMask.classList.add('show');
-      drawerCard.classList.add('show');
-    });
-
-    document.getElementById('drawerCloseBtn').addEventListener('click', closeDrawer);
-    drawerMask.addEventListener('click', closeDrawer);
+    var drawerCloseBtn = document.getElementById('drawerCloseBtn');
 
     function closeDrawer() {
-      drawerMask.classList.remove('show');
-      drawerCard.classList.remove('show');
+      if (drawerMask) drawerMask.classList.remove('show');
+      if (drawerCard) drawerCard.classList.remove('show');
     }
 
-    // 抽屉内切换用户
-    drawerCard.querySelectorAll('.drawer-user-item').forEach(function(item) {
-      item.addEventListener('click', function(e) {
-        if (e.target.closest('.drawer-del-btn')) return;
-        currentUserId = this.dataset.userId;
-        var selected = getCurrentUser();
-        if (selected) currentTplIdx = selected.tplIdx || 0;
-        saveCurrentToDB(function() {
-          closeDrawer();
-          renderStep3();
-        });
-      });
-    });
+    if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', closeDrawer);
+    if (drawerMask) drawerMask.addEventListener('click', closeDrawer);
 
-    // 抽屉内删除用户
-    drawerCard.querySelectorAll('.drawer-del-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var delId = this.dataset.delId;
-        if (!confirm('确定要删除这位用户的档案吗？')) return;
-        userList = userList.filter(function(u) { return u.id !== delId; });
-        if (currentUserId === delId) {
-          currentUserId = userList.length ? userList[0].id : null;
-        }
-        saveCurrentToDB(function() {
-          if (userList.length) renderStep3();
-          else renderStep1();
+    // 抽屉内切换用户
+    if (drawerCard) {
+      drawerCard.querySelectorAll('.drawer-user-item').forEach(function(item) {
+        item.addEventListener('click', function(e) {
+          if (e.target.closest('.drawer-del-btn')) return;
+          currentUserId = this.dataset.userId;
+          var selected = getCurrentUser();
+          if (selected) currentTplIdx = selected.tplIdx || 0;
+          saveCurrentToDB(function() {
+            closeDrawer();
+            renderStep3();
+          });
         });
       });
-    });
+
+      // 抽屉内删除用户
+      drawerCard.querySelectorAll('.drawer-del-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var delId = this.dataset.delId;
+          if (!confirm('确定要删除这位用户的档案吗？')) return;
+          userList = userList.filter(function(u) { return u.id !== delId; });
+          if (currentUserId === delId) {
+            currentUserId = userList.length ? userList[0].id : null;
+          }
+          saveCurrentToDB(function() {
+            if (userList.length) renderStep3();
+            else renderStep1();
+          });
+        });
+      });
+    }
 
     // 照片上传与裁剪
     var photoBtn = document.getElementById('cardPhotoBtn');
@@ -473,7 +531,7 @@
           var reader = new FileReader();
           reader.onload = function(e) {
             if (window.AppCropper) {
-              AppCropper.open(e.target.result, { aspectRatio: 1 / 1.35 }, function(croppedData) {
+              AppCropper.open(e.target.result, { aspectRatio: 1 / 1.38 }, function(croppedData) {
                 cur.photo = croppedData;
                 saveCurrentToDB(function() {
                   renderStep3();
@@ -494,7 +552,6 @@
       });
     }
 
-    // 监听实时直接修改
     bindLiveEdits(cur);
   }
 
