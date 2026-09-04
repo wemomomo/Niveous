@@ -157,192 +157,23 @@
     return Math.abs(hash).toString(36);
   }
 
-  function getApiEndpoint(action) {
-    return '/api/' + action;
-  }
-
-  // ============ 登录门禁逻辑 ============
+  // ============ 登录门禁逻辑 (测试模式：免密直接放行) ============
   function checkActivation() {
     var mask = document.getElementById('authGateMask');
-    var usernameInput = document.getElementById('authUsernameInput');
-    var passwordInput = document.getElementById('authPasswordInput');
-    var submitBtn = document.getElementById('authSubmitBtn');
-    if (!mask) return;
-
-    function onLoginVerified(token, userInfo) {
-      dbSave('app_auth_token', token, function() {
-        dbSave('app_user_info', userInfo, function() {
-          try {
-            localStorage.setItem('app_auth_token', token);
-            localStorage.setItem('app_user_info', JSON.stringify(userInfo));
-          } catch(e) {}
-          mask.classList.remove('show');
-        });
-      });
+    if (mask) {
+      mask.classList.remove('show');
+      mask.style.display = 'none';
     }
-
-    function kickOut(message) {
-      dbDelete('app_auth_token', function() {
-        dbDelete('app_user_info', function() {
-          clearAllAuth();
-          mask.classList.add('show');
-          if (message) showToast(message);
-        });
-      });
-    }
-
-    function realTimeVerify(userInfo) {
-      getStableDeviceId(function(deviceId) {
-        fetch(getApiEndpoint('login') + '?_t=' + Date.now(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json; charset=utf-8' },
-          body: JSON.stringify({
-            username: userInfo.username,
-            password: userInfo.password || '',
-            deviceId: deviceId,
-            verifyOnly: true
-          })
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          if (!data.success) {
-            kickOut(data.message || '账号已失效');
-          }
-        })
-        .catch(function() {});
-      });
-    }
-
-    dbGet('app_user_info', function(userInfo) {
-      dbGet('app_auth_token', function(token) {
-        if (token && userInfo && userInfo.username) {
-          mask.classList.remove('show');
-          realTimeVerify(userInfo);
-        } else {
-          var session = getGlobalSession();
-          if (session && session.token && session.userInfo && session.userInfo.username) {
-            onLoginVerified(session.token, session.userInfo);
-            realTimeVerify(session.userInfo);
-          } else {
-            mask.classList.add('show');
-          }
-        }
+    // 默认写入测试用户信息
+    var defaultUser = { username: '墨墨' };
+    dbSave('app_auth_token', 'test_token_ok', function() {
+      dbSave('app_user_info', defaultUser, function() {
+        try {
+          localStorage.setItem('app_auth_token', 'test_token_ok');
+          localStorage.setItem('app_user_info', JSON.stringify(defaultUser));
+        } catch(e) {}
       });
     });
-
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'visible') {
-        dbGet('app_user_info', function(userInfo) {
-          if (userInfo && userInfo.username) realTimeVerify(userInfo);
-        });
-      }
-    });
-
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function() {
-        var username = (usernameInput.value || '').trim();
-        var password = (passwordInput.value || '').trim();
-        if (!username || !password) { showToast('请输入账号和密码'); return; }
-
-        getStableDeviceId(function(deviceId) {
-          submitBtn.disabled = true;
-          submitBtn.textContent = '进入中...';
-
-          fetch(getApiEndpoint('login') + '?_t=' + Date.now(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=utf-8' },
-            body: JSON.stringify({ username: username, password: password, deviceId: deviceId })
-          })
-          .then(function(res) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return res.json();
-          })
-          .then(function(data) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '进入';
-
-            if (data.success && data.token) {
-              var info = { username: data.username, password: password };
-              onLoginVerified(data.token, info);
-              showToast('欢迎回来');
-              window.dispatchEvent(new CustomEvent('loginSuccess'));
-            } else {
-              showToast(data.message || '登录失败');
-            }
-          })
-          .catch(function() {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '进入';
-            showToast('登录失败，请重试');
-          });
-        });
-      });
-    }
-
-    var loginBox = document.getElementById('authLoginBox');
-    var registerBox = document.getElementById('authRegisterBox');
-    var goRegisterBtn = document.getElementById('authGoRegister');
-    var goLoginBtn = document.getElementById('authGoLogin');
-    var registerBtn = document.getElementById('authRegisterBtn');
-
-    if (goRegisterBtn) {
-      goRegisterBtn.addEventListener('click', function() {
-        loginBox.classList.add('auth-hidden');
-        registerBox.classList.remove('auth-hidden');
-      });
-    }
-
-    if (goLoginBtn) {
-      goLoginBtn.addEventListener('click', function() {
-        registerBox.classList.add('auth-hidden');
-        loginBox.classList.remove('auth-hidden');
-      });
-    }
-
-    if (registerBtn) {
-      registerBtn.addEventListener('click', function() {
-        var inviteCode = (document.getElementById('authInviteInput').value || '').trim();
-        var regUser = (document.getElementById('authRegUserInput').value || '').trim();
-        var regPass = (document.getElementById('authRegPassInput').value || '').trim();
-
-        if (!inviteCode || !regUser || !regPass) { showToast('请填写完整信息'); return; }
-
-        getStableDeviceId(function(deviceId) {
-          registerBtn.disabled = true;
-          registerBtn.textContent = '注册中...';
-
-          fetch(getApiEndpoint('register') + '?_t=' + Date.now(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=utf-8' },
-            body: JSON.stringify({
-              inviteCode: inviteCode,
-              username: regUser,
-              password: regPass,
-              deviceId: deviceId
-            })
-          })
-          .then(function(res) { return res.json(); })
-          .then(function(data) {
-            registerBtn.disabled = false;
-            registerBtn.textContent = '注册并登录';
-
-            if (data.success && data.token) {
-              var info = { username: data.username, password: regPass };
-              onLoginVerified(data.token, info);
-              showToast('注册成功，欢迎进入');
-              window.dispatchEvent(new CustomEvent('loginSuccess'));
-            } else {
-              showToast(data.message || '注册失败');
-            }
-          })
-          .catch(function() {
-            registerBtn.disabled = false;
-            registerBtn.textContent = '注册并登录';
-            showToast('网络异常，请重试');
-          });
-        });
-      });
-    }
   }
 
   // ============ 页面外壳与导航 ============
