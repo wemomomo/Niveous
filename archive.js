@@ -1,15 +1,23 @@
+
 (function(){
   'use strict';
 
-  var ARCHIVE_DB_KEY = 'user_archive_data_v2';
+  var ARCHIVES_LIST_KEY = 'user_archives_list_v3';
+  var ACTIVE_USER_ID_KEY = 'user_archive_active_id_v3';
+
   var container = null;
-  var currentData = {
+  var userList = [];
+  var currentUserId = null;
+  var currentTplIdx = 0; // 0:票根, 1:亚克力, 2:燕麦火漆, 3:粉晶圣殿, 4:白金胶片
+
+  var defaultProfile = {
+    id: '',
     name: '你',
-    gender: '女',
-    age: '18',
-    height: '165cm',
+    gender: '',
+    age: '',
+    height: '',
     birthday: '',
-    zodiac: '天秤座',
+    zodiac: '',
     appearance: '',
     personality: '',
     tags: '',
@@ -22,18 +30,18 @@
     tag1: '✦ 专属',
     tag2: '♡ 奔赴',
     tag3: '✧ 宇宙漫游',
-    serial: 'NO. 0000-NIVEOUS'
+    serial: 'NO. 0000-NIVEOUS',
+    tplIdx: 0
   };
 
-  // 双重保险初始化，适配 iOS PWA 加载机制
+  // 初始化监听
   function tryInit() {
     container = document.getElementById('archiveContent');
     if (!container) {
       window.addEventListener('dbReady', tryInit);
       return;
     }
-    // 已经准备好容器，从数据库读取数据
-    loadArchiveData();
+    loadAllData();
   }
 
   if (window._dbReady) {
@@ -44,20 +52,53 @@
   }
 
   // 1. 读取数据库
-  function loadArchiveData() {
+  function loadAllData() {
     if (!window.AppDB) return;
-    AppDB.get(ARCHIVE_DB_KEY, function(saved) {
-      if (saved && saved.name) {
-        currentData = saved;
-        renderStep3(); // 如果已经有档案，直接进入高定小卡展示页
-      } else {
-        renderStep1(); // 没有任何档案，显示空状态及慢速凝线雪花
-      }
+    AppDB.get(ARCHIVES_LIST_KEY, function(list) {
+      userList = Array.isArray(list) ? list : [];
+      AppDB.get(ACTIVE_USER_ID_KEY, function(activeId) {
+        currentUserId = activeId;
+        var activeUser = getCurrentUser();
+        if (activeUser) {
+          currentTplIdx = activeUser.tplIdx || 0;
+          renderStep3();
+        } else if (userList.length > 0) {
+          currentUserId = userList[0].id;
+          currentTplIdx = userList[0].tplIdx || 0;
+          renderStep3();
+        } else {
+          renderStep1();
+        }
+      });
     });
   }
 
+  function getCurrentUser() {
+    if (!currentUserId || !userList.length) return null;
+    for (var i = 0; i < userList.length; i++) {
+      if (userList[i].id === currentUserId) return userList[i];
+    }
+    return null;
+  }
+
+  function saveCurrentToDB(callback) {
+    if (!window.AppDB) return;
+    AppDB.save(ARCHIVES_LIST_KEY, userList, function() {
+      AppDB.save(ACTIVE_USER_ID_KEY, currentUserId, function() {
+        if (callback) callback();
+      });
+    });
+  }
+
+  function getTodayDateStr() {
+    var now = new Date();
+    var m = String(now.getMonth() + 1).padStart(2, '0');
+    var d = String(now.getDate()).padStart(2, '0');
+    return m + d;
+  }
+
   // ==========================================
-  // 步骤 1：雪花成型空状态
+  // 步骤 1：慢速凝聚雪花空状态
   // ==========================================
   function renderStep1() {
     container.className = 'app-content archive-panel-active';
@@ -105,28 +146,33 @@
       + '</div>';
 
     document.getElementById('goToStep2Btn').addEventListener('click', function() {
-      // 首次建档，读取手机当前的真实日期并彻底固化锁定
-      if (!currentData.createDate) {
-        var now = new Date();
-        var m = String(now.getMonth() + 1).padStart(2, '0');
-        var d = String(now.getDate()).padStart(2, '0');
-        currentData.createDate = m + d;
-      }
-      renderStep2();
+      createNewUser();
     });
   }
 
+  function createNewUser() {
+    var newObj = JSON.parse(JSON.stringify(defaultProfile));
+    newObj.id = 'user_' + Date.now();
+    newObj.createDate = getTodayDateStr();
+    newObj.serial = 'NO. 0000-NIVEOUS';
+    userList.push(newObj);
+    currentUserId = newObj.id;
+    currentTplIdx = 0;
+    renderStep2();
+  }
+
   // ==========================================
-  // 步骤 2：法式手账填单
+  // 步骤 2：法式高定手账填单
   // ==========================================
   function renderStep2() {
+    var cur = getCurrentUser() || defaultProfile;
     container.className = 'app-content';
     container.innerHTML = '<div class="archive-step-panel step-active" id="archStep2">'
       + '<div class="journal-sheet">'
       + '<div class="journal-header">'
       + '<div class="journal-header-top">'
       + '<span class="brand-confidential">RECORD // ARCHIVE</span>'
-      + '<span class="brand-serial">№ NV-' + esc(currentData.createDate) + '</span>'
+      + '<span class="brand-serial">№ NV-' + esc(cur.createDate || getTodayDateStr()) + '</span>'
       + '</div>'
       + '<h1 class="journal-main-title">档案录入手札</h1>'
       + '<p class="journal-desc-text">在这里提笔，将关于你的每一缕呼吸、性格轮廓与灵魂羁绊落于纸上。</p>'
@@ -137,41 +183,40 @@
       + '<div class="journal-section">'
       + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">01.</span><span>基础身份</span></div><span class="section-tag-en">IDENTITY</span></div>'
       + '<div class="ruled-row-grid">'
-      + '<div class="ruled-item"><span class="ruled-label">姓名 / 专属称呼</span><input type="text" class="ruled-input" id="fieldName" value="' + esc(currentData.name) + '" placeholder="如：墨墨"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">性别</span><input type="text" class="ruled-input" id="fieldGender" value="' + esc(currentData.gender) + '" placeholder="如：女"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">年龄</span><input type="text" class="ruled-input" id="fieldAge" value="' + esc(currentData.age) + '" placeholder="如：18"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">身高</span><input type="text" class="ruled-input" id="fieldHeight" value="' + esc(currentData.height) + '" placeholder="如：165cm"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">生日</span><input type="text" class="ruled-input" id="fieldBirthday" value="' + esc(currentData.birthday) + '" placeholder="如：09.24"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">星座</span><input type="text" class="ruled-input" id="fieldZodiac" value="' + esc(currentData.zodiac) + '" placeholder="如：天秤座"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">姓名 / 专属称呼</span><input type="text" class="ruled-input" id="fieldName" value="' + esc(cur.name) + '" placeholder="如：墨墨"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">性别</span><input type="text" class="ruled-input" id="fieldGender" value="' + esc(cur.gender) + '" placeholder="如：女"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">年龄</span><input type="text" class="ruled-input" id="fieldAge" value="' + esc(cur.age) + '" placeholder="如：18"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">身高</span><input type="text" class="ruled-input" id="fieldHeight" value="' + esc(cur.height) + '" placeholder="如：165cm"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">生日</span><input type="text" class="ruled-input" id="fieldBirthday" value="' + esc(cur.birthday) + '" placeholder="如：09.24"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">星座</span><input type="text" class="ruled-input" id="fieldZodiac" value="' + esc(cur.zodiac) + '" placeholder="如：天秤座"></div>'
       + '</div>'
       + '</div>'
 
-      // 02. 外貌长相手记
+      // 02. 外貌长相
       + '<div class="journal-section">'
       + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">02.</span><span>长相与外貌特征</span></div><span class="section-tag-en">APPEARANCE</span></div>'
-      + '<textarea class="ruled-textarea" id="fieldAppearance" rows="2" placeholder="发型、眸色、五官气质、穿搭风格、身形特点...">' + esc(currentData.appearance) + '</textarea>'
+      + '<textarea class="ruled-textarea" id="fieldAppearance" rows="2" placeholder="发型、眸色、五官气质、穿搭风格、身形特点...">' + esc(cur.appearance) + '</textarea>'
       + '</div>'
 
-      // 03. 性格特质与口吻
+      // 03. 性格特质
       + '<div class="journal-section">'
       + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">03.</span><span>性格特质与语气习惯</span></div><span class="section-tag-en">PERSONALITY</span></div>'
-      + '<div class="ruled-item" style="margin-bottom:6px;"><span class="ruled-label">性格标签</span><input type="text" class="ruled-input" id="fieldTags" value="' + esc(currentData.tags) + '" placeholder="多个关键词用空格分隔"></div>'
-      + '<textarea class="ruled-textarea" id="fieldPersonality" rows="2" placeholder="日常性格表现、说话习惯、专属的互动方式与情绪特点...">' + esc(currentData.personality) + '</textarea>'
+      + '<div class="ruled-item" style="margin-bottom:6px;"><span class="ruled-label">性格标签</span><input type="text" class="ruled-input" id="fieldTags" value="' + esc(cur.tags) + '" placeholder="多个关键词用空格分隔"></div>'
+      + '<textarea class="ruled-textarea" id="fieldPersonality" rows="2" placeholder="日常性格表现、说话习惯、专属的互动方式与情绪特点...">' + esc(cur.personality) + '</textarea>'
       + '</div>'
 
-      // 04. 兴趣爱好与日常偏好
+      // 04. 兴趣爱好
       + '<div class="journal-section">'
       + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">04.</span><span>兴趣爱好与日常偏好</span></div><span class="section-tag-en">HOBBIES & LIKES</span></div>'
-      + '<textarea class="ruled-textarea" id="fieldHobbies" rows="2" placeholder="喜欢的食物、日常兴趣爱好、喜恶偏好、特殊习惯...">' + esc(currentData.hobbies) + '</textarea>'
+      + '<textarea class="ruled-textarea" id="fieldHobbies" rows="2" placeholder="喜欢的食物、日常兴趣爱好、喜恶偏好、特殊习惯...">' + esc(cur.hobbies) + '</textarea>'
       + '</div>'
 
-      // 05. 深度背景渊源
+      // 05. 深度背景
       + '<div class="journal-section">'
       + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">05.</span><span>深度背景渊源与人设</span></div><span class="section-tag-en">BACKGROUND & LORE</span></div>'
-      + '<textarea class="ruled-textarea" id="fieldBackground" rows="3" placeholder="身份背景、过往经历、故事渊源与深度设定...">' + esc(currentData.background) + '</textarea>'
+      + '<textarea class="ruled-textarea" id="fieldBackground" rows="3" placeholder="身份背景、过往经历、故事渊源与深度设定...">' + esc(cur.background) + '</textarea>'
       + '</div>'
 
-      // 撕条及印章
       + '<div class="journal-tear-strip">'
       + '<div class="journal-sign-box"><span class="sign-label">AUTHENTICATED PROTOCOL</span><span class="sign-handwriting">✦ Verified Confidential Dossier</span></div>'
       + '<div class="journal-seal-stamp"><span class="seal-star">✦</span><span>NIVEOUS</span><span>OFFICIAL</span></div>'
@@ -187,209 +232,300 @@
     document.getElementById('generateCardBtn').addEventListener('click', function() {
       var nameVal = document.getElementById('fieldName').value.trim();
       if (!nameVal) {
-        AppNav.showToast('墨墨，请在第一栏写下你的“姓名”哦');
+        AppNav.showToast('墨墨，请在第一栏写下姓名哦');
         return;
       }
 
-      // 获取表单值保存至临时变量
-      currentData.name = nameVal;
-      currentData.gender = document.getElementById('fieldGender').value.trim() || '女';
-      currentData.age = document.getElementById('fieldAge').value.trim() || '18';
-      currentData.height = document.getElementById('fieldHeight').value.trim() || '165cm';
-      currentData.birthday = document.getElementById('fieldBirthday').value.trim();
-      currentData.zodiac = document.getElementById('fieldZodiac').value.trim() || '天秤座';
-      currentData.appearance = document.getElementById('fieldAppearance').value.trim();
-      currentData.personality = document.getElementById('fieldPersonality').value.trim();
-      currentData.tags = document.getElementById('fieldTags').value.trim();
-      currentData.hobbies = document.getElementById('fieldHobbies').value.trim();
-      currentData.background = document.getElementById('fieldBackground').value.trim();
+      cur.name = nameVal;
+      cur.gender = document.getElementById('fieldGender').value.trim() || '女';
+      cur.age = document.getElementById('fieldAge').value.trim() || '18';
+      cur.height = document.getElementById('fieldHeight').value.trim() || '165cm';
+      cur.birthday = document.getElementById('fieldBirthday').value.trim();
+      cur.zodiac = document.getElementById('fieldZodiac').value.trim() || '天秤座';
+      cur.appearance = document.getElementById('fieldAppearance').value.trim();
+      cur.personality = document.getElementById('fieldPersonality').value.trim();
+      cur.tags = document.getElementById('fieldTags').value.trim();
+      cur.hobbies = document.getElementById('fieldHobbies').value.trim();
+      cur.background = document.getElementById('fieldBackground').value.trim();
 
-      // 生日智能编号联动：填写生日同步为 NO.纯数字-NIVEOUS，否则默认 NO.0000-NIVEOUS
-      if (currentData.birthday) {
-        var cleanDigits = currentData.birthday.replace(/[^0-9]/g, '');
-        currentData.serial = 'NO. ' + (cleanDigits || currentData.birthday) + '-NIVEOUS';
+      if (cur.birthday) {
+        var cleanDigits = cur.birthday.replace(/[^0-9]/g, '');
+        cur.serial = 'NO. ' + (cleanDigits || cur.birthday) + '-NIVEOUS';
       } else {
-        currentData.serial = 'NO. 0000-NIVEOUS';
+        cur.serial = 'NO. 0000-NIVEOUS';
       }
 
-      // 名字右侧的 userid 完全绑定为 @NIVEOUSMOON
-      currentData.userid = '@NIVEOUSMOON';
-      currentData.useridVal = 'G: ' + currentData.gender + ' · H: ' + currentData.height;
-
-      renderStep3();
+      saveCurrentToDB(function() {
+        renderStep3();
+      });
     });
   }
 
   // ==========================================
-  // 步骤 3：高定票根展示及自由编辑
+  // 步骤 3：全屏小卡展示、左右切模板、右上角多用户管理
   // ==========================================
   function renderStep3() {
-    container.className = 'app-content';
-    var hasPhotoClass = currentData.photo ? ' has-img' : '';
-    
-    container.innerHTML = '<div class="archive-step-panel step-active" id="archStep3">'
-      + '<div class="t1-wrapper">'
-      + '<div class="t1-inner">'
-      + '<div class="t1-header">'
-      + '<div>'
-      + '<div class="t1-serial" id="cardSerial" contenteditable="true" spellcheck="false">' + esc(currentData.serial) + '</div>'
-      + '<div class="t1-title" contenteditable="true" spellcheck="false"><span>MEMORIES</span><span>✦</span></div>'
-      + '</div>'
-      + '<div class="t1-stamp" contenteditable="true" spellcheck="false">★ SPECIAL</div>'
+    var cur = getCurrentUser();
+    if (!cur) {
+      renderStep1();
+      return;
+    }
+
+    container.className = 'app-content archive-fullscreen-mode';
+    var hasPhotoClass = cur.photo ? ' has-img' : '';
+
+    var html = '<div class="archive-showcase-wrap">'
+      // 1. 右上角功能栏
+      + '<div class="archive-top-actions">'
+      + '<button class="arch-action-pill" id="actionNewBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>'
+      + '<button class="arch-action-pill" id="actionListBtn" type="button"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>用户列表 (' + userList.length + ')</span></button>'
       + '</div>'
 
-      + '<div class="t1-body">'
-      + '<div class="t1-left-rail">'
-      + '<div class="t1-qr-icon">'
-      + '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="15" y="15" width="5" height="5" fill="currentColor"/></svg>'
-      + '</div>'
-      + '<div class="t1-barcode-lines">'
-      + '<div class="t1-bline thick"></div><div class="t1-bline thin"></div><div class="t1-bline"></div>'
-      + '<div class="t1-bline thick"></div><div class="t1-bline"></div><div class="t1-bline thin"></div>'
-      + '<div class="t1-bline thick"></div>'
-      + '</div>'
-      + '<div class="t1-vertical-code" id="cardVertCode" contenteditable="true" spellcheck="false">LUCKY-TODAY</div>'
+      // 2. 全屏大卡片容器 (根据 currentTplIdx 渲染不同模板)
+      + '<div class="archive-full-card-box" id="cardContainerBox">'
+      + renderCardTemplateHtml(cur, currentTplIdx, hasPhotoClass)
       + '</div>'
 
-      // 原生态大相框，移除了 online 标识
-      + '<div class="t1-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn">'
-      + '<img id="cardPhotoImg" src="' + esc(currentData.photo) + '" alt="立绘">'
-      + '<div class="t1-photo-empty">'
-      + '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
-      + '<span>上传立绘/特写</span>'
-      + '</div>'
+      // 3. 底部悬浮控制坞 (左箭头 · 编辑 · 右箭头)
+      + '<div class="archive-bottom-dock">'
+      + '<button class="dock-arrow-btn" id="prevTplBtn" type="button"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>'
+      + '<button class="dock-edit-btn" id="dockEditBtn" type="button"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>编辑资料</span></button>'
+      + '<button class="dock-arrow-btn" id="nextTplBtn" type="button"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>'
       + '</div>'
 
-      + '<div class="t1-right-rail">'
-      + '<span class="t1-star">✦</span><span class="t1-dash"></span><span class="t1-rail-dot"></span>'
-      + '<span class="t1-star">✧</span><span class="t1-rail-dot"></span><span class="t1-dash"></span>'
-      + '<span class="t1-star">✦</span>'
-      + '</div>'
-      + '</div>'
-
-      + '<div class="t1-footer">'
-      + '<div class="t1-cutout-left"></div><div class="t1-cutout-right"></div>'
-      + '<div class="t1-user-row">'
-      + '<div class="t1-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(currentData.name) + '</div>'
-      + '<div class="t1-userid" id="cardUserId" contenteditable="true" spellcheck="false">' + esc(currentData.userid) + '</div>'
-      + '</div>'
-      + '<div class="t1-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(currentData.bio) + '</div>'
-      + '<div class="t1-tags" id="cardTagsContainer">'
-      + '<span class="t1-tag primary" id="cardTag1" contenteditable="true" spellcheck="false">' + esc(currentData.tag1) + '</span>'
-      + '<span class="t1-tag" id="cardTag2" contenteditable="true" spellcheck="false">' + esc(currentData.tag2) + '</span>'
-      + '<span class="t1-tag" id="cardTag3" contenteditable="true" spellcheck="false">' + esc(currentData.tag3) + '</span>'
-      + '</div>'
-      + '</div>'
+      // 4. 用户列表弹出抽屉 (默认隐藏)
+      + '<div class="user-drawer-mask" id="userDrawerMask"></div>'
+      + '<div class="user-drawer-card" id="userDrawerCard">'
+      + '<div class="drawer-header"><div class="drawer-title">用户档案库</div><button class="drawer-close-btn" id="drawerCloseBtn" type="button">✕</button></div>'
+      + '<div class="drawer-list">'
+      + userList.map(function(u, idx) {
+          var isActive = u.id === cur.id;
+          return '<div class="drawer-user-item' + (isActive ? ' active' : '') + '" data-user-id="' + u.id + '">'
+            + '<div class="drawer-avatar">' + (u.photo ? '<img src="' + esc(u.photo) + '">' : '✦') + '</div>'
+            + '<div class="drawer-user-info"><div class="drawer-user-name">' + esc(u.name) + (isActive ? '<span class="drawer-active-tag">当前</span>' : '') + '</div><div class="drawer-user-date">建档：№ NV-' + esc(u.createDate || '0000') + '</div></div>'
+            + '<button class="drawer-del-btn" data-del-id="' + u.id + '" type="button">删除</button>'
+            + '</div>';
+        }).join('')
       + '</div>'
       + '</div>'
 
-      // 功能按钮组
-      + '<div class="t1-action-deck">'
-      + '<button class="t1-secondary-btn" id="reEditBtn" type="button">'
-      + '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'
-      + '<span>返回手账</span>'
-      + '</button>'
-      + '<button class="action-trigger-btn" id="finishBtn" style="flex:1.2;" type="button">'
-      + '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
-      + '<span>确认并保存</span>'
-      + '</button>'
-      + '</div>'
-      + '<button class="t1-secondary-btn" id="recreateBtn" style="width:100%; margin-top:10px; border-color:rgba(219,68,85,0.3); color:#db4455;" type="button">'
-      + '<span>重新创建全新档案</span>'
-      + '</button>'
       + '</div>';
 
-    // 绑定返回编辑
-    document.getElementById('reEditBtn').addEventListener('click', function() {
-      readDirectEditableValues();
+    container.innerHTML = html;
+    bindStep3Events(cur);
+  }
+
+  // 渲染 5 种高定模板中的某一种
+  function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
+    if (tplIdx === 0) {
+      // 01. 冰蓝票根
+      return '<div class="t1-wrapper">'
+        + '<div class="t1-inner">'
+        + '<div class="t1-header"><div><div class="t1-serial" id="cardSerial" contenteditable="true" spellcheck="false">' + esc(cur.serial) + '</div><div class="t1-title" contenteditable="true" spellcheck="false"><span>MEMORIES</span><span>✦</span></div></div><div class="t1-stamp" contenteditable="true" spellcheck="false">★ SPECIAL</div></div>'
+        + '<div class="t1-body">'
+        + '<div class="t1-left-rail"><div class="t1-qr-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="15" y="15" width="5" height="5" fill="currentColor"/></svg></div><div class="t1-barcode-lines"><div class="t1-bline thick"></div><div class="t1-bline thin"></div><div class="t1-bline"></div><div class="t1-bline thick"></div><div class="t1-bline"></div><div class="t1-bline thin"></div><div class="t1-bline thick"></div></div><div class="t1-vertical-code" contenteditable="true" spellcheck="false">LUCKY-TODAY</div></div>'
+        + '<div class="t1-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
+        + '<div class="t1-right-rail"><span class="t1-star">✦</span><span class="t1-dash"></span><span class="t1-rail-dot"></span><span class="t1-star">✧</span><span class="t1-rail-dot"></span><span class="t1-dash"></span><span class="t1-star">✦</span></div>'
+        + '</div>'
+        + '<div class="t1-footer"><div class="t1-cutout-left"></div><div class="t1-cutout-right"></div>'
+        + '<div class="t1-user-row"><div class="t1-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t1-userid" id="cardUserId" contenteditable="true" spellcheck="false">' + esc(cur.userid) + '</div></div>'
+        + '<div class="t1-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio) + '</div>'
+        + '<div class="t1-tags"><span class="t1-tag primary" id="cardTag1" contenteditable="true" spellcheck="false">' + esc(cur.tag1) + '</span><span class="t1-tag" id="cardTag2" contenteditable="true" spellcheck="false">' + esc(cur.tag2) + '</span><span class="t1-tag" id="cardTag3" contenteditable="true" spellcheck="false">' + esc(cur.tag3) + '</span></div>'
+        + '</div></div></div>';
+    } else if (tplIdx === 1) {
+      // 02. 缎带亚克力
+      return '<div class="t2-wrapper">'
+        + '<div class="t2-ribbon-tr">✦ SPECIAL</div><div class="t2-ribbon-bl">✦ MEMORIES</div><div class="t2-top-ring"></div>'
+        + '<div class="t2-frame"><div class="t2-cross tl">+</div><div class="t2-cross tr">+</div><div class="t2-cross bl">+</div><div class="t2-cross br">+</div>'
+        + '<div class="t2-top-bar"><div class="t2-icons"><span>♡</span><span>★</span><span>♪</span><span>☆</span></div><div class="t2-brand">NIVEOUS ARCHIVE</div></div>'
+        + '<div class="t2-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t2-music-pill"><div class="t2-music-wave"><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div></div><span>PLAYING</span></div></div>'
+        + '<div class="t2-footer"><div class="t2-user-row"><div class="t2-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t2-stars">✦ ✦ ✦</div></div>'
+        + '<div class="t2-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio) + '</div>'
+        + '<div class="t2-barcode-deck"><div class="t2-barcode-wrap"><div class="t2-graphic"><div class="t2-bar w2"></div><div class="t2-bar"></div><div class="t2-bar w3"></div><div class="t2-bar"></div><div class="t2-bar w2"></div><div class="t2-bar"></div></div><span class="t2-digits">4 892019 330219</span></div><div class="t2-tag"><span>♡</span><span>SPECIAL EDITION</span></div></div>'
+        + '</div></div></div>';
+    } else if (tplIdx === 2) {
+      // 03. 燕麦火漆
+      return '<div class="t3-wrapper">'
+        + '<div class="t3-perfs-left"><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div></div>'
+        + '<div class="t3-perfs-right"><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div></div>'
+        + '<div class="t3-inner-box"><div class="t3-header-row"><div class="t3-postmark"><div class="t3-pm-circle">PARIS</div><div class="t3-pm-lines"><div class="t3-pm-line"></div><div class="t3-pm-line"></div><div class="t3-pm-line"></div></div></div><div class="t3-tag-text"><span>♡</span><span>LETTRE D\'AMOUR</span></div></div>'
+        + '<div class="t3-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t3-photo-tag"><span>♥</span><span>NO. ' + esc(cur.birthday || '0000') + '</span></div></div>'
+        + '<div class="t3-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t3-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t3-serial">POSTAGE</div></div>'
+        + '<div class="t3-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio) + '</div>'
+        + '<div class="t3-bottom-deck"><div class="t3-french-tags"><span class="t3-french-quote">« Pour toujours et à jamais »</span><div class="t3-chips"><span class="t3-chip">✦ 燕麦手作</span><span class="t3-chip">♡ 典藏信笺</span></div></div><div class="t3-wax-seal"><div class="t3-wax-inner">✦</div></div></div>'
+        + '</div></div></div>';
+    } else if (tplIdx === 3) {
+      // 04. 粉晶圣殿
+      return '<div class="t4-wrapper">'
+        + '<div class="t4-inner-frame"><div class="t4-cross tl">✟</div><div class="t4-cross tr">✟</div><div class="t4-cross bl">✟</div><div class="t4-cross br">✟</div>'
+        + '<div class="t4-header"><div class="t4-title-wrap"><span>✠</span><span class="t4-title">SANCTUARY</span></div><div class="t4-stamp">ROSE · ' + esc(cur.birthday || '0000') + '</div></div>'
+        + '<div class="t4-arch-stage' + hasPhotoClass + '" id="cardPhotoBtn"><div class="t4-arch-overlay">✦ ETERNAL ✦</div><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
+        + '<div class="t4-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t4-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + ' ✞</div><div class="t4-serial">ROSE #001</div></div>'
+        + '<div class="t4-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio) + '</div>'
+        + '<div class="t4-plague-bar">✟ SACRED OATH · IN PERPETUUM ✟</div>'
+        + '<div class="t4-stats-matrix"><div class="t4-stat-box"><span class="t4-stat-label">DEVOTION</span><span class="t4-stat-val">100% 纯粹</span></div><div class="t4-stat-box"><span class="t4-stat-label">BOUND</span><span class="t4-stat-val">灵魂共鸣</span></div><div class="t4-stat-box"><span class="t4-stat-label">STATUS</span><span class="t4-stat-val">永恒偏爱</span></div></div>'
+        + '</div></div></div>';
+    } else {
+      // 05. 白金胶片
+      return '<div class="t5-wrapper">'
+        + '<div class="t5-sprockets"><div class="t5-hole"></div><div class="t5-hole"></div><span class="t5-sprocket-code">▶ NIVEOUS 35mm</span><div class="t5-hole"></div><div class="t5-hole"></div></div>'
+        + '<div class="t5-header-bar"><div class="t5-scene"><span class="t5-dot"></span><span>SCENE 01</span></div><span class="t5-fps">ISO 400 · 24 FPS</span></div>'
+        + '<div class="t5-frame-stage' + hasPhotoClass + '" id="cardPhotoBtn"><span class="t5-edge-mark">SAFETY FILM ★</span><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
+        + '<div class="t5-footer-wrap"><div class="t5-username-row"><div class="t5-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><span class="t5-director">PROD. BY LOVE</span></div>'
+        + '<div class="t5-subtitles-box"><div class="t5-sub-cn" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio) + '</div><div class="t5-sub-en">"In every frame of this endless reel, you are my only focus."</div></div>'
+        + '<div class="t5-stub"><div style="display:flex; align-items:center; gap:6px;"><span class="t5-admit-pill">ADMIT ONE</span><span style="font-size:8.5px; color:#a0aec0; font-family:monospace;">SEAT: VIP</span></div><span style="font-size:8px; color:#828a94; font-family:monospace;">№ 9248-FILM</span></div>'
+        + '</div>'
+        + '<div class="t5-sprockets" style="margin-top:2px;"><div class="t5-hole"></div><div class="t5-hole"></div><span class="t5-sprocket-code">KODAK FRAME 24A</span><div class="t5-hole"></div><div class="t5-hole"></div></div>'
+        + '</div>';
+    }
+  }
+
+  function bindStep3Events(cur) {
+    // 左右切模板
+    document.getElementById('prevTplBtn').addEventListener('click', function() {
+      currentTplIdx = (currentTplIdx - 1 + 5) % 5;
+      cur.tplIdx = currentTplIdx;
+      saveCurrentToDB();
+      renderStep3();
+    });
+
+    document.getElementById('nextTplBtn').addEventListener('click', function() {
+      currentTplIdx = (currentTplIdx + 1) % 5;
+      cur.tplIdx = currentTplIdx;
+      saveCurrentToDB();
+      renderStep3();
+    });
+
+    // 底部编辑
+    document.getElementById('dockEditBtn').addEventListener('click', function() {
+      syncDirectEdits(cur);
       renderStep2();
     });
 
-    // 绑定永久重置
-    document.getElementById('recreateBtn').addEventListener('click', function() {
-      if (confirm('确定要清除当前的档案，重新建立一份新的吗？')) {
-        currentData = {
-          name: '你', gender: '女', age: '18', height: '165cm', birthday: '', zodiac: '天秤座',
-          appearance: '', personality: '', tags: '', hobbies: '', background: '',
-          bio: '“在这清冷如霜的世界里，你是我唯一的满月与浪漫。”', photo: '', createDate: '',
-          userid: '@NIVEOUSMOON', tag1: '✦ 专属', tag2: '♡ 奔赴', tag3: '✧ 宇宙漫游', serial: 'NO. 0000-NIVEOUS'
-        };
-        if (window.AppDB) AppDB.delete(ARCHIVE_DB_KEY);
-        renderStep1();
-      }
+    // 右上角新建
+    document.getElementById('actionNewBtn').addEventListener('click', function() {
+      syncDirectEdits(cur);
+      createNewUser();
     });
 
-    // 绑定立绘相框点击，调取原生文件选择裁剪器
-    document.getElementById('cardPhotoBtn').addEventListener('click', function() {
-      var fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = 'image/*';
-      fileInput.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
-      document.body.appendChild(fileInput);
+    // 右上角用户列表抽屉
+    var drawerMask = document.getElementById('userDrawerMask');
+    var drawerCard = document.getElementById('userDrawerCard');
 
-      fileInput.addEventListener('change', function() {
-        var file = this.files[0];
-        if (!file) return;
+    document.getElementById('actionListBtn').addEventListener('click', function() {
+      drawerMask.classList.add('show');
+      drawerCard.classList.add('show');
+    });
 
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          if (window.AppCropper) {
-            // 调用全局的原生 Canvas 裁剪器，裁切为经典 1 : 1.38 的修长立绘比例
-            AppCropper.open(e.target.result, { aspectRatio: 1 / 1.38 }, function(croppedData) {
-              currentData.photo = croppedData;
-              var imgNode = document.getElementById('cardPhotoImg');
-              if (imgNode) {
-                imgNode.src = croppedData;
-                document.getElementById('cardPhotoBtn').classList.add('has-img');
-              }
-            });
-          } else {
-            // 如果裁剪器未加载，使用原图保底
-            currentData.photo = e.target.result;
-            var imgNode2 = document.getElementById('cardPhotoImg');
-            if (imgNode2) {
-              imgNode2.src = e.target.result;
-              document.getElementById('cardPhotoBtn').classList.add('has-img');
-            }
-          }
-        };
-        reader.readAsDataURL(file);
-        if (fileInput.parentNode) document.body.removeChild(fileInput);
+    document.getElementById('drawerCloseBtn').addEventListener('click', closeDrawer);
+    drawerMask.addEventListener('click', closeDrawer);
+
+    function closeDrawer() {
+      drawerMask.classList.remove('show');
+      drawerCard.classList.remove('show');
+    }
+
+    // 抽屉内切换用户
+    drawerCard.querySelectorAll('.drawer-user-item').forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        if (e.target.closest('.drawer-del-btn')) return;
+        currentUserId = this.dataset.userId;
+        var selected = getCurrentUser();
+        if (selected) currentTplIdx = selected.tplIdx || 0;
+        saveCurrentToDB(function() {
+          closeDrawer();
+          renderStep3();
+        });
       });
-
-      fileInput.click();
     });
 
-    // 确认封存并存入数据库
-    document.getElementById('finishBtn').addEventListener('click', function() {
-      readDirectEditableValues();
-      if (window.AppDB) {
-        AppDB.save(ARCHIVE_DB_KEY, currentData, function() {
-          AppNav.showToast('专属档案已安全封存并锁入本地');
+    // 抽屉内删除用户
+    drawerCard.querySelectorAll('.drawer-del-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var delId = this.dataset.delId;
+        if (!confirm('确定要删除这位用户的档案吗？')) return;
+        userList = userList.filter(function(u) { return u.id !== delId; });
+        if (currentUserId === delId) {
+          currentUserId = userList.length ? userList[0].id : null;
+        }
+        saveCurrentToDB(function() {
+          if (userList.length) renderStep3();
+          else renderStep1();
+        });
+      });
+    });
+
+    // 照片上传与裁剪
+    var photoBtn = document.getElementById('cardPhotoBtn');
+    if (photoBtn) {
+      photoBtn.addEventListener('click', function() {
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
+        document.body.appendChild(fileInput);
+
+        fileInput.addEventListener('change', function() {
+          var file = this.files[0];
+          if (!file) return;
+
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            if (window.AppCropper) {
+              AppCropper.open(e.target.result, { aspectRatio: 1 / 1.35 }, function(croppedData) {
+                cur.photo = croppedData;
+                saveCurrentToDB(function() {
+                  renderStep3();
+                });
+              });
+            } else {
+              cur.photo = e.target.result;
+              saveCurrentToDB(function() {
+                renderStep3();
+              });
+            }
+          };
+          reader.readAsDataURL(file);
+          if (fileInput.parentNode) document.body.removeChild(fileInput);
+        });
+
+        fileInput.click();
+      });
+    }
+
+    // 监听实时直接修改
+    bindLiveEdits(cur);
+  }
+
+  function bindLiveEdits(cur) {
+    ['cardName', 'cardBio', 'cardSerial', 'cardUserId', 'cardTag1', 'cardTag2', 'cardTag3'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('blur', function() {
+          syncDirectEdits(cur);
+          saveCurrentToDB();
         });
       }
     });
   }
 
-  // 获取票根小卡上由 Momo 手指轻点实时编辑的直接值
-  function readDirectEditableValues() {
-    var serialNode = document.getElementById('cardSerial');
-    var vertCodeNode = document.getElementById('cardVertCode');
+  function syncDirectEdits(cur) {
     var nameNode = document.getElementById('cardName');
-    var userIdNode = document.getElementById('cardUserId');
     var bioNode = document.getElementById('cardBio');
+    var serialNode = document.getElementById('cardSerial');
+    var userIdNode = document.getElementById('cardUserId');
     var tag1Node = document.getElementById('cardTag1');
     var tag2Node = document.getElementById('cardTag2');
     var tag3Node = document.getElementById('cardTag3');
 
-    if (serialNode) currentData.serial = serialNode.textContent.trim();
-    if (vertCodeNode) currentData.vertCode = vertCodeNode.textContent.trim();
-    if (nameNode) currentData.name = nameNode.textContent.trim();
-    if (userIdNode) currentData.userid = userIdNode.textContent.trim();
-    if (bioNode) currentData.bio = bioNode.textContent.trim();
-    if (tag1Node) currentData.tag1 = tag1Node.textContent.trim();
-    if (tag2Node) currentData.tag2 = tag2Node.textContent.trim();
-    if (tag3Node) currentData.tag3 = tag3Node.textContent.trim();
+    if (nameNode) cur.name = nameNode.textContent.trim();
+    if (bioNode) cur.bio = bioNode.textContent.trim();
+    if (serialNode) cur.serial = serialNode.textContent.trim();
+    if (userIdNode) cur.userid = userIdNode.textContent.trim();
+    if (tag1Node) cur.tag1 = tag1Node.textContent.trim();
+    if (tag2Node) cur.tag2 = tag2Node.textContent.trim();
+    if (tag3Node) cur.tag3 = tag3Node.textContent.trim();
   }
 
   function esc(str) {
