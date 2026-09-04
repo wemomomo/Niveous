@@ -685,7 +685,7 @@
 .t5-wrapper {
   background: #141619;
   border-radius: 16px;
-  padding: 12px 15px 14px;
+  padding: 12px 17px 14px;
   box-shadow: 0 22px 55px rgba(20, 22, 25, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.08);
   gap: 8px;
@@ -749,7 +749,7 @@
 /* 胶片相框 */
 .t5-frame-stage {
   flex: 1;
-  height: 300px !important; 
+  height: 310px !important; 
   width: 100%;
   position: relative;
   background: #000000;
@@ -830,9 +830,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px dashed rgba(255, 255, 255, 0.2);
-  margin-top: 3px;
+  margin-top: 4px;
 }
 .t5-admit-pill {
   background: #dcdfe4;
