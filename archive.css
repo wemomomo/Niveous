@@ -258,7 +258,7 @@
 }
 
 .t1-left-rail {
-  width: 20px;
+  width: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -341,7 +341,7 @@
 .t1-photo-empty span { font-size: 11.5px; font-weight: 500; }
 
 .t1-right-rail {
-  width: 18px;
+  width: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
