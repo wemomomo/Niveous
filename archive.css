@@ -616,7 +616,19 @@
 .t4-cross.br { bottom: 4px; right: 6px; }
 
 .t4-header { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
-.t4-title-wrap { display: flex; align-items: center; gap: 6px; }
+.t4-title-wrap { 
+  display: flex; 
+  align-items: center; 
+  gap: 5px; 
+}
+/* 重点：让左侧的十字架符号彻底加厚饱满 */
+.t4-title-wrap span:first-child {
+  font-size: 14px;
+  font-weight: 900;
+  color: #3a2e33;
+  transform: scale(1.15); /* 视觉微调增厚 */
+  display: inline-block;
+}
 .t4-title { font-size: 14px; font-weight: 800; letter-spacing: 3px; color: #3a2e33; text-transform: uppercase; }
 .t4-stamp {
   font-size: 9.5px; font-weight: 700; border: 1px solid #b88f9d; color: #966b7a;
@@ -673,7 +685,7 @@
 .t5-wrapper {
   background: #141619;
   border-radius: 16px;
-  padding: 12px 12px 14px;
+  padding: 12px 15px 14px;
   box-shadow: 0 22px 55px rgba(20, 22, 25, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.08);
   gap: 8px;
@@ -737,7 +749,7 @@
 /* 胶片相框 */
 .t5-frame-stage {
   flex: 1;
-  height: 290px !important; 
+  height: 300px !important; 
   width: 100%;
   position: relative;
   background: #000000;
@@ -818,9 +830,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 6px;
+  padding-top: 8px;
   border-top: 1px dashed rgba(255, 255, 255, 0.2);
-  margin-top: 1px;
+  margin-top: 3px;
 }
 .t5-admit-pill {
   background: #dcdfe4;
@@ -839,8 +851,11 @@
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  max-width: 370px;
-  padding-top: 4px;
+  max-width: 360px;
+  padding-top: 6px;
+  position: relative !important;
+  z-index: 9999 !important; /* 提到最高层，任何东西都挡不住它 */
+  pointer-events: auto !important; /* 强制接收点击触摸 */
 }
 
 .dock-arrow-btn {
