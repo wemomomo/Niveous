@@ -610,7 +610,7 @@
 }
 .t4-inner-frame {
   border: 1px solid #ebdbe0; border-radius: 14px; padding: 14px 12px;
-  display: flex; flex-direction: column; gap: 12px; background: rgba(255, 255, 255, 0.85);
+  display: flex; flex-direction: column; gap: 8px; background: rgba(255, 255, 255, 0.85);
   position: relative;
 }
 .t4-cross { position: absolute; color: #b88f9d; font-size: 11px; pointer-events: none; }
@@ -642,7 +642,7 @@
 /* 第 4 款拱门相框：固定高度 */
 .t4-arch-stage {
   width: 100%;
-  height: 330px;
+  height: 340px;
   position: relative;
   border-radius: 130px 130px 10px 10px;
   border: 1.5px solid #b88f9d;
@@ -664,7 +664,7 @@
   text-shadow: 0 1px 4px rgba(58, 46, 51, 0.4); pointer-events: none; letter-spacing: 2px;
 }
 
-.t4-footer-body { display: flex; flex-direction: column; gap: 10px; padding-top: 2px; }
+.t4-footer-body { display: flex; flex-direction: column; gap: 6px; padding-top: 2px; }
 .t4-username { font-size: 20px; font-weight: 800; color: #3a2e33; letter-spacing: 1.5px; }
 .t4-serial { font-size: 10px; font-family: monospace; color: #966b7a; font-weight: 700; }
 .t4-bio { font-size: 13.5px; color: #695b60; line-height: 1.55; font-weight: 500; }
