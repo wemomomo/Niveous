@@ -13,11 +13,11 @@
   var defaultProfile = {
     id: '',
     name: '你',
-    gender: '',
-    age: '',
-    height: '',
+    gender: '女',
+    age: '18',
+    height: '165cm',
     birthday: '',
-    zodiac: '',
+    zodiac: '天秤座',
     appearance: '',
     personality: '',
     tags: '',
@@ -95,45 +95,6 @@
     return m + d;
   }
 
-  // 动态同步顶部的“新建”与“用户列表”按钮到 Header
-  function updateHeaderNav(showActions) {
-    var page = document.querySelector('[data-page="archive"]');
-    if (!page) return;
-    var header = page.querySelector('.app-header');
-    if (!header) return;
-
-    var extraWrap = header.querySelector('.archive-header-actions');
-    if (showActions) {
-      if (!extraWrap) {
-        extraWrap = document.createElement('div');
-        extraWrap.className = 'archive-header-actions';
-        header.appendChild(extraWrap);
-      }
-      extraWrap.innerHTML = '<button class="arch-header-btn" id="headerNewBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>'
-        + '<button class="arch-header-btn" id="headerListBtn" type="button"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>列表 (' + userList.length + ')</span></button>';
-
-      var newBtn = document.getElementById('headerNewBtn');
-      var listBtn = document.getElementById('headerListBtn');
-
-      if (newBtn) {
-        newBtn.onclick = function() {
-          var cur = getCurrentUser();
-          if (cur) syncDirectEdits(cur);
-          createNewUser();
-        };
-      }
-      if (listBtn) {
-        listBtn.onclick = function() {
-          openUserDrawer();
-        };
-      }
-    } else {
-      if (extraWrap) {
-        header.removeChild(extraWrap);
-      }
-    }
-  }
-
   function createNewUser() {
     var newObj = JSON.parse(JSON.stringify(defaultProfile));
     newObj.id = 'user_' + Date.now();
@@ -149,7 +110,6 @@
   // 步骤 1：空状态凝聚冰晶
   // ==========================================
   function renderStep1() {
-    updateHeaderNav(false);
     container.className = 'app-content archive-panel-active';
     container.innerHTML = '<div class="archive-step-panel step-active" id="archStep1">'
       + '<div class="empty-card-stage">'
@@ -203,7 +163,6 @@
   // 步骤 2：手账录入填单
   // ==========================================
   function renderStep2() {
-    updateHeaderNav(false);
     var cur = getCurrentUser() || defaultProfile;
     container.className = 'app-content';
     container.innerHTML = '<div class="archive-step-panel step-active" id="archStep2">'
@@ -301,7 +260,7 @@
   }
 
   // ==========================================
-  // 步骤 3：全屏小卡展示、左右切模板、底部贴底控制坞
+  // 步骤 3：全屏小卡展示、左右切模板、控制坞
   // ==========================================
   function renderStep3() {
     var cur = getCurrentUser();
@@ -310,12 +269,17 @@
       return;
     }
 
-    updateHeaderNav(true);
     container.className = 'app-content archive-fullscreen-mode';
     var hasPhotoClass = cur.photo ? ' has-img' : '';
 
     var html = '<div class="archive-showcase-wrap">'
-      // 统一标准大卡片容器（高度额外拉长20px）
+      // 顶部悬浮工具条（与卡片上方右对齐，规整精致）
+      + '<div class="archive-floating-toolbar">'
+      + '<button class="arch-tool-pill" id="actionNewBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>'
+      + '<button class="arch-tool-pill" id="actionListBtn" type="button"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>用户列表 (' + userList.length + ')</span></button>'
+      + '</div>'
+
+      // 统一标准小卡视窗
       + '<div class="archive-full-card-box" id="cardContainerBox">'
       + renderCardTemplateHtml(cur, currentTplIdx, hasPhotoClass)
       + '</div>'
@@ -327,7 +291,7 @@
       + '<button class="dock-arrow-btn" id="nextTplBtn" type="button"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>'
       + '</div>'
 
-      // 用户列表弹出抽屉
+      // 用户列表抽屉
       + '<div class="user-drawer-mask" id="userDrawerMask"></div>'
       + '<div class="user-drawer-card" id="userDrawerCard">'
       + '<div class="drawer-header"><div class="drawer-title">用户档案库</div><button class="drawer-close-btn" id="drawerCloseBtn" type="button">✕</button></div>'
@@ -414,15 +378,6 @@
     }
   }
 
-  function openUserDrawer() {
-    var drawerMask = document.getElementById('userDrawerMask');
-    var drawerCard = document.getElementById('userDrawerCard');
-    if (drawerMask && drawerCard) {
-      drawerMask.classList.add('show');
-      drawerCard.classList.add('show');
-    }
-  }
-
   function bindStep3Events(cur) {
     // 左右切模板
     document.getElementById('prevTplBtn').addEventListener('click', function() {
@@ -468,16 +423,32 @@
       renderStep2();
     });
 
-    // 抽屉关闭
+    // 顶部新建
+    var newBtn = document.getElementById('actionNewBtn');
+    if (newBtn) {
+      newBtn.addEventListener('click', function() {
+        syncDirectEdits(cur);
+        createNewUser();
+      });
+    }
+
+    // 顶部用户列表
+    var listBtn = document.getElementById('actionListBtn');
     var drawerMask = document.getElementById('userDrawerMask');
     var drawerCard = document.getElementById('userDrawerCard');
     var drawerCloseBtn = document.getElementById('drawerCloseBtn');
+
+    function openDrawer() {
+      if (drawerMask) drawerMask.classList.add('show');
+      if (drawerCard) drawerCard.classList.add('show');
+    }
 
     function closeDrawer() {
       if (drawerMask) drawerMask.classList.remove('show');
       if (drawerCard) drawerCard.classList.remove('show');
     }
 
+    if (listBtn) listBtn.addEventListener('click', openDrawer);
     if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', closeDrawer);
     if (drawerMask) drawerMask.addEventListener('click', closeDrawer);
 
@@ -531,7 +502,7 @@
           var reader = new FileReader();
           reader.onload = function(e) {
             if (window.AppCropper) {
-              AppCropper.open(e.target.result, { aspectRatio: 1 / 1.38 }, function(croppedData) {
+              AppCropper.open(e.target.result, { aspectRatio: 1 / 1.35 }, function(croppedData) {
                 cur.photo = croppedData;
                 saveCurrentToDB(function() {
                   renderStep3();
