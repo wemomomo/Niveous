@@ -6,6 +6,9 @@
 /* 外壳容器实心纯白兜底，严禁透出桌面 */
 .page[data-page="archive"] {
   background: #ffffff !important;
+  z-index: 200 !important;
+  position: absolute !important;
+  inset: 0 !important;
 }
 
 /* ========== 档案页面滚动容器 ========== */
@@ -992,3 +995,13 @@
 .drawer-user-date { font-size: 9.5px; color: #94a3b8; font-family: monospace; margin-top: 1px; }
 .drawer-del-btn { background: none; border: none; color: #ef4444; font-size: 11.5px; font-weight: 600; padding: 5px 8px; cursor: pointer; border-radius: 5px; }
 .drawer-del-btn:active { background: rgba(239, 68, 68, 0.1); }
+
+/* 仅限 PWA 桌面端生效：拉开编辑按钮与卡片的距离 */
+@media (display-mode: standalone) {
+  .archive-bottom-dock {
+    margin-top: 28px !important;
+    padding-bottom: calc(14px + var(--safe-bottom)) !important;
+  }
+}
+
+
