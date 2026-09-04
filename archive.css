@@ -4,60 +4,68 @@
   display: none !important;
 }
 
-/* 核心修复：允许档案页专属背景穿透显示 */
+/* 核心修复：外壳容器实心遮挡桌面，并随主题平滑变色 */
 .page[data-page="archive"] {
-  background: transparent !important;
-}
-
-/* ========== 档案页面整体滚动视口 ========== */
-.archive-page-wrap {
-  padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom)) !important;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
+  background-color: #eef2f7 !important; /* 默认实心浅灰，绝对不透首页 */
   transition: background 0.35s ease;
 }
 
-/* ========== 5 套模板的专属动态页面背景色 ========== */
-/* 第一张：浅灰色背景 */
-.archive-page-wrap.theme-bg-grey {
-  background: #eef2f7 !important;
+/* ========== 5 套模板的专属实心动态背景色（直接赋给外壳） ========== */
+/* 第一张：实心浅灰光晕背景 */
+.page[data-page="archive"]:has(.theme-bg-grey),
+.page[data-page="archive"].theme-bg-grey {
+  background-color: #eef2f7 !important;
   background-image: 
     radial-gradient(circle at 20% 15%, rgba(176, 204, 232, 0.45) 0%, transparent 40%),
     radial-gradient(circle at 80% 85%, rgba(136, 171, 218, 0.35) 0%, transparent 40%) !important;
 }
-/* 第二张：灰蓝背景 */
-.archive-page-wrap.theme-bg-blue {
-  background: #e9edf3 !important;
+/* 第二张：实心灰蓝网点背景 */
+.page[data-page="archive"]:has(.theme-bg-blue),
+.page[data-page="archive"].theme-bg-blue {
+  background-color: #e9edf3 !important;
   background-image: 
     radial-gradient(#cbd5e1 1px, transparent 1px),
     linear-gradient(135deg, #eef2f7 0%, #dfe7f1 100%) !important;
   background-size: 16px 16px, 100% 100% !important;
 }
-/* 第三张：奶米燕麦背景 */
-.archive-page-wrap.theme-bg-oat {
-  background: #eae6df !important;
+/* 第三张：实心奶米燕麦背景 */
+.page[data-page="archive"]:has(.theme-bg-oat),
+.page[data-page="archive"].theme-bg-oat {
+  background-color: #eae6df !important;
   background-image: 
     radial-gradient(#cfc9be 1.2px, transparent 1.2px),
     linear-gradient(135deg, #f2eee8 0%, #e3ded6 100%) !important;
   background-size: 18px 18px, 100% 100% !important;
 }
-/* 第四张：灰粉色背景 */
-.archive-page-wrap.theme-bg-pink {
-  background: #f2e8eb !important;
+/* 第四张：实心灰粉色背景 */
+.page[data-page="archive"]:has(.theme-bg-pink),
+.page[data-page="archive"].theme-bg-pink {
+  background-color: #f2e8eb !important;
   background-image: 
     radial-gradient(circle at 50% 15%, rgba(184, 143, 157, 0.28) 0%, transparent 60%),
     radial-gradient(#e2d3d8 1.2px, transparent 1.2px) !important;
   background-size: 100% 100%, 16px 16px !important;
 }
-/* 第五张：冷炭背景 */
-.archive-page-wrap.theme-bg-dark {
-  background: #e7e4dc !important;
+/* 第五张：实心冷炭电影背景 */
+.page[data-page="archive"]:has(.theme-bg-dark),
+.page[data-page="archive"].theme-bg-dark {
+  background-color: #e7e4dc !important;
   background-image: 
     radial-gradient(#cfcbbf 1.2px, transparent 1.2px),
     linear-gradient(135deg, #edeae3 0%, #dbd6cb 100%) !important;
   background-size: 18px 18px, 100% 100% !important;
+}
+
+/* ========== 档案页面整体滚动视口 ========== */
+.archive-page-wrap {
+  width: 100%;
+  height: 100%;
+  background: transparent !important; /* 内部透明，透出外壳的实心背景 */
+  padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom)) !important;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .archive-showcase-wrap {
@@ -414,7 +422,7 @@
   box-shadow: 0 3px 8px rgba(127, 165, 209, 0.45); z-index: 20; user-select: none;
 }
 .t2-ribbon-bl {
-  position: absolute bottom: 18px; left: -36px; width: 130px;
+  position: absolute; bottom: 18px; left: -36px; width: 130px;
   background: linear-gradient(135deg, #7fa5d1, #b0cce8);
   color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 2px;
   text-align: center; padding: 6px 0; transform: rotate(45deg);
