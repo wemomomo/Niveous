@@ -1,3 +1,4 @@
+
 (function(){
   'use strict';
 
@@ -349,11 +350,11 @@
   var dockEditBtn = document.querySelector('.tabbar-edit-btn');
 
   function initAppShells() {
-    var appPages = ['imgbed', 'wechat', 'offline', 'settings', 'check'];
+    var appPages = ['archive', 'imgbed', 'wechat', 'offline', 'settings', 'check'];
     appPages.forEach(function(name) {
       var page = document.querySelector('[data-page="'+name+'"]');
       if (!page || page.querySelector('.app-header')) return;
-      var titleText = { imgbed: '图床', wechat: '微信', offline: '线下', settings: '设置', check: '查岗' }[name];
+      var titleText = { archive: '档案', imgbed: '图床', wechat: '微信', offline: '线下', settings: '设置', check: '查岗' }[name];
       page.innerHTML = '<div class="app-header"><button class="icon-back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button><div class="app-title">'+titleText+'</div></div><div class="app-content" id="'+name+'Content"></div>';
     });
 
