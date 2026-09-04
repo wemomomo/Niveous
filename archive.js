@@ -9,15 +9,16 @@
   var userList = [];
   var currentUserId = null;
   var currentTplIdx = 0; // 0:票根, 1:亚克力, 2:燕麦火漆, 3:粉晶圣殿, 4:白金胶片
+  var currentStep = 1;
 
   var defaultProfile = {
     id: '',
     name: '你',
-    gender: '',
-    age: '',
-    height: '',
+    gender: '女',
+    age: '18',
+    height: '165cm',
     birthday: '',
-    zodiac: '',
+    zodiac: '天秤座',
     appearance: '',
     personality: '',
     tags: '',
@@ -110,8 +111,15 @@
   // 步骤 1：空状态凝聚冰晶
   // ==========================================
   function renderStep1() {
-    container.className = 'app-content archive-panel-active';
-    container.innerHTML = '<div class="archive-step-panel step-active" id="archStep1">'
+    currentStep = 1;
+    container.className = 'app-content archive-page-wrap archive-panel-active';
+    container.innerHTML = '<div class="archive-integrated-header">'
+      + '<div class="arch-header-left">'
+      + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
+      + '<span class="arch-header-title">档案</span>'
+      + '</div>'
+      + '</div>'
+      + '<div class="archive-step-panel step-active" id="archStep1">'
       + '<div class="empty-card-stage">'
       + '<div class="deco-cross tl">+</div><div class="deco-cross tr">+</div>'
       + '<div class="deco-cross bl">+</div><div class="deco-cross br">+</div>'
@@ -154,6 +162,10 @@
       + '</div>'
       + '</div>';
 
+    document.getElementById('archBackBtn').addEventListener('click', function() {
+      if (window.AppNav) AppNav.showPage('home');
+    });
+
     document.getElementById('goToStep2Btn').addEventListener('click', function() {
       createNewUser();
     });
@@ -163,9 +175,16 @@
   // 步骤 2：手账录入填单
   // ==========================================
   function renderStep2() {
+    currentStep = 2;
     var cur = getCurrentUser() || defaultProfile;
-    container.className = 'app-content';
-    container.innerHTML = '<div class="archive-step-panel step-active" id="archStep2">'
+    container.className = 'app-content archive-page-wrap';
+    container.innerHTML = '<div class="archive-integrated-header">'
+      + '<div class="arch-header-left">'
+      + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
+      + '<span class="arch-header-title">手账填单</span>'
+      + '</div>'
+      + '</div>'
+      + '<div class="archive-step-panel step-active" id="archStep2">'
       + '<div class="journal-sheet">'
       + '<div class="journal-header">'
       + '<div class="journal-header-top">'
@@ -227,6 +246,24 @@
       + '</div>'
       + '</div>';
 
+    // 核心返回逻辑：未封存时点击返回，退回小卡首页或空状态
+    document.getElementById('archBackBtn').addEventListener('click', function() {
+      if (userList.length > 0 && cur.name && cur.name !== '你') {
+        renderStep3();
+      } else if (userList.length > 0) {
+        // 如果是全新创建但未保存，清理空对象
+        userList = userList.filter(function(u) { return u.id !== cur.id; });
+        if (userList.length) {
+          currentUserId = userList[0].id;
+          renderStep3();
+        } else {
+          renderStep1();
+        }
+      } else {
+        renderStep1();
+      }
+    });
+
     document.getElementById('generateCardBtn').addEventListener('click', function() {
       var nameVal = document.getElementById('fieldName').value.trim();
       if (!nameVal) {
@@ -263,20 +300,27 @@
   // 步骤 3：全屏小卡展示、左右切模板、控制坞
   // ==========================================
   function renderStep3() {
+    currentStep = 3;
     var cur = getCurrentUser();
     if (!cur) {
       renderStep1();
       return;
     }
 
-    container.className = 'app-content archive-fullscreen-mode';
+    container.className = 'app-content archive-page-wrap';
     var hasPhotoClass = cur.photo ? ' has-img' : '';
 
     var html = '<div class="archive-showcase-wrap">'
-      // 顶部悬浮工具条（与卡片上方右对齐，规整精致）
-      + '<div class="archive-floating-toolbar">'
+      // 同层顶部导航行：左侧返回+标题，右侧新建+列表
+      + '<div class="archive-integrated-header">'
+      + '<div class="arch-header-left">'
+      + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
+      + '<span class="arch-header-title">档案</span>'
+      + '</div>'
+      + '<div class="arch-header-right">'
       + '<button class="arch-tool-pill" id="actionNewBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>'
-      + '<button class="arch-tool-pill" id="actionListBtn" type="button"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>用户列表 (' + userList.length + ')</span></button>'
+      + '<button class="arch-tool-pill" id="actionListBtn" type="button"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>列表 (' + userList.length + ')</span></button>'
+      + '</div>'
       + '</div>'
 
       // 统一标准小卡视窗
@@ -379,6 +423,14 @@
   }
 
   function bindStep3Events(cur) {
+    // 退出返回桌面
+    document.getElementById('archBackBtn').addEventListener('click', function() {
+      syncDirectEdits(cur);
+      saveCurrentToDB(function() {
+        if (window.AppNav) AppNav.showPage('home');
+      });
+    });
+
     // 左右切模板
     document.getElementById('prevTplBtn').addEventListener('click', function() {
       currentTplIdx = (currentTplIdx - 1 + 5) % 5;
@@ -394,7 +446,7 @@
       renderStep3();
     });
 
-    // 屏幕上直接横向手势切模板
+    // 屏幕横向手势切模板
     var cardBox = document.getElementById('cardContainerBox');
     if (cardBox) {
       var touchStartX = 0, touchEndX = 0;
@@ -502,7 +554,7 @@
           var reader = new FileReader();
           reader.onload = function(e) {
             if (window.AppCropper) {
-              AppCropper.open(e.target.result, { aspectRatio: 1 / 1.35 }, function(croppedData) {
+              AppCropper.open(e.target.result, { aspectRatio: 1 / 1.32 }, function(croppedData) {
                 cur.photo = croppedData;
                 saveCurrentToDB(function() {
                   renderStep3();
