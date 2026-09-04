@@ -20,10 +20,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px; /* 顶部栏、卡片、底部栏之间的上下距离，墨墨可以在这里调 */
+  gap: 12px;
 }
 
-/* ========== 同层横排顶栏（绝不折行） ========== */
+/* ========== 顶部栏（保持原版完全不动） ========== */
 .archive-integrated-header {
   width: 100%;
   max-width: 370px;
@@ -126,7 +126,7 @@
 }
 
 /* ======================================================== */
-/* 风格 1：冰蓝条形码票根（100% 还原 showcase 满血版）       */
+/* 风格 1：冰蓝条形码票根（仅卡片文字调大）                  */
 /* ======================================================== */
 .t1-wrapper {
   width: 100%;
@@ -147,7 +147,7 @@
   padding: 14px 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px; /* 卡片内各部分上下间距 */
+  gap: 12px;
   background: #ffffff;
   position: relative;
 }
@@ -175,14 +175,14 @@
   z-index: 2;
 }
 .t1-serial {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 2px;
   color: #7a9ec7;
   font-family: monospace;
 }
 .t1-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: 3px;
   color: #242b35;
@@ -191,7 +191,7 @@
   gap: 4px;
 }
 .t1-stamp {
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: 700;
   background: #242b35;
   color: #ffffff;
@@ -240,7 +240,7 @@
 .t1-vertical-code {
   writing-mode: vertical-rl;
   font-family: monospace;
-  font-size: 8px;
+  font-size: 9.5px;
   letter-spacing: 2px;
   color: #4a5568;
   transform: rotate(180deg);
@@ -256,8 +256,8 @@
   border-radius: 16px;
   overflow: hidden;
   background: #f7fafc;
-  border: 1.5px solid #2b333e; /* 原版深黑边框 */
-  aspect-ratio: 1 / 1.38; /* 原版修长比例 */
+  border: 1.5px solid #2b333e;
+  aspect-ratio: 1 / 1.38;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -288,7 +288,7 @@
   text-align: center;
 }
 .t1-photo-empty svg { width: 32px; height: 32px; stroke: currentColor; fill: none; stroke-width: 1.2; }
-.t1-photo-empty span { font-size: 11px; font-weight: 500; }
+.t1-photo-empty span { font-size: 11.5px; font-weight: 500; }
 
 .t1-right-rail {
   width: 20px;
@@ -299,7 +299,7 @@
   padding: 6px 0;
   flex-shrink: 0;
 }
-.t1-star { font-size: 11px; color: #242b35; }
+.t1-star { font-size: 12px; color: #242b35; }
 .t1-dash { width: 1px; height: 30px; border-left: 1.2px dashed #a0aec0; }
 .t1-rail-dot { width: 3.5px; height: 3.5px; background: #a0aec0; border-radius: 50%; }
 
@@ -326,13 +326,18 @@
 .t1-cutout-right { right: -20px; border-right: none; }
 
 .t1-user-row { display: flex; justify-content: space-between; align-items: baseline; }
-.t1-username { font-size: 16px; font-weight: 800; color: #242b35; }
-.t1-userid { font-size: 9px; font-family: monospace; font-weight: 600; color: #7a9ec7; }
-.t1-bio { font-size: 11px; color: #4a5568; line-height: 1.45; font-weight: 500; }
+.t1-username { font-size: 20px; font-weight: 800; color: #242b35; letter-spacing: 0.5px; }
+.t1-userid { font-size: 11px; font-family: monospace; font-weight: 600; color: #7a9ec7; }
+.t1-bio { font-size: 13.5px; color: #3a424e; line-height: 1.55; font-weight: 500; }
 .t1-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
 .t1-tag {
-  font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 8px;
-  background: #f0f5fa; color: #4a6b8f; border: 0.5px solid rgba(176, 204, 232, 0.6);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3.5px 9px;
+  border-radius: 8px;
+  background: #f0f5fa;
+  color: #4a6b8f;
+  border: 0.5px solid rgba(176, 204, 232, 0.6);
 }
 .t1-tag.primary { background: #2b333e; color: #ffffff; border: none; }
 
@@ -370,7 +375,7 @@
   background: #18191c;
   color: #ffffff;
   border: none;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 1px;
   display: flex;
@@ -474,7 +479,7 @@
 @keyframes sparkleSlowIn { 0% { opacity: 0; transform: scale(0.4); } 100% { opacity: 0.85; transform: scale(1); } }
 
 .empty-title { font-size: 17px; font-weight: 700; color: #18191c; letter-spacing: 0.5px; margin-bottom: 6px; }
-.empty-desc { font-size: 12px; color: #5c6470; line-height: 1.6; max-width: 250px; margin-bottom: 24px; }
+.empty-desc { font-size: 12.5px; color: #5c6470; line-height: 1.6; max-width: 250px; margin-bottom: 24px; }
 
 .action-trigger-btn {
   display: flex;
@@ -488,7 +493,7 @@
   border: none;
   border-radius: 10px;
   color: #ffffff;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 1.5px;
   cursor: pointer;
@@ -515,33 +520,33 @@
 .journal-header-top { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .brand-confidential { font-size: 8px; font-family: monospace; font-weight: 800; color: #18191c; background: #f1f3f5; padding: 2.5px 7px; border-radius: 4px; letter-spacing: 1.5px; }
 .brand-serial { font-size: 8.5px; font-family: monospace; font-weight: 700; color: #5c6470; letter-spacing: 1px; }
-.journal-main-title { font-size: 19px; font-weight: 800; letter-spacing: 2px; color: #18191c; font-family: "Didot", "Playfair Display", "Times New Roman", "PingFang SC", serif; margin-bottom: 4px; }
-.journal-desc-text { font-size: 10.5px; color: #5c6470; line-height: 1.5; max-width: 280px; margin-bottom: 12px; }
+.journal-main-title { font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #18191c; font-family: "Didot", "Playfair Display", "Times New Roman", "PingFang SC", serif; margin-bottom: 4px; }
+.journal-desc-text { font-size: 11px; color: #5c6470; line-height: 1.5; max-width: 280px; margin-bottom: 12px; }
 .journal-header-divider { width: 100%; display: flex; align-items: center; gap: 8px; }
 .divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(24, 25, 28, 0.22), transparent); }
 .divider-star { font-size: 9px; color: #18191c; }
 
 .journal-section { display: flex; flex-direction: column; gap: 8px; }
 .section-lead-title { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid rgba(24, 25, 28, 0.12); padding-bottom: 3px; }
-.section-name { font-size: 11.5px; font-weight: 800; letter-spacing: 1.5px; color: #18191c; display: flex; align-items: center; gap: 4px; }
-.section-name .sec-index { font-family: monospace; font-size: 9.5px; color: #5c6470; }
-.section-tag-en { font-size: 7.5px; font-family: monospace; color: #5c6470; letter-spacing: 1px; }
+.section-name { font-size: 13.5px; font-weight: 800; letter-spacing: 1.5px; color: #18191c; display: flex; align-items: center; gap: 4px; }
+.section-name .sec-index { font-family: monospace; font-size: 10px; color: #5c6470; }
+.section-tag-en { font-size: 8.5px; font-family: monospace; color: #5c6470; letter-spacing: 1px; }
 
 .ruled-row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
 .ruled-item { display: flex; flex-direction: column; gap: 2px; }
-.ruled-label { font-size: 9px; font-weight: 700; color: #5c6470; letter-spacing: 0.5px; }
-.ruled-input { width: 100%; border: none; border-bottom: 1px dashed rgba(24, 25, 28, 0.22); padding: 3px 0; font-size: 11.5px; font-weight: 600; color: #18191c; background: transparent; outline: none; font-family: inherit; }
+.ruled-label { font-size: 10px; font-weight: 700; color: #5c6470; letter-spacing: 0.5px; }
+.ruled-input { width: 100%; border: none; border-bottom: 1px dashed rgba(24, 25, 28, 0.22); padding: 3px 0; font-size: 13.5px; font-weight: 600; color: #18191c; background: transparent; outline: none; font-family: inherit; }
 .ruled-input:focus { border-bottom-color: #18191c; border-bottom-style: solid; }
-.ruled-input::placeholder { color: #cbd5e1; font-weight: 400; font-size: 10.5px; }
+.ruled-input::placeholder { color: #cbd5e1; font-weight: 400; font-size: 11.5px; }
 
-.ruled-textarea { width: 100%; border: none; background: transparent; font-size: 11.5px; line-height: 22px; color: #18191c; font-family: inherit; outline: none; resize: none; padding: 0; background-image: linear-gradient(transparent, transparent 21px, rgba(24, 25, 28, 0.22) 21px, rgba(24, 25, 28, 0.22) 22px); background-size: 100% 22px; }
-.ruled-textarea::placeholder { color: #cbd5e1; line-height: 22px; font-size: 10.5px; }
+.ruled-textarea { width: 100%; border: none; background: transparent; font-size: 13.5px; line-height: 22px; color: #18191c; font-family: inherit; outline: none; resize: none; padding: 0; background-image: linear-gradient(transparent, transparent 21px, rgba(24, 25, 28, 0.22) 21px, rgba(24, 25, 28, 0.22) 22px); background-size: 100% 22px; }
+.ruled-textarea::placeholder { color: #cbd5e1; line-height: 22px; font-size: 11.5px; }
 
 .journal-tear-strip { border-top: 1.5px dashed rgba(24, 25, 28, 0.22); padding-top: 12px; display: flex; align-items: center; justify-content: space-between; }
 .journal-sign-box { display: flex; flex-direction: column; gap: 2px; }
-.sign-label { font-size: 7.5px; font-family: monospace; color: #5c6470; letter-spacing: 1px; }
-.sign-handwriting { font-size: 11.5px; font-weight: 700; letter-spacing: 0.5px; color: #18191c; font-style: italic; }
-.journal-seal-stamp { width: 38px; height: 38px; border: 1.5px solid #18191c; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 6px; font-weight: 900; letter-spacing: 0.5px; transform: rotate(-8deg); color: #18191c; opacity: 0.85; }
+.sign-label { font-size: 8px; font-family: monospace; color: #5c6470; letter-spacing: 1px; }
+.sign-handwriting { font-size: 12.5px; font-weight: 700; letter-spacing: 0.5px; color: #18191c; font-style: italic; }
+.journal-seal-stamp { width: 38px; height: 38px; border: 1.5px solid #18191c; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 6.5px; font-weight: 900; letter-spacing: 0.5px; transform: rotate(-8deg); color: #18191c; opacity: 0.85; }
 .seal-star { font-size: 8px; line-height: 1; }
 
 /* ========== 用户档案抽屉 ========== */
