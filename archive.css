@@ -1,11 +1,11 @@
-/* ========== 彻底隐藏全局白色遮挡顶栏 ========== */
+/* ========== 彻底隐藏全局 app-header ========== */
 [data-page="archive"] .app-header {
   display: none !important;
 }
 
-/* ========== 档案页面专属滚动容器 ========== */
+/* ========== 档案页面专属滚动页面 ========== */
 .archive-page-wrap {
-  padding: calc(10px + var(--safe-top)) 16px calc(14px + var(--safe-bottom)) !important;
+  padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom)) !important;
   display: flex;
   flex-direction: column;
   overflow-y: auto !important;
@@ -14,7 +14,7 @@
 
 .archive-showcase-wrap {
   width: 100%;
-  max-width: 360px;
+  max-width: 370px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -22,21 +22,24 @@
   gap: 10px;
 }
 
-/* ========== 真正同层的精致顶栏 ========== */
+/* ========== 同层横排顶栏（绝不折行） ========== */
 .archive-integrated-header {
   width: 100%;
-  max-width: 360px;
+  max-width: 370px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 0 8px;
+  padding: 0 0 6px;
   margin: 0 auto;
+  flex-wrap: nowrap !important; /* 强制单行 */
+  flex-shrink: 0;
 }
 
 .arch-header-left {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .arch-native-back {
@@ -71,10 +74,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: nowrap !important;
+  flex-shrink: 0;
 }
 
 .arch-tool-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
   background: #f1f3f5;
@@ -86,6 +91,7 @@
   color: #18191c;
   cursor: pointer;
   font-family: inherit;
+  white-space: nowrap !important; /* 绝对禁止文字断行 */
   box-shadow: 0 2px 6px rgba(0,0,0,0.03);
   transition: all 0.15s ease;
 }
@@ -116,9 +122,10 @@
   flex-direction: column;
 }
 
+/* 恢复黄金比例修长相框 */
 .arch-shared-photo-box {
   width: 100%;
-  aspect-ratio: 1 / 1.32;
+  aspect-ratio: 1 / 1.35;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -348,7 +355,7 @@
 
 /* ========== 5 种模板内部原生样式 ========== */
 
-/* --- 模板 1：冰蓝票根 --- */
+/* --- 模板 1：冰蓝票根（100% 还原原版尺寸与双层黑框） --- */
 .t1-wrapper { background: #ffffff; border-radius: 20px; padding: 14px 12px 16px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.07); border: 1px solid rgba(255, 255, 255, 0.9); position: relative; overflow: hidden; }
 .t1-inner { border: 1.2px solid #2b333e; border-radius: 16px; padding: 12px 10px 14px; display: flex; flex-direction: column; gap: 10px; background: #ffffff; position: relative; }
 .t1-inner::before { content: ""; position: absolute; top: 4px; right: 4px; width: 60px; height: 60px; background-image: radial-gradient(#2b333e 1px, transparent 1px); background-size: 5px 5px; opacity: 0.18; pointer-events: none; }
