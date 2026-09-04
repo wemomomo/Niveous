@@ -343,12 +343,17 @@
 /* ======================================================== */
 .t2-wrapper {
   width: 100%;
-  background: rgba(255, 255, 255, 0.95);
+  /* 专属清冷灰蓝双层渐变 + 柔焦冰蓝微粒光晕 */
+  background: 
+    radial-gradient(circle at 85% 15%, rgba(136, 171, 218, 0.45) 0%, transparent 55%),
+    radial-gradient(circle at 15% 85%, rgba(160, 190, 225, 0.35) 0%, transparent 60%),
+    linear-gradient(145deg, #e3ebf5 0%, #cfdceb 50%, #b8cde3 100%);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   border-radius: 28px;
   padding: 14px 14px 18px;
-  box-shadow: 0 25px 60px rgba(50, 75, 105, 0.18), inset 0 1px 2px #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 25px 60px rgba(70, 95, 125, 0.22), inset 0 1px 3px rgba(255, 255, 255, 0.8);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -690,7 +695,7 @@
 .archive-step-panel {
   display: none;
   width: 100%;
-  animation: archPanelIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: archPanelIn 0.27s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .archive-step-panel.step-active {
   display: flex;
