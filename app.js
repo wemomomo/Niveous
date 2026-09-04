@@ -380,8 +380,16 @@
       if (p.dataset.page === name) { p.classList.add('active'); p.style.transform = ''; }
       else { p.classList.remove('active'); }
     });
-    if (name === 'home') { if (dock) dock.style.display = 'flex'; if (dockEditBtn) dockEditBtn.style.display = 'block'; }
-    else { if (dock) dock.style.display = 'none'; if (dockEditBtn) dockEditBtn.style.display = 'none'; }
+    var desktopPagination = document.getElementById('desktopPagination');
+    if (name === 'home') { 
+      if (dock) dock.style.display = 'flex'; 
+      if (dockEditBtn) dockEditBtn.style.display = 'block'; 
+      if (desktopPagination) desktopPagination.style.display = 'flex';
+    } else { 
+      if (dock) dock.style.display = 'none'; 
+      if (dockEditBtn) dockEditBtn.style.display = 'none'; 
+      if (desktopPagination) desktopPagination.style.display = 'none';
+    }
     window.dispatchEvent(new CustomEvent('pageChange', { detail: { page: name } }));
   }
 
