@@ -22,17 +22,16 @@
   var defaultProfile = {
     id: '',
     name: '你',
-    gender: '',
-    age: '',
-    height: '',
+    gender: '女',
+    age: '18',
+    height: '165cm',
     birthday: '',
-    zodiac: '',
+    zodiac: '天秤座',
     appearance: '',
     personality: '',
     tags: '',
     hobbies: '',
     background: '',
-    // 5 款模板专属独立台词库
     bio0: DEFAULT_BIOS[0],
     bio1: DEFAULT_BIOS[1],
     bio2: DEFAULT_BIOS[2],
@@ -68,8 +67,11 @@
     if (!window.AppDB) return;
     AppDB.get(ARCHIVES_LIST_KEY, function(list) {
       userList = Array.isArray(list) ? list : [];
-      // 数据兼容性补齐：确保每张卡片都有独立的 bio0 ~ bio4
+      // 自动清洗历史误带的十字架符号
       userList.forEach(function(u) {
+        if (u.name) {
+          u.name = u.name.replace(/[✞✟✠]/g, '').trim();
+        }
         for (var i = 0; i < 5; i++) {
           if (!u['bio' + i]) {
             u['bio' + i] = (i === 0 && u.bio) ? u.bio : DEFAULT_BIOS[i];
@@ -289,7 +291,7 @@
 
     document.getElementById('archBackBtn').addEventListener('click', function() {
       var currentSnapshot = JSON.stringify({
-        name: document.getElementById('fieldName').value.trim(),
+        name: document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, ''),
         gender: document.getElementById('fieldGender').value.trim(),
         age: document.getElementById('fieldAge').value.trim(),
         height: document.getElementById('fieldHeight').value.trim(),
@@ -307,7 +309,7 @@
       if (isModified) {
         var shouldSave = confirm('检测到内容已修改，是否保存？');
         if (shouldSave) {
-          var nameVal = document.getElementById('fieldName').value.trim();
+          var nameVal = document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, '');
           if (!nameVal) {
             AppNav.showToast('姓名不能为空哦');
             return;
@@ -354,7 +356,7 @@
     });
 
     document.getElementById('generateCardBtn').addEventListener('click', function() {
-      var nameVal = document.getElementById('fieldName').value.trim();
+      var nameVal = document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, '');
       if (!nameVal) {
         AppNav.showToast('墨墨，请在第一栏写下姓名哦');
         return;
@@ -394,6 +396,9 @@
       renderStep1();
       return;
     }
+
+    // 确保名字干净
+    if (cur.name) cur.name = cur.name.replace(/[✞✟✠]/g, '').trim();
 
     updatePageThemeBg(currentTplIdx);
     container.className = 'app-content archive-page-wrap';
@@ -442,7 +447,7 @@
     bindStep3Events(cur);
   }
 
-  // 渲染 5 种模板（5款专属台词与细节完全独立）
+  // 渲染 5 种模板（已彻底移除名字后的十字架字符）
   function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
     if (tplIdx === 0) {
       // 01. 冰蓝票根
@@ -482,12 +487,12 @@
         + '<div class="t3-bottom-deck"><div class="t3-french-tags"><span class="t3-french-quote">« Pour toujours et à jamais »</span><div class="t3-chips"><span class="t3-chip">✦ 燕麦手作</span><span class="t3-chip">♡ 典藏信笺</span></div></div><div class="t3-wax-seal"><div class="t3-wax-inner">✦</div></div></div>'
         + '</div></div></div>';
     } else if (tplIdx === 3) {
-      // 04. 粉晶圣殿
+      // 04. 粉晶圣殿（已彻底去掉原先名称后的 ✞ 字符）
       return '<div class="arch-card-wrapper t4-wrapper">'
         + '<div class="t4-inner-frame"><div class="t4-cross tl">✟</div><div class="t4-cross tr">✟</div><div class="t4-cross bl">✟</div><div class="t4-cross br">✟</div>'
         + '<div class="t4-header"><div class="t4-title-wrap"><span>✠</span><span class="t4-title">SANCTUARY</span></div><div class="t4-stamp">ROSE · ' + esc(cur.birthday || '0000') + '</div></div>'
         + '<div class="t4-arch-stage' + hasPhotoClass + '" id="cardPhotoBtn"><div class="t4-arch-overlay">✦ ETERNAL ✦</div><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
-        + '<div class="t4-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t4-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + ' ✞</div><div class="t4-serial">ROSE #001</div></div>'
+        + '<div class="t4-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t4-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t4-serial">ROSE #001</div></div>'
         + '<div class="t4-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio3 || DEFAULT_BIOS[3]) + '</div>'
         + '<div class="t4-plague-bar">✟ SACRED OATH · IN PERPETUUM ✟</div>'
         + '<div class="t4-stats-matrix"><div class="t4-stat-box"><span class="t4-stat-label">DEVOTION</span><span class="t4-stat-val">100% 纯粹</span></div><div class="t4-stat-box"><span class="t4-stat-label">BOUND</span><span class="t4-stat-val">灵魂共鸣</span></div><div class="t4-stat-box"><span class="t4-stat-label">STATUS</span><span class="t4-stat-val">永恒偏爱</span></div></div>'
@@ -679,8 +684,7 @@
     var tag2Node = document.getElementById('cardTag2');
     var tag3Node = document.getElementById('cardTag3');
 
-    if (nameNode) cur.name = nameNode.textContent.trim();
-    // 将修改后的文案精准回存到当前模板的专属变量中
+    if (nameNode) cur.name = nameNode.textContent.replace(/[✞✟✠]/g, '').trim();
     if (bioNode) cur['bio' + currentTplIdx] = bioNode.textContent.trim();
     if (serialNode) cur.serial = serialNode.textContent.trim();
     if (userIdNode) cur.userid = userIdNode.textContent.trim();
