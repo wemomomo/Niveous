@@ -453,16 +453,34 @@
       }
     });
 
+    // 智能右滑返回拦截（对档案展示区进行手势冲突保护，防止切卡片误退）
     document.querySelectorAll('.app-page').forEach(function(page) {
       var startX = 0, currentX = 0, isDragging = false;
-      page.addEventListener('touchstart', function(e) { if (e.touches[0].clientX > 40) return; isDragging = true; startX = e.touches[0].clientX; page.style.transition = 'none'; }, { passive: true });
-      page.addEventListener('touchmove', function(e) { if (!isDragging) return; currentX = e.touches[0].clientX - startX; if (currentX > 0) page.style.transform = 'translateX('+currentX+'px)'; }, { passive: true });
+      page.addEventListener('touchstart', function(e) { 
+        if (e.touches[0].clientX > 30) return; // 只有从最左侧边缘 30px 以内发起才算返回
+        if (e.target.closest('.archive-full-card-box')) return; // 处于卡片区则不触发全页后退
+        isDragging = true; 
+        startX = e.touches[0].clientX; 
+        page.style.transition = 'none'; 
+      }, { passive: true });
+
+      page.addEventListener('touchmove', function(e) { 
+        if (!isDragging) return; 
+        currentX = e.touches[0].clientX - startX; 
+        if (currentX > 0) page.style.transform = 'translateX('+currentX+'px)'; 
+      }, { passive: true });
+
       page.addEventListener('touchend', function() {
-        if (!isDragging) return; isDragging = false;
+        if (!isDragging) return; 
+        isDragging = false;
         page.style.transition = 'transform 0.3s cubic-bezier(0.2,0.8,0.2,1)';
         var backBtn = page.querySelector('[data-back]');
-        if (currentX > window.innerWidth*0.3 && backBtn) { showPage(backBtn.dataset.back); setTimeout(function() { page.style.transform = ''; }, 300); }
-        else { page.style.transform = 'translateX(0)'; }
+        if (currentX > window.innerWidth*0.35 && backBtn) { 
+          showPage(backBtn.dataset.back); 
+          setTimeout(function() { page.style.transform = ''; }, 300); 
+        } else { 
+          page.style.transform = 'translateX(0)'; 
+        }
       });
     });
   }
