@@ -345,6 +345,13 @@ html, body {
   width: calc(100% - 32px);
 }
 
+/* 重点加这一句：只要不是桌面首页，彻底穿透这块区域，绝不挡按钮！ */
+.page:not([data-page="home"]).active ~ .tab-bar {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 .page-title { font-size:28px; font-weight:700; letter-spacing:-.5px; padding:8px 0; }
 
 /* ========== Toast ========== */
