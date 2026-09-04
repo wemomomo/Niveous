@@ -858,7 +858,7 @@
   max-width: 360px;
   padding-top: 6px;
   position: relative !important;
-  z-index: 9999 !important; /* 提到最高层，任何东西都挡不住它 */
+  z-index: 50 !important; /* 提到最高层，任何东西都挡不住它 */
   pointer-events: auto !important; /* 强制接收点击触摸 */
 }
 
