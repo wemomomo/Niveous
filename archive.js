@@ -842,7 +842,7 @@
           reader.onload = function(e) {
             if (window.AppCropper) {
               AppCropper.open(e.target.result, { aspectRatio: 1 / 1.35 }, function(croppedData) {
-                syncDirectEdits(cur); // 重点：上传图片前先无损抓取并保存当前界面的空格与文字
+                syncDirectEdits(cur);
                 cur.photo = croppedData;
                 saveCurrentToDB(function() {
                   renderStep3();
@@ -867,21 +867,28 @@
     bindLiveEdits(cur);
   }
 
-  function bindLiveEdits(cur) {
-    var editables = document.querySelectorAll('.arch-card-wrapper [contenteditable="true"]');
-    editables.forEach(function(el) {
-      el.addEventListener('blur', function() {
-        syncDirectEdits(cur);
-        saveCurrentToDB();
-      });
-    });
-  }
-
-  // 重点：使用 innerText 提取，绝不削减任何首尾或连续空格
-  function getCleanText(node) {
+  // ============ 核心：iOS WebKit 专用的全无损换行与空格提取器 ============
+  function getHtmlWithBreaks(node) {
     if (!node) return '';
-    var text = node.innerText !== undefined ? node.innerText : node.textContent;
-    return text.replace(/^\n+|\n+$/g, '');
+    var clone = node.cloneNode(true);
+
+    // 把所有的 <br> 显式转为换行符
+    var breaks = clone.querySelectorAll('br');
+    breaks.forEach(function(br) {
+      br.parentNode.replaceChild(document.createTextNode('\n'), br);
+    });
+
+    // 把所有的 <div> / <p>（iOS 敲回车默认插入的块）尾部追加换行符
+    var blocks = clone.querySelectorAll('div, p');
+    blocks.forEach(function(b) {
+      b.appendChild(document.createTextNode('\n'));
+    });
+
+    var raw = clone.textContent || '';
+    // 把 &nbsp; 替换为标准空格
+    raw = raw.replace(/\u00a0/g, ' ');
+    // 移除最尾部多余的单个换行符，但绝不删除开头的空格与回车
+    return raw.replace(/\n+$/, '');
   }
 
   function syncDirectEdits(cur) {
@@ -893,21 +900,46 @@
     var tag2Node = document.getElementById('cardTag2');
     var tag3Node = document.getElementById('cardTag3');
 
-    if (nameNode) cur.name = getCleanText(nameNode).replace(/[✞✟✠]/g, '');
-    if (bioNode) cur['bio' + currentTplIdx] = getCleanText(bioNode);
-    if (serialNode) cur.serial = getCleanText(serialNode);
-    if (userIdNode) cur.userid = getCleanText(userIdNode);
-    if (tag1Node) cur.tag1 = getCleanText(tag1Node);
-    if (tag2Node) cur.tag2 = getCleanText(tag2Node);
-    if (tag3Node) cur.tag3 = getCleanText(tag3Node);
+    if (nameNode) cur.name = getHtmlWithBreaks(nameNode).replace(/[✞✟✠]/g, '');
+    if (bioNode) cur['bio' + currentTplIdx] = getHtmlWithBreaks(bioNode);
+    if (serialNode) cur.serial = getHtmlWithBreaks(serialNode);
+    if (userIdNode) cur.userid = getHtmlWithBreaks(userIdNode);
+    if (tag1Node) cur.tag1 = getHtmlWithBreaks(tag1Node);
+    if (tag2Node) cur.tag2 = getHtmlWithBreaks(tag2Node);
+    if (tag3Node) cur.tag3 = getHtmlWithBreaks(tag3Node);
   }
 
-  // 重点：把换行转为 <br>，同时把连续空格转为 &nbsp; 保证 HTML 绝对不吞空格
+  // 绑定实时输入、失焦、及退出 PWA 时的三重保险存储
+  function bindLiveEdits(cur) {
+    var editables = document.querySelectorAll('.arch-card-wrapper [contenteditable="true"]');
+    editables.forEach(function(el) {
+      el.addEventListener('input', function() {
+        syncDirectEdits(cur);
+      });
+      el.addEventListener('blur', function() {
+        syncDirectEdits(cur);
+        saveCurrentToDB();
+      });
+    });
+
+    // PWA 专属：离开应用/锁屏瞬间强制持久化封存
+    window.addEventListener('pagehide', function() {
+      syncDirectEdits(cur);
+      saveCurrentToDB();
+    });
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden') {
+        syncDirectEdits(cur);
+        saveCurrentToDB();
+      }
+    });
+  }
+
   function formatLineBreaks(str) {
     if (!str) return '';
     var safe = esc(str);
     safe = safe.replace(/\n/g, '<br>');
-    safe = safe.replace(/  /g, '&nbsp;&nbsp;');
+    safe = safe.replace(/ /g, '&nbsp;');
     return safe;
   }
 
@@ -917,4 +949,3 @@
   }
 
 })();
-
