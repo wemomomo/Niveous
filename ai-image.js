@@ -12,48 +12,52 @@
   var STORAGE_TASK_KEY = 'ai_image_active_task';
   var STORAGE_LAST_RESULT_KEY = 'ai_image_last_result';
 
-  function createModalDOM() {
-    if (document.getElementById('aiImageModalOverlay')) return;
+  function initAiImageApp() {
+    var page = document.querySelector('[data-page="ai-image"]');
+    if (!page) {
+      page = document.createElement('div');
+      page.className = 'page app-page';
+      page.dataset.page = 'ai-image';
+      var container = document.getElementById('pageContainer');
+      if (container) container.appendChild(page);
+    }
 
-    var overlay = document.createElement('div');
-    overlay.className = 'ai-image-modal-overlay';
-    overlay.id = 'aiImageModalOverlay';
+    renderPage(page);
+    bindPageEvents(page);
+    restorePersistedResult();
+  }
 
-    overlay.innerHTML = '<div class="ai-image-modal-panel">'
-      + '<div class="ai-image-header">'
-      + '<div class="ai-image-title-wrap">'
-      + '<span class="ai-image-title-icon">✦</span>'
-      + '<span class="ai-image-title">AI 绘图工坊</span>'
+  function renderPage(page) {
+    page.innerHTML = '<div class="app-header">'
+      + '<button class="icon-back-btn" data-back="home" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
+      + '<div class="app-title">AI 绘图</div>'
       + '</div>'
-      + '<button class="ai-image-close-btn" id="aiImageCloseBtn" type="button">✕</button>'
-      + '</div>'
-
-      + '<div class="ai-image-body">'
+      + '<div class="app-content ai-image-page-content">'
       
       // 1. 模型选择/输入栏
-      + '<div style="display:flex; flex-direction:column; gap:6px; background:#f8fafc; padding:8px 10px; border-radius:12px; border:1px solid rgba(0,0,0,0.06);">'
-      + '<div style="display:flex; justify-content:space-between; align-items:center;">'
-      + '<span style="font-size:11px; font-weight:700; color:#64748b;">生图模型 (极速通道)</span>'
-      + '<div style="display:flex; gap:4px;">'
-      + '<button class="ai-quick-model-btn" data-model="flux-schnell" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #88abda; background:#eaf3fa; color:#334e68; font-weight:700; cursor:pointer;" type="button">⚡极速Flux</button>'
-      + '<button class="ai-quick-model-btn" data-model="dall-e-3" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">dall-e-3</button>'
-      + '<button class="ai-quick-model-btn" data-model="imagen-3" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">imagen-3</button>'
+      + '<div class="ai-model-section">'
+      + '<div class="ai-section-label-row">'
+      + '<span class="ai-field-label">生图模型 (极速通道)</span>'
+      + '<div class="ai-quick-models">'
+      + '<button class="ai-quick-model-btn" data-model="flux-schnell" type="button">⚡极速Flux</button>'
+      + '<button class="ai-quick-model-btn" data-model="dall-e-3" type="button">dall-e-3</button>'
+      + '<button class="ai-quick-model-btn" data-model="imagen-3" type="button">imagen-3</button>'
       + '</div>'
       + '</div>'
-      + '<input type="text" id="aiCustomModelInput" placeholder="输入模型名 (如 flux-schnell / dall-e-3)" style="width:100%; border:none; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; font-size:12px; font-family:monospace; outline:none; color:#18191c;">'
+      + '<input type="text" class="ai-custom-input" id="aiCustomModelInput" placeholder="输入模型名 (如 flux-schnell / dall-e-3)">'
       + '</div>'
 
       // 2. 提示词输入区
-      + '<div class="ai-prompt-box">'
-      + '<div class="ai-prompt-header">'
-      + '<span class="ai-prompt-label">画意描述 (PROMPT)</span>'
+      + '<div class="ai-prompt-section">'
+      + '<div class="ai-section-label-row">'
+      + '<span class="ai-field-label">画意描述 (PROMPT)</span>'
       + '<button class="ai-auto-prompt-pill" id="aiAutoPromptBtn" type="button"><span>✦ 智能润色</span></button>'
       + '</div>'
-      + '<textarea class="ai-prompt-textarea" id="aiPromptInput" placeholder="描述想要绘制的立绘、发色眸色、光影与场景..."></textarea>'
+      + '<textarea class="ai-prompt-textarea" id="aiPromptInput" placeholder="描述想要绘制的画面、发色眸色、光影与场景..."></textarea>'
       + '</div>'
 
       // 3. 比例选择
-      + '<div class="ai-options-row">'
+      + '<div class="ai-ratio-section">'
       + '<div class="ai-ratio-group">'
       + '<button class="ai-ratio-chip active" data-ratio="1:1" type="button">1:1 方图</button>'
       + '<button class="ai-ratio-chip" data-ratio="3:4" type="button">3:4 立绘</button>'
@@ -63,7 +67,7 @@
 
       // 4. 图像生成展示舞台
       + '<div class="ai-preview-stage" id="aiPreviewStage" style="aspect-ratio:1/1;">'
-      + '<img id="aiResultImg" src="" alt="AI生成图像" title="点击或长按可存储到手机相册">'
+      + '<img id="aiResultImg" src="" alt="AI生成图像">'
       + '<div class="ai-stage-empty">'
       + '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
       + '<span>输入描述，轻点下方开始绘图</span>'
@@ -83,59 +87,70 @@
       // 5. 诊断报错输出框
       + '<div id="aiDebugErrorBox" style="display:none; font-size:11px; color:#c94a4a; background:#fdf2f2; border:1px solid #fecaca; border-radius:8px; padding:6px 10px; line-height:1.4; word-break:break-all;"></div>'
 
-      + '</div>'
-
-      // 6. 底部执行与下载按钮组
+      // 6. 操作按钮区
       + '<div class="ai-action-footer">'
       + '<button class="ai-generate-btn" id="aiStartGenBtn" type="button">'
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 14.5,9.5 22,12 14.5,14.5 12,22 9.5,14.5 2,12 9.5,9.5"/></svg>'
       + '<span>开始绘制立绘</span>'
       + '</button>'
       + '<div class="ai-result-actions" id="aiResultActions" style="display:none; gap:6px; width:100%;">'
-      + '<button class="ai-result-btn" id="aiDownloadPhotoBtn" type="button" style="color:#0284c7; border-color:rgba(2,132,199,0.3); background:#f0f9ff;"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>保存相册</span></button>'
+      + '<button class="ai-result-btn" id="aiDownloadPhotoBtn" type="button"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>保存相册</span></button>'
       + '<button class="ai-result-btn" id="aiSaveImgbedBtn" type="button"><span>存入图床</span></button>'
       + '<button class="ai-result-btn primary" id="aiAdoptBtn" type="button"><span>✦ 采用立绘</span></button>'
       + '</div>'
       + '</div>'
-      + '</div>';
 
-    document.body.appendChild(overlay);
-    bindModalEvents();
-    restorePersistedResult();
+      + '</div>'
+
+      // 7. 立绘采用选择弹窗 (设为用户立绘 / 设为角色立绘)
+      + '<div class="ai-adopt-mask" id="aiAdoptMask"></div>'
+      + '<div class="ai-adopt-card" id="aiAdoptCard">'
+      + '<div class="ai-adopt-title">将此立绘应用于：</div>'
+      + '<button class="ai-adopt-option" id="adoptToUserBtn" type="button">✦ 设为用户档案立绘 (你)</button>'
+      + '<button class="ai-adopt-option" id="adoptToCharBtn" type="button">✦ 设为角色档案立绘 (冥夜)</button>'
+      + '<button class="ai-adopt-cancel" id="adoptCancelBtn" type="button">取消</button>'
+      + '</div>';
   }
 
-  function bindModalEvents() {
-    var overlay = document.getElementById('aiImageModalOverlay');
-    var closeBtn = document.getElementById('aiImageCloseBtn');
-    var startBtn = document.getElementById('aiStartGenBtn');
-    var adoptBtn = document.getElementById('aiAdoptBtn');
-    var saveImgbedBtn = document.getElementById('aiSaveImgbedBtn');
-    var downloadBtn = document.getElementById('aiDownloadPhotoBtn');
-    var autoPromptBtn = document.getElementById('aiAutoPromptBtn');
-    var promptInput = document.getElementById('aiPromptInput');
-    var customModelInput = document.getElementById('aiCustomModelInput');
-    var resultImg = document.getElementById('aiResultImg');
+  function bindPageEvents(page) {
+    var startBtn = page.querySelector('#aiStartGenBtn');
+    var adoptBtn = page.querySelector('#aiAdoptBtn');
+    var saveImgbedBtn = page.querySelector('#aiSaveImgbedBtn');
+    var downloadBtn = page.querySelector('#aiDownloadPhotoBtn');
+    var autoPromptBtn = page.querySelector('#aiAutoPromptBtn');
+    var promptInput = page.querySelector('#aiPromptInput');
+    var customModelInput = page.querySelector('#aiCustomModelInput');
+    var resultImg = page.querySelector('#aiResultImg');
 
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    if (overlay) {
-      overlay.addEventListener('click', function(e) {
-        if (e.target === overlay && !isGenerating) closeModal();
-      });
+    var adoptMask = page.querySelector('#aiAdoptMask');
+    var adoptCard = page.querySelector('#aiAdoptCard');
+    var adoptToUserBtn = page.querySelector('#adoptToUserBtn');
+    var adoptToCharBtn = page.querySelector('#adoptToCharBtn');
+    var adoptCancelBtn = page.querySelector('#adoptCancelBtn');
+
+    // 默认填入可用模型
+    var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
+    if (customModelInput) {
+      if (activeApi && activeApi.model && /(image|flux|dall|sd|midjourney)/i.test(activeApi.model)) {
+        customModelInput.value = activeApi.model;
+      } else {
+        customModelInput.value = 'flux-schnell';
+      }
     }
 
-    document.querySelectorAll('.ai-quick-model-btn').forEach(function(btn) {
+    page.querySelectorAll('.ai-quick-model-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         if (customModelInput) customModelInput.value = this.dataset.model;
       });
     });
 
-    document.querySelectorAll('.ai-ratio-chip').forEach(function(chip) {
+    page.querySelectorAll('.ai-ratio-chip').forEach(function(chip) {
       chip.addEventListener('click', function() {
-        document.querySelectorAll('.ai-ratio-chip').forEach(function(c){ c.classList.remove('active'); });
+        page.querySelectorAll('.ai-ratio-chip').forEach(function(c){ c.classList.remove('active'); });
         this.classList.add('active');
         currentRatio = this.dataset.ratio;
         
-        var stage = document.getElementById('aiPreviewStage');
+        var stage = page.querySelector('#aiPreviewStage');
         if (stage) {
           if (currentRatio === '1:1') stage.style.aspectRatio = '1 / 1';
           else if (currentRatio === '3:4') stage.style.aspectRatio = '3 / 4';
@@ -163,8 +178,14 @@
           if (window.AppNav) AppNav.showToast('请先输入想要绘制的描述哦');
           return;
         }
-        executeDualEngineGeneration(prompt);
+        executeDualEngineGeneration(prompt, page);
       });
+    }
+
+    // 采用立绘流程
+    function closeAdoptCard() {
+      if (adoptMask) adoptMask.classList.remove('show');
+      if (adoptCard) adoptCard.classList.remove('show');
     }
 
     if (adoptBtn) {
@@ -172,116 +193,156 @@
         if (!currentGeneratedUrl) return;
         if (typeof currentCallback === 'function') {
           currentCallback(currentGeneratedUrl);
+          if (window.AppNav) {
+            AppNav.showToast('✦ 已采用为当前立绘 ✦');
+            AppNav.showPage('home');
+          }
+          currentCallback = null;
+        } else {
+          // 弹出选择目标
+          if (adoptMask) adoptMask.classList.add('show');
+          if (adoptCard) adoptCard.classList.add('show');
         }
-        closeModal();
-        if (window.AppNav) AppNav.showToast('✦ 已成功设为当前立绘 ✦');
       });
     }
 
+    if (adoptCancelBtn) adoptCancelBtn.addEventListener('click', closeAdoptCard);
+    if (adoptMask) adoptMask.addEventListener('click', closeAdoptCard);
+
+    // 设为用户立绘
+    if (adoptToUserBtn) {
+      adoptToUserBtn.addEventListener('click', function() {
+        if (!currentGeneratedUrl || !window.AppDB) return;
+        AppDB.get('user_archives_list_v3', function(list) {
+          var arr = Array.isArray(list) ? list : [];
+          if (arr.length > 0) {
+            arr[0].photo = currentGeneratedUrl;
+            AppDB.save('user_archives_list_v3', arr, function() {
+              closeAdoptCard();
+              if (window.AppNav) {
+                AppNav.showToast('✦ 已成功设为用户小卡立绘 ✦');
+                AppNav.showPage('archive');
+              }
+            });
+          } else {
+            closeAdoptCard();
+            if (window.AppNav) AppNav.showToast('请先在档案页创建用户档案哦');
+          }
+        });
+      });
+    }
+
+    // 设为角色立绘
+    if (adoptToCharBtn) {
+      adoptToCharBtn.addEventListener('click', function() {
+        if (!currentGeneratedUrl || !window.AppDB) return;
+        AppDB.get('character_archives_list_v1', function(list) {
+          var arr = Array.isArray(list) ? list : [];
+          if (arr.length > 0) {
+            arr[0].photo = currentGeneratedUrl;
+            AppDB.save('character_archives_list_v1', arr, function() {
+              closeAdoptCard();
+              if (window.AppNav) {
+                AppNav.showToast('✦ 已成功设为角色小卡立绘 ✦');
+                AppNav.showPage('character');
+              }
+            });
+          } else {
+            closeAdoptCard();
+            if (window.AppNav) AppNav.showToast('请先创建角色档案哦');
+          }
+        });
+      });
+    }
+
+    // 存入图床 (带全局更新广播)
     if (saveImgbedBtn) {
       saveImgbedBtn.addEventListener('click', function() {
-        if (!currentGeneratedUrl) return;
-        if (window.AppDB) {
-          AppDB.get('app_imgbed_list', function(list) {
-            var arr = Array.isArray(list) ? list : [];
-            arr.unshift({ id: 'img_' + Date.now(), url: currentGeneratedUrl, date: new Date().toLocaleDateString() });
-            AppDB.save('app_imgbed_list', arr, function() {
-              if (window.AppNav) AppNav.showToast('✦ 已存入图床相册 ✦');
-            });
+        if (!currentGeneratedUrl || !window.AppDB) return;
+        AppDB.get('app_imgbed_list', function(list) {
+          var arr = Array.isArray(list) ? list : [];
+          arr.unshift({
+            id: 'img_' + Date.now(),
+            url: currentGeneratedUrl,
+            name: 'AI绘图 · ' + new Date().toLocaleDateString(),
+            date: new Date().toLocaleDateString()
           });
-        }
+          AppDB.save('app_imgbed_list', arr, function() {
+            window.dispatchEvent(new Event('imgbedUpdated'));
+            if (window.AppNav) AppNav.showToast('✦ 已成功存入图床相册 ✦');
+          });
+        });
       });
     }
 
+    // 下载到相册
     if (downloadBtn) {
       downloadBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
-        downloadImageToDevice(currentGeneratedUrl);
+        downloadImageSafely(currentGeneratedUrl);
       });
     }
 
     if (resultImg) {
       resultImg.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
-        if (window.AppNav) AppNav.showToast('✦ 长按图片即可直接存储到系统相册 ✦');
+        downloadImageSafely(currentGeneratedUrl);
       });
     }
   }
 
-  // 页面前后台切换监听（防止切后台导致时钟冻结与结果丢失）
-  document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') {
-      restorePersistedResult();
-      if (isGenerating && startTimestamp > 0) {
-        updateProgressStatus();
-      }
-    }
-  });
+  // 苹果 iOS 专属无损转码存储方案
+  function downloadImageSafely(url) {
+    if (window.AppNav) AppNav.showToast('正在准备原图...');
 
-  function restorePersistedResult() {
-    try {
-      var saved = localStorage.getItem(STORAGE_LAST_RESULT_KEY);
-      if (saved && !currentGeneratedUrl) {
-        showGeneratedResult(saved);
-      }
-    } catch(e){}
-  }
+    var img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function() {
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        var base64Data = canvas.toDataURL('image/png');
 
-  function downloadImageToDevice(url) {
-    if (url.indexOf('data:image') === 0) {
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'niveous-art-' + Date.now() + '.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      if (window.AppNav) AppNav.showToast('✦ 图片已开始保存 ✦');
-      return;
-    }
-
-    if (window.AppNav) AppNav.showToast('正在准备高清原图...');
-    fetch(url)
-      .then(function(res) { return res.blob(); })
-      .then(function(blob) {
-        var blobUrl = URL.createObjectURL(blob);
         var a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = 'niveous-ai-' + Date.now() + '.png';
+        a.href = base64Data;
+        a.download = 'niveous-art-' + Date.now() + '.png';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-        if (window.AppNav) AppNav.showToast('✦ 已保存至手机下载/相册 ✦');
-      })
-      .catch(function() {
+        if (window.AppNav) AppNav.showToast('✦ 已保存至手机下载 ✦');
+      } catch(e) {
         window.open(url, '_blank');
-        if (window.AppNav) AppNav.showToast('✦ 已打开大图，长按即可保存 ✦');
-      });
+        if (window.AppNav) AppNav.showToast('✦ 已打开大图，长按即可存储 ✦');
+      }
+    };
+    img.onerror = function() {
+      window.open(url, '_blank');
+      if (window.AppNav) AppNav.showToast('✦ 已打开大图，长按即可存储 ✦');
+    };
+    img.src = url;
   }
 
   function deeplyExtractImage(obj) {
     if (!obj) return '';
-
     if (typeof obj === 'string') {
       var str = obj.trim();
       if (str.indexOf('data:image/') === 0) return str;
       if (/^[A-Za-z0-9+/=]{100,}$/.test(str)) return 'data:image/png;base64,' + str;
-
       var mdMatch = str.match(/!\[.*?\]\((https?:\/\/[^\s\)\"\']+)\)/i);
       if (mdMatch && mdMatch[1]) return mdMatch[1];
-
       var urlMatch = str.match(/https?:\/\/[^\s"'<>\)]+/i);
       if (urlMatch && urlMatch[0]) return urlMatch[0].replace(/[,\);]+$/, '');
       return '';
     }
-
     if (obj.data && Array.isArray(obj.data) && obj.data.length > 0) {
       var first = obj.data[0];
       if (first.url) return first.url;
       if (first.b64_json) return 'data:image/png;base64,' + first.b64_json;
       if (first.image) return first.image;
     }
-
     if (obj.choices && Array.isArray(obj.choices) && obj.choices.length > 0) {
       var msg = obj.choices[0].message;
       if (msg && msg.content) {
@@ -289,21 +350,17 @@
         if (fromContent) return fromContent;
       }
     }
-
     if (obj.url && typeof obj.url === 'string') return obj.url;
     if (obj.image_url && typeof obj.image_url === 'string') return obj.image_url;
     if (obj.image && typeof obj.image === 'string') return deeplyExtractImage(obj.image);
     if (obj.images && Array.isArray(obj.images) && obj.images[0]) return deeplyExtractImage(obj.images[0]);
     if (obj.result) return deeplyExtractImage(obj.result);
-
     return '';
   }
 
-  // 双引擎极速生图（持久化守护版）
-  function executeDualEngineGeneration(prompt) {
+  function executeDualEngineGeneration(prompt, page) {
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
-    
-    var debugBox = document.getElementById('aiDebugErrorBox');
+    var debugBox = page.querySelector('#aiDebugErrorBox');
     if (debugBox) { debugBox.style.display = 'none'; debugBox.textContent = ''; }
 
     if (!activeApi || !activeApi.url || !activeApi.key) {
@@ -311,70 +368,49 @@
       return;
     }
 
-    var customModelInput = document.getElementById('aiCustomModelInput');
+    var customModelInput = page.querySelector('#aiCustomModelInput');
     var chosenModel = (customModelInput && customModelInput.value.trim()) ? customModelInput.value.trim() : (activeApi.model || 'flux-schnell');
 
     var cleanBase = activeApi.url.replace(/\/+$/, '');
     var rootUrl = cleanBase.endsWith('/v1') ? cleanBase : (cleanBase + '/v1');
-
     var imagesUrl = rootUrl + '/images/generations';
     var chatUrl = rootUrl + '/chat/completions';
 
-    setGeneratingState(true);
+    setGeneratingState(true, page);
 
-    // 记录后台任务元数据
     try {
-      localStorage.setItem(STORAGE_TASK_KEY, JSON.stringify({
-        prompt: prompt,
-        model: chosenModel,
-        time: Date.now()
-      }));
+      localStorage.setItem(STORAGE_TASK_KEY, JSON.stringify({ prompt: prompt, model: chosenModel, time: Date.now() }));
     } catch(e){}
 
-    // 引擎 1：标准生图
     fetch(imagesUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + activeApi.key
-      },
-      body: JSON.stringify({
-        model: chosenModel,
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024'
-      })
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + activeApi.key },
+      body: JSON.stringify({ model: chosenModel, prompt: prompt, n: 1, size: '1024x1024' })
     })
     .then(function(res) {
       return res.text().then(function(rawText) {
         var data = null;
         try { data = JSON.parse(rawText); } catch(e) { data = rawText; }
-
         if (!res.ok) {
           var msg = (data && data.error && data.error.message) ? data.error.message : (typeof data === 'string' ? data : ('HTTP ' + res.status));
           throw new Error('IMG_FAILED:' + msg);
         }
-
         var foundImg = deeplyExtractImage(data);
         if (foundImg) {
           onSuccess(foundImg);
           return null;
         } else {
-          throw new Error('IMG_FAILED:中转未返回标准图像，切入Chat通道');
+          throw new Error('IMG_FAILED:转入Chat协议');
         }
       });
     })
     .catch(function(imgErr) {
-      // 引擎 2：Chat 对话通道
-      var statusText = document.getElementById('aiProgressStatusText');
+      var statusText = page.querySelector('#aiProgressStatusText');
       if (statusText) statusText.textContent = '🔄 切换对话画师协议中...';
 
       fetch(chatUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + activeApi.key
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + activeApi.key },
         body: JSON.stringify({
           model: chosenModel,
           messages: [{ role: 'user', content: 'Draw an image: ' + prompt }]
@@ -384,62 +420,47 @@
         return cRes.text().then(function(cText) {
           var cData = null;
           try { cData = JSON.parse(cText); } catch(e) { cData = cText; }
-
           if (!cRes.ok) {
             var cMsg = (cData && cData.error && cData.error.message) ? cData.error.message : (typeof cData === 'string' ? cData : ('HTTP ' + cRes.status));
             throw new Error(cMsg);
           }
-
           var chatImg = deeplyExtractImage(cData);
           if (chatImg) {
             onSuccess(chatImg);
           } else {
             var rawPreview = typeof cData === 'object' ? JSON.stringify(cData) : String(cData);
-            throw new Error('中转站未给出图片链接。返回内容：' + rawPreview.slice(0, 120));
+            throw new Error('中转未给出图片链接: ' + rawPreview.slice(0, 100));
           }
         });
       })
       .catch(function(finalErr) {
-        setGeneratingState(false);
+        setGeneratingState(false, page);
         try { localStorage.removeItem(STORAGE_TASK_KEY); } catch(e){}
-        var displayMsg = finalErr.message || '请求失败';
         if (debugBox) {
           debugBox.style.display = 'block';
-          debugBox.textContent = '【排查提示】' + displayMsg;
+          debugBox.textContent = '【排查提示】' + (finalErr.message || '请求失败');
         }
         if (window.AppNav) AppNav.showToast('绘图遇到阻碍，请看下方提示');
       });
     });
 
     function onSuccess(url) {
-      setGeneratingState(false);
+      setGeneratingState(false, page);
       try {
         localStorage.removeItem(STORAGE_TASK_KEY);
         localStorage.setItem(STORAGE_LAST_RESULT_KEY, url);
       } catch(e){}
-      showGeneratedResult(url);
+      showGeneratedResult(url, page);
       if (window.AppNav) AppNav.showToast('✦ 绘制成功 ✦');
     }
   }
 
-  function updateProgressStatus() {
-    var statusText = document.getElementById('aiProgressStatusText');
-    if (!statusText || !startTimestamp) return;
-    var currentElapsed = Math.floor((Date.now() - startTimestamp) / 1000);
-    if (currentElapsed < 5) {
-      statusText.textContent = '⚡ 正在极速连接画师... (' + currentElapsed + 's)';
-    } else if (currentElapsed < 15) {
-      statusText.textContent = '✨ 正在高精光影渲染... (' + currentElapsed + 's)';
-    } else {
-      statusText.textContent = '🎨 正在进行细节高清处理... (' + currentElapsed + 's)';
-    }
-  }
-
-  function setGeneratingState(generating) {
+  function setGeneratingState(generating, page) {
     isGenerating = generating;
-    var stage = document.getElementById('aiPreviewStage');
-    var startBtn = document.getElementById('aiStartGenBtn');
-    var resultActions = document.getElementById('aiResultActions');
+    var stage = page.querySelector('#aiPreviewStage');
+    var startBtn = page.querySelector('#aiStartGenBtn');
+    var statusText = page.querySelector('#aiProgressStatusText');
+    var resultActions = page.querySelector('#aiResultActions');
     if (!stage || !startBtn) return;
 
     if (generating) {
@@ -450,9 +471,16 @@
       startBtn.querySelector('span').textContent = '正在极速绘制中...';
       if (resultActions) resultActions.style.display = 'none';
 
-      updateProgressStatus();
+      if (statusText) statusText.textContent = '正在连接极速画师... (0s)';
       clearInterval(timerInterval);
-      timerInterval = setInterval(updateProgressStatus, 1000);
+      timerInterval = setInterval(function() {
+        var elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+        if (statusText) {
+          if (elapsed < 5) statusText.textContent = '⚡ 正在极速连接画师... (' + elapsed + 's)';
+          else if (elapsed < 12) statusText.textContent = '✨ 正在高精光影渲染... (' + elapsed + 's)';
+          else statusText.textContent = '🎨 正在进行细节高清处理... (' + elapsed + 's)';
+        }
+      }, 1000);
     } else {
       startTimestamp = 0;
       clearInterval(timerInterval);
@@ -462,11 +490,13 @@
     }
   }
 
-  function showGeneratedResult(url) {
+  function showGeneratedResult(url, page) {
     currentGeneratedUrl = url;
-    var stage = document.getElementById('aiPreviewStage');
-    var resultImg = document.getElementById('aiResultImg');
-    var resultActions = document.getElementById('aiResultActions');
+    var p = page || document.querySelector('[data-page="ai-image"]');
+    if (!p) return;
+    var stage = p.querySelector('#aiPreviewStage');
+    var resultImg = p.querySelector('#aiResultImg');
+    var resultActions = p.querySelector('#aiResultActions');
     if (stage && resultImg) {
       resultImg.onload = function() {
         stage.classList.add('has-result');
@@ -482,51 +512,35 @@
     }
   }
 
-  function openStudio(options, callback) {
-    createModalDOM();
-    currentCallback = callback || null;
-    
-    var overlay = document.getElementById('aiImageModalOverlay');
-    var promptInput = document.getElementById('aiPromptInput');
-    var stage = document.getElementById('aiPreviewStage');
-    var customModelInput = document.getElementById('aiCustomModelInput');
-    var resultActions = document.getElementById('aiResultActions');
-    var debugBox = document.getElementById('aiDebugErrorBox');
-
-    if (debugBox) { debugBox.style.display = 'none'; debugBox.textContent = ''; }
-
-    if (promptInput && options && options.defaultPrompt) {
-      promptInput.value = options.defaultPrompt;
-    }
-
-    var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
-    if (customModelInput) {
-      if (activeApi && activeApi.model && /(image|flux|dall|sd|midjourney)/i.test(activeApi.model)) {
-        customModelInput.value = activeApi.model;
-      } else {
-        customModelInput.value = 'flux-schnell';
+  function restorePersistedResult() {
+    try {
+      var saved = localStorage.getItem(STORAGE_LAST_RESULT_KEY);
+      if (saved && !currentGeneratedUrl) {
+        showGeneratedResult(saved);
       }
-    }
-
-    restorePersistedResult();
-    if (overlay) overlay.classList.add('show');
+    } catch(e){}
   }
 
-  function closeModal() {
-    var overlay = document.getElementById('aiImageModalOverlay');
-    if (overlay) overlay.classList.remove('show');
-    if (timerInterval) clearInterval(timerInterval);
+  function openStudio(options, callback) {
+    currentCallback = callback || null;
+    if (window.AppNav) {
+      AppNav.showPage('ai-image');
+    }
+    var page = document.querySelector('[data-page="ai-image"]');
+    if (page && options && options.defaultPrompt) {
+      var promptInput = page.querySelector('#aiPromptInput');
+      if (promptInput) promptInput.value = options.defaultPrompt;
+    }
   }
 
   window.AppAiImage = {
-    openStudio: openStudio,
-    closeStudio: closeModal
+    openStudio: openStudio
   };
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', createModalDOM);
+    document.addEventListener('DOMContentLoaded', initAiImageApp);
   } else {
-    createModalDOM();
+    initAiImageApp();
   }
 
 })();
