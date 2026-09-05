@@ -187,26 +187,27 @@
       if (window.AppNav) AppNav.showPage('home');
     });
 
-    // 尚未建立用户面板：支持丝滑右滑返回桌面首页
-    var step1Panel = document.getElementById('archStep1');
-    if (step1Panel) {
+        // 凝聚冰晶页面：监听全屏容器，无论从屏幕哪里右滑都能丝滑返回桌面！
+    var s1Screen = container.querySelector('.archive-page-screen') || container;
+    if (s1Screen) {
       var s1StartX = 0, s1StartY = 0, s1EndX = 0, s1EndY = 0;
-      step1Panel.addEventListener('touchstart', function(e) {
+      s1Screen.addEventListener('touchstart', function(e) {
         s1StartX = e.touches[0].clientX;
         s1StartY = e.touches[0].clientY;
         s1EndX = s1StartX;
         s1EndY = s1StartY;
       }, { passive: true });
 
-      step1Panel.addEventListener('touchmove', function(e) {
+      s1Screen.addEventListener('touchmove', function(e) {
         s1EndX = e.touches[0].clientX;
         s1EndY = e.touches[0].clientY;
       }, { passive: true });
 
-      step1Panel.addEventListener('touchend', function() {
+      s1Screen.addEventListener('touchend', function() {
         var diffX = s1EndX - s1StartX;
         var diffY = s1EndY - s1StartY;
-        if (diffX > 40 && Math.abs(diffX) > Math.abs(diffY)) {
+        // 只要向右滑超过 35px 且横向大于纵向，立刻返回桌面！
+        if (diffX > 35 && Math.abs(diffX) > Math.abs(diffY)) {
           if (window.AppNav) AppNav.showPage('home');
         }
       });
