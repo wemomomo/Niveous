@@ -193,7 +193,7 @@
   }
 
   // ==========================================
-  // 步骤 2：手账录入填单（含全局捕获级右滑手势）
+  // 步骤 2：手账录入填单（含02-05全屏扩大编辑）
   // ==========================================
   var step2BackHandler = null;
 
@@ -221,37 +221,69 @@
       + '<div class="journal-section">'
       + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">01.</span><span>基础身份</span></div><span class="section-tag-en">IDENTITY</span></div>'
       + '<div class="ruled-row-grid">'
-      + '<div class="ruled-item"><span class="ruled-label">姓名 / 专属称呼</span><input type="text" class="ruled-input" id="fieldName" value="' + esc(cur.name) + '" placeholder=""></div>'
-      + '<div class="ruled-item"><span class="ruled-label">性别</span><input type="text" class="ruled-input" id="fieldGender" value="' + esc(cur.gender) + '" placeholder=""></div>'
-      + '<div class="ruled-item"><span class="ruled-label">年龄</span><input type="text" class="ruled-input" id="fieldAge" value="' + esc(cur.age) + '" placeholder=""></div>'
-      + '<div class="ruled-item"><span class="ruled-label">身高</span><input type="text" class="ruled-input" id="fieldHeight" value="' + esc(cur.height) + '" placeholder=""></div>'
+      + '<div class="ruled-item"><span class="ruled-label">姓名 / 专属称呼</span><input type="text" class="ruled-input" id="fieldName" value="' + esc(cur.name) + '" placeholder="如：墨墨"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">性别</span><input type="text" class="ruled-input" id="fieldGender" value="' + esc(cur.gender) + '" placeholder="如：女"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">年龄</span><input type="text" class="ruled-input" id="fieldAge" value="' + esc(cur.age) + '" placeholder="如：18"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">身高</span><input type="text" class="ruled-input" id="fieldHeight" value="' + esc(cur.height) + '" placeholder="如：165cm"></div>'
       + '<div class="ruled-item"><span class="ruled-label">生日</span><input type="text" class="ruled-input" id="fieldBirthday" value="' + esc(cur.birthday) + '" placeholder="如：09.24"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">星座</span><input type="text" class="ruled-input" id="fieldZodiac" value="' + esc(cur.zodiac) + '" placeholder=""></div>'
+      + '<div class="ruled-item"><span class="ruled-label">星座</span><input type="text" class="ruled-input" id="fieldZodiac" value="' + esc(cur.zodiac) + '" placeholder="如：天秤座"></div>'
       + '</div>'
       + '</div>'
 
-      // 02. 外貌长相
+      // 02. 外貌长相（带扩大按钮）
       + '<div class="journal-section">'
-      + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">02.</span><span>长相与外貌特征</span></div><span class="section-tag-en">APPEARANCE</span></div>'
+      + '<div class="section-lead-title">'
+      + '<div class="section-name"><span class="sec-index">02.</span><span>长相与外貌特征</span></div>'
+      + '<div style="display:flex; align-items:center; gap:6px;">'
+      + '<span class="section-tag-en">APPEARANCE</span>'
+      + '<button class="expand-edit-btn" data-expand-target="fieldAppearance" data-expand-title="02. 长相与外貌特征" type="button" title="扩大编辑">'
+      + '<svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'
+      + '</button>'
+      + '</div>'
+      + '</div>'
       + '<textarea class="ruled-textarea" id="fieldAppearance" rows="2" placeholder="发型、眸色、五官气质、穿搭风格、身形特点...">' + esc(cur.appearance) + '</textarea>'
       + '</div>'
 
-      // 03. 性格特质
+      // 03. 性格特质（带扩大按钮）
       + '<div class="journal-section">'
-      + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">03.</span><span>性格特质与语气习惯</span></div><span class="section-tag-en">PERSONALITY</span></div>'
+      + '<div class="section-lead-title">'
+      + '<div class="section-name"><span class="sec-index">03.</span><span>性格特质与语气习惯</span></div>'
+      + '<div style="display:flex; align-items:center; gap:6px;">'
+      + '<span class="section-tag-en">PERSONALITY</span>'
+      + '<button class="expand-edit-btn" data-expand-target="fieldPersonality" data-expand-title="03. 性格特质与语气习惯" type="button" title="扩大编辑">'
+      + '<svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'
+      + '</button>'
+      + '</div>'
+      + '</div>'
       + '<div class="ruled-item" style="margin-bottom:6px;"><span class="ruled-label">性格标签</span><input type="text" class="ruled-input" id="fieldTags" value="' + esc(cur.tags) + '" placeholder="多个关键词用空格分隔"></div>'
       + '<textarea class="ruled-textarea" id="fieldPersonality" rows="2" placeholder="日常性格表现、说话习惯、专属的互动方式与情绪特点...">' + esc(cur.personality) + '</textarea>'
       + '</div>'
 
-      // 04. 兴趣爱好
+      // 04. 兴趣爱好（带扩大按钮）
       + '<div class="journal-section">'
-      + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">04.</span><span>兴趣爱好与日常偏好</span></div><span class="section-tag-en">HOBBIES & LIKES</span></div>'
+      + '<div class="section-lead-title">'
+      + '<div class="section-name"><span class="sec-index">04.</span><span>兴趣爱好与日常偏好</span></div>'
+      + '<div style="display:flex; align-items:center; gap:6px;">'
+      + '<span class="section-tag-en">HOBBIES & LIKES</span>'
+      + '<button class="expand-edit-btn" data-expand-target="fieldHobbies" data-expand-title="04. 兴趣爱好与日常偏好" type="button" title="扩大编辑">'
+      + '<svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'
+      + '</button>'
+      + '</div>'
+      + '</div>'
       + '<textarea class="ruled-textarea" id="fieldHobbies" rows="2" placeholder="喜欢的食物、日常兴趣爱好、喜恶偏好、特殊习惯...">' + esc(cur.hobbies) + '</textarea>'
       + '</div>'
 
-      // 05. 深度背景
+      // 05. 深度背景（带扩大按钮）
       + '<div class="journal-section">'
-      + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">05.</span><span>深度背景渊源与人设</span></div><span class="section-tag-en">BACKGROUND & LORE</span></div>'
+      + '<div class="section-lead-title">'
+      + '<div class="section-name"><span class="sec-index">05.</span><span>深度背景渊源与人设</span></div>'
+      + '<div style="display:flex; align-items:center; gap:6px;">'
+      + '<span class="section-tag-en">BACKGROUND & LORE</span>'
+      + '<button class="expand-edit-btn" data-expand-target="fieldBackground" data-expand-title="05. 深度背景渊源与人设" type="button" title="扩大编辑">'
+      + '<svg viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'
+      + '</button>'
+      + '</div>'
+      + '</div>'
       + '<textarea class="ruled-textarea" id="fieldBackground" rows="3" placeholder="身份背景、过往经历、故事渊源与深度设定...">' + esc(cur.background) + '</textarea>'
       + '</div>'
 
@@ -266,6 +298,27 @@
       + '</button>'
       + '</div>'
       + '</div>'
+
+      // ==========================================
+      // 全新沉浸式全屏手写板（扩大编辑弹窗）
+      // ==========================================
+      + '<div class="expand-modal-overlay" id="expandModalOverlay">'
+      + '<div class="expand-modal-panel">'
+      + '<div class="expand-modal-header">'
+      + '<button class="expand-modal-back" id="expandModalCancelBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
+      + '<div class="expand-modal-title" id="expandModalTitle">深度手札编辑</div>'
+      + '<button class="expand-modal-done" id="expandModalDoneBtn" type="button">完成</button>'
+      + '</div>'
+      + '<div class="expand-modal-body">'
+      + '<textarea class="expand-modal-textarea" id="expandModalTextarea" placeholder="在这里尽情书写..."></textarea>'
+      + '</div>'
+      + '<div class="expand-modal-footer">'
+      + '<div class="expand-word-count" id="expandWordCount">0 字</div>'
+      + '<button class="expand-clear-btn" id="expandClearBtn" type="button">清空文本</button>'
+      + '</div>'
+      + '</div>'
+      + '</div>'
+
       + '</div>';
 
     var originalSnapshot = JSON.stringify({
@@ -283,6 +336,13 @@
     });
 
     step2BackHandler = function() {
+      // 如果全屏弹窗开着，先只关闭弹窗
+      var modal = document.getElementById('expandModalOverlay');
+      if (modal && modal.classList.contains('show')) {
+        closeExpandModal();
+        return;
+      }
+
       var currentSnapshot = JSON.stringify({
         name: (document.getElementById('fieldName') ? document.getElementById('fieldName').value : '').trim().replace(/[✞✟✠]/g, ''),
         gender: (document.getElementById('fieldGender') ? document.getElementById('fieldGender').value : '').trim(),
@@ -350,6 +410,82 @@
 
     document.getElementById('archBackBtn').addEventListener('click', step2BackHandler);
 
+    // ==========================================
+    // 绑定 02-05 扩大符号点击事件与双向同步
+    // ==========================================
+    var currentTargetFieldId = '';
+    var modalOverlay = document.getElementById('expandModalOverlay');
+    var modalTitle = document.getElementById('expandModalTitle');
+    var modalTextarea = document.getElementById('expandModalTextarea');
+    var modalDoneBtn = document.getElementById('expandModalDoneBtn');
+    var modalCancelBtn = document.getElementById('expandModalCancelBtn');
+    var wordCount = document.getElementById('expandWordCount');
+    var clearBtn = document.getElementById('expandClearBtn');
+
+    function updateWordCount() {
+      if (wordCount && modalTextarea) {
+        wordCount.textContent = modalTextarea.value.length + ' 字';
+      }
+    }
+
+    function openExpandModal(fieldId, titleText) {
+      currentTargetFieldId = fieldId;
+      var targetInput = document.getElementById(fieldId);
+      if (modalTitle) modalTitle.textContent = titleText || '深度手札编辑';
+      if (modalTextarea) {
+        modalTextarea.value = targetInput ? targetInput.value : '';
+        updateWordCount();
+      }
+      if (modalOverlay) modalOverlay.classList.add('show');
+      setTimeout(function() {
+        if (modalTextarea) modalTextarea.focus();
+      }, 300);
+    }
+
+    function closeExpandModal() {
+      if (modalOverlay) modalOverlay.classList.remove('show');
+      currentTargetFieldId = '';
+    }
+
+    document.querySelectorAll('.expand-edit-btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var targetId = this.dataset.expandTarget;
+        var title = this.dataset.expandTitle;
+        openExpandModal(targetId, title);
+      });
+    });
+
+    if (modalTextarea) {
+      modalTextarea.addEventListener('input', updateWordCount);
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function() {
+        if (modalTextarea && confirm('确定要清空当前输入的内容吗？')) {
+          modalTextarea.value = '';
+          updateWordCount();
+          modalTextarea.focus();
+        }
+      });
+    }
+
+    if (modalDoneBtn) {
+      modalDoneBtn.addEventListener('click', function() {
+        if (currentTargetFieldId) {
+          var targetInput = document.getElementById(currentTargetFieldId);
+          if (targetInput && modalTextarea) {
+            targetInput.value = modalTextarea.value;
+          }
+        }
+        closeExpandModal();
+      });
+    }
+
+    if (modalCancelBtn) {
+      modalCancelBtn.addEventListener('click', closeExpandModal);
+    }
+
     document.getElementById('generateCardBtn').addEventListener('click', function() {
       var nameVal = document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, '');
       if (!nameVal) {
@@ -401,7 +537,6 @@
       touchCurY = touchStartY;
       isIntercepting = true;
       
-      // 只要处于编辑页，在左边缘触摸时直接切断向外部 app-page 传递，防止触发桌面返回
       if (touchStartX <= 60) {
         e.stopPropagation();
       }
@@ -414,7 +549,6 @@
       var diffX = touchCurX - touchStartX;
       var diffY = touchCurY - touchStartY;
       if (diffX > 10 && diffX > Math.abs(diffY)) {
-        // 向右滑时立刻阻止 app-page 整体平移退回桌面
         e.stopPropagation();
       }
     }, { capture: true, passive: true });
