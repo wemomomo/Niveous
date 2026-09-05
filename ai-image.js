@@ -34,7 +34,7 @@
       + '</div>'
       + '<div class="app-content ai-image-page-content">'
       
-      // 1. 模型选择/输入栏
+      // 1. 模型选择区
       + '<div class="ai-model-section">'
       + '<div class="ai-section-label-row">'
       + '<span class="ai-field-label">生图模型 (极速通道)</span>'
@@ -66,7 +66,7 @@
       + '</div>'
 
       // 4. 图像生成展示舞台
-      + '<div class="ai-preview-stage" id="aiPreviewStage" style="aspect-ratio:1/1;">'
+      + '<div class="ai-preview-stage" id="aiPreviewStage">'
       + '<img id="aiResultImg" src="" alt="AI生成图像">'
       + '<div class="ai-stage-empty">'
       + '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
@@ -85,7 +85,7 @@
       + '</div>'
 
       // 5. 诊断报错输出框
-      + '<div id="aiDebugErrorBox" style="display:none; font-size:11px; color:#c94a4a; background:#fdf2f2; border:1px solid #fecaca; border-radius:8px; padding:6px 10px; line-height:1.4; word-break:break-all;"></div>'
+      + '<div class="ai-debug-error-box" id="aiDebugErrorBox"></div>'
 
       // 6. 操作按钮区
       + '<div class="ai-action-footer">'
@@ -93,8 +93,8 @@
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 14.5,9.5 22,12 14.5,14.5 12,22 9.5,14.5 2,12 9.5,9.5"/></svg>'
       + '<span>开始绘制立绘</span>'
       + '</button>'
-      + '<div class="ai-result-actions" id="aiResultActions" style="display:none; gap:6px; width:100%;">'
-      + '<button class="ai-result-btn" id="aiDownloadPhotoBtn" type="button"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>保存相册</span></button>'
+      + '<div class="ai-result-actions" id="aiResultActions">'
+      + '<button class="ai-result-btn download" id="aiDownloadPhotoBtn" type="button"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>保存相册</span></button>'
       + '<button class="ai-result-btn" id="aiSaveImgbedBtn" type="button"><span>存入图床</span></button>'
       + '<button class="ai-result-btn primary" id="aiAdoptBtn" type="button"><span>✦ 采用立绘</span></button>'
       + '</div>'
@@ -102,7 +102,7 @@
 
       + '</div>'
 
-      // 7. 立绘采用选择弹窗 (设为用户立绘 / 设为角色立绘)
+      // 7. 采用立绘目标选择抽屉
       + '<div class="ai-adopt-mask" id="aiAdoptMask"></div>'
       + '<div class="ai-adopt-card" id="aiAdoptCard">'
       + '<div class="ai-adopt-title">将此立绘应用于：</div>'
@@ -128,7 +128,6 @@
     var adoptToCharBtn = page.querySelector('#adoptToCharBtn');
     var adoptCancelBtn = page.querySelector('#adoptCancelBtn');
 
-    // 默认填入可用模型
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
     if (customModelInput) {
       if (activeApi && activeApi.model && /(image|flux|dall|sd|midjourney)/i.test(activeApi.model)) {
@@ -182,7 +181,6 @@
       });
     }
 
-    // 采用立绘流程
     function closeAdoptCard() {
       if (adoptMask) adoptMask.classList.remove('show');
       if (adoptCard) adoptCard.classList.remove('show');
@@ -199,7 +197,6 @@
           }
           currentCallback = null;
         } else {
-          // 弹出选择目标
           if (adoptMask) adoptMask.classList.add('show');
           if (adoptCard) adoptCard.classList.add('show');
         }
@@ -209,7 +206,6 @@
     if (adoptCancelBtn) adoptCancelBtn.addEventListener('click', closeAdoptCard);
     if (adoptMask) adoptMask.addEventListener('click', closeAdoptCard);
 
-    // 设为用户立绘
     if (adoptToUserBtn) {
       adoptToUserBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl || !window.AppDB) return;
@@ -232,7 +228,6 @@
       });
     }
 
-    // 设为角色立绘
     if (adoptToCharBtn) {
       adoptToCharBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl || !window.AppDB) return;
@@ -255,7 +250,6 @@
       });
     }
 
-    // 存入图床 (带全局更新广播)
     if (saveImgbedBtn) {
       saveImgbedBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl || !window.AppDB) return;
@@ -275,7 +269,6 @@
       });
     }
 
-    // 下载到相册
     if (downloadBtn) {
       downloadBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
@@ -291,7 +284,6 @@
     }
   }
 
-  // 苹果 iOS 专属无损转码存储方案
   function downloadImageSafely(url) {
     if (window.AppNav) AppNav.showToast('正在准备原图...');
 
@@ -361,7 +353,10 @@
   function executeDualEngineGeneration(prompt, page) {
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
     var debugBox = page.querySelector('#aiDebugErrorBox');
-    if (debugBox) { debugBox.style.display = 'none'; debugBox.textContent = ''; }
+    if (debugBox) {
+      debugBox.classList.remove('show');
+      debugBox.textContent = '';
+    }
 
     if (!activeApi || !activeApi.url || !activeApi.key) {
       if (window.AppNav) AppNav.showToast('请先在「设置 ➔ API配置」中配置接口');
@@ -437,7 +432,7 @@
         setGeneratingState(false, page);
         try { localStorage.removeItem(STORAGE_TASK_KEY); } catch(e){}
         if (debugBox) {
-          debugBox.style.display = 'block';
+          debugBox.classList.add('show');
           debugBox.textContent = '【排查提示】' + (finalErr.message || '请求失败');
         }
         if (window.AppNav) AppNav.showToast('绘图遇到阻碍，请看下方提示');
@@ -469,7 +464,7 @@
       stage.classList.add('is-generating');
       startBtn.disabled = true;
       startBtn.querySelector('span').textContent = '正在极速绘制中...';
-      if (resultActions) resultActions.style.display = 'none';
+      if (resultActions) resultActions.classList.remove('show');
 
       if (statusText) statusText.textContent = '正在连接极速画师... (0s)';
       clearInterval(timerInterval);
@@ -500,15 +495,15 @@
     if (stage && resultImg) {
       resultImg.onload = function() {
         stage.classList.add('has-result');
-        if (resultActions) resultActions.style.display = 'flex';
+        if (resultActions) resultActions.classList.add('show');
       };
       resultImg.onerror = function() {
         stage.classList.add('has-result');
-        if (resultActions) resultActions.style.display = 'flex';
+        if (resultActions) resultActions.classList.add('show');
       };
       resultImg.src = url;
       stage.classList.add('has-result');
-      if (resultActions) resultActions.style.display = 'flex';
+      if (resultActions) resultActions.classList.add('show');
     }
   }
 
