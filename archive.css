@@ -53,15 +53,13 @@
   box-sizing: border-box;
 }
 
-/* 第 1 个底页：实心浅灰色 */
+/* 第 1 个底页：纯粹高级冷浅灰（彻底去除偏蓝光晕） */
 .archive-page-screen.screen-bg-0 {
-  background-color: #eef2f7 !important;
-  background-image: 
-    radial-gradient(circle at 20% 15%, rgba(176, 204, 232, 0.45) 0%, transparent 40%),
-    radial-gradient(circle at 80% 85%, rgba(136, 171, 218, 0.35) 0%, transparent 40%) !important;
+  background-color: #f2f4f7 !important;
+  background-image: linear-gradient(180deg, #f7f9fb 0%, #ebedf0 100%) !important;
 }
 
-/* 第 2 个底页：与第 1 张完全相同的浅灰光晕背景 */
+/* 第 2 个底页：浅灰光晕背景 */
 .archive-page-screen.screen-bg-1 {
   background-color: #eef2f7 !important;
   background-image: 
