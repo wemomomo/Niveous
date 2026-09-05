@@ -615,7 +615,7 @@
       + '<div class="archive-header">'
       + '<div class="archive-header-left">'
       + '<button class="arch-native-back" id="archBackBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>'
-      + '<div><span class="archive-subtitle">IDENTITY & DOSSIER</span><h1 class="archive-title">档案中心</h1></div>'
+      + '<div><h1 class="archive-title">档案中心</h1></div>'
       + '</div>'
       + '<div class="archive-header-right">'
       + '<button class="arch-tool-pill" id="actionNewBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>'
