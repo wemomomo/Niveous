@@ -994,27 +994,29 @@
   color: #18191c;
 }
 
+/* ========== 初雪 Pure Crystal 清透雪晶蓝 ========== */
 .frost-crystal-svg { width: 46px; height: 46px; overflow: visible; }
-/* 冰晶描边：清透柔和冰蓝 */
+
+/* 冰晶描边：清透初雪蓝（带微光通透感） */
 .crystal-stroke { 
-  stroke: #6a8ca8 !important; 
-  stroke-width: 1.3; 
+  stroke: rgba(90, 145, 210, 0.75) !important; 
+  stroke-width: 1.35; 
   stroke-linecap: round; 
   stroke-linejoin: round; 
   fill: none; 
 }
 
-/* 冰晶星核与极点微芒：深邃冰蓝 */
+/* 核心晶核与尖端凝霜点：深邃雪晶蓝 */
 .crystal-core circle[fill],
 .crystal-sparkles circle[fill] {
-  fill: #6a8ca8 !important;
+  fill: rgba(90, 145, 210, 0.85) !important;
 }
 
-/* 四周闪烁的小星芒符号 */
+/* 四周闪烁的星芒符号：柔和初雪蓝 */
 .empty-sparkle {
   position: absolute;
   font-size: 11px;
-  color: #88abda !important;
+  color: rgba(110, 160, 215, 0.75) !important;
   opacity: 0;
 }
 
