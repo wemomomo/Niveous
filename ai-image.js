@@ -187,22 +187,52 @@
     }
   }
 
-  // 提取 Markdown 或文本中的图片链接
-  function extractImageUrlFromText(text) {
-    if (!text) return '';
-    // 匹配 ![...](http...)
-    var mdMatch = text.match(/!\[.*?\]\((https?:\/\/[^\s\)]+)\)/i);
-    if (mdMatch && mdMatch[1]) return mdMatch[1];
-    // 匹配常规图片 URL
-    var urlMatch = text.match(/(https?:\/\/[^\s"'<>]+\.(?:png|jpg|jpeg|webp|gif))/i);
-    if (urlMatch && urlMatch[1]) return urlMatch[1];
-    // 匹配通用 HTTP 链接（中转站临时生图链接）
-    var genericMatch = text.match(/(https?:\/\/[^\s"'<>]+)/i);
-    if (genericMatch && genericMatch[1]) return genericMatch[1];
+  // 万能穿透提取器（递归深挖任何字段里的图片与 Base64）
+  function deeplyExtractImage(obj) {
+    if (!obj) return '';
+
+    // 1. 如果直接是字符串
+    if (typeof obj === 'string') {
+      var str = obj.trim();
+      if (str.indexOf('data:image/') === 0) return str;
+      if (/^[A-Za-z0-9+/=]{100,}$/.test(str)) return 'data:image/png;base64,' + str;
+
+      var mdMatch = str.match(/!\[.*?\]\((https?:\/\/[^\s\)\"\']+)\)/i);
+      if (mdMatch && mdMatch[1]) return mdMatch[1];
+
+      var urlMatch = str.match(/https?:\/\/[^\s"'<>\)]+/i);
+      if (urlMatch && urlMatch[0]) return urlMatch[0].replace(/[,\);]+$/, '');
+      return '';
+    }
+
+    // 2. 如果是标准 OpenAI images 格式
+    if (obj.data && Array.isArray(obj.data) && obj.data.length > 0) {
+      var first = obj.data[0];
+      if (first.url) return first.url;
+      if (first.b64_json) return 'data:image/png;base64,' + first.b64_json;
+      if (first.image) return first.image;
+    }
+
+    // 3. 如果是 Chat 格式
+    if (obj.choices && Array.isArray(obj.choices) && obj.choices.length > 0) {
+      var msg = obj.choices[0].message;
+      if (msg && msg.content) {
+        var fromContent = deeplyExtractImage(msg.content);
+        if (fromContent) return fromContent;
+      }
+    }
+
+    // 4. 通用私有字段检索
+    if (obj.url && typeof obj.url === 'string') return obj.url;
+    if (obj.image_url && typeof obj.image_url === 'string') return obj.image_url;
+    if (obj.image && typeof obj.image === 'string') return deeplyExtractImage(obj.image);
+    if (obj.images && Array.isArray(obj.images) && obj.images[0]) return deeplyExtractImage(obj.images[0]);
+    if (obj.result) return deeplyExtractImage(obj.result);
+
     return '';
   }
 
-  // 双引擎生图核心（Engine 1: /images/generations ➔ Engine 2: /chat/completions）
+  // 双引擎生图核心
   function executeDualEngineGeneration(prompt) {
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
     
@@ -217,7 +247,6 @@
     var customModelInput = document.getElementById('aiCustomModelInput');
     var chosenModel = (customModelInput && customModelInput.value.trim()) ? customModelInput.value.trim() : (activeApi.model || 'dall-e-3');
 
-    // 清理 URL 结尾
     var cleanBase = activeApi.url.replace(/\/+$/, '');
     var rootUrl = cleanBase.endsWith('/v1') ? cleanBase : (cleanBase + '/v1');
 
@@ -226,7 +255,7 @@
 
     setGeneratingState(true);
 
-    // 引擎 1：尝试标准生图接口
+    // 引擎 1：尝试标准生图端点
     fetch(imagesUrl, {
       method: 'POST',
       headers: {
@@ -241,30 +270,26 @@
       })
     })
     .then(function(res) {
-      if (!res.ok) {
-        // 如果端点 404 或不支持，抛错转入引擎 2
-        return res.json().then(function(errData) {
-          var msg = (errData && errData.error && errData.error.message) ? errData.error.message : ('HTTP ' + res.status);
+      return res.text().then(function(rawText) {
+        var data = null;
+        try { data = JSON.parse(rawText); } catch(e) { data = rawText; }
+
+        if (!res.ok) {
+          var msg = (data && data.error && data.error.message) ? data.error.message : (typeof data === 'string' ? data : ('HTTP ' + res.status));
           throw new Error('IMG_FAILED:' + msg);
-        }).catch(function(e) {
-          throw new Error('IMG_FAILED:' + (e.message || res.status));
-        });
-      }
-      return res.json();
-    })
-    .then(function(data) {
-      var img = '';
-      if (data && data.data && data.data[0]) {
-        img = data.data[0].url || (data.data[0].b64_json ? ('data:image/png;base64,' + data.data[0].b64_json) : '');
-      }
-      if (img) {
-        onSuccess(img);
-      } else {
-        throw new Error('IMG_FAILED:未返回图片链接');
-      }
+        }
+
+        var foundImg = deeplyExtractImage(data);
+        if (foundImg) {
+          onSuccess(foundImg);
+          return null;
+        } else {
+          throw new Error('IMG_FAILED:中转未返回标准图像，切入Chat通道');
+        }
+      });
     })
     .catch(function(imgErr) {
-      // 引擎 2：如果标准接口失败，无缝切入 Chat 对话生图接口
+      // 引擎 2：Chat 对话通道
       var statusText = document.getElementById('aiProgressStatusText');
       if (statusText) statusText.textContent = '🔄 切换对话画师协议中...';
 
@@ -276,41 +301,36 @@
         },
         body: JSON.stringify({
           model: chosenModel,
-          messages: [{ role: 'user', content: 'Generate an image: ' + prompt }]
+          messages: [{ role: 'user', content: 'Draw an image: ' + prompt }]
         })
       })
       .then(function(cRes) {
-        if (!cRes.ok) {
-          return cRes.json().then(function(cData) {
-            var msg = (cData && cData.error && cData.error.message) ? cData.error.message : ('HTTP ' + cRes.status);
-            throw new Error(msg);
-          }).catch(function(e) {
-            throw new Error(e.message || ('HTTP ' + cRes.status));
-          });
-        }
-        return cRes.json();
-      })
-      .then(function(chatData) {
-        var reply = '';
-        if (chatData && chatData.choices && chatData.choices[0] && chatData.choices[0].message) {
-          reply = chatData.choices[0].message.content || '';
-        }
-        var foundUrl = extractImageUrlFromText(reply);
-        if (foundUrl) {
-          onSuccess(foundUrl);
-        } else {
-          var firstErr = imgErr.message.replace(/^IMG_FAILED:/, '');
-          throw new Error('画师未返回图片。中转报错：' + (firstErr || reply.slice(0, 80)));
-        }
+        return cRes.text().then(function(cText) {
+          var cData = null;
+          try { cData = JSON.parse(cText); } catch(e) { cData = cText; }
+
+          if (!cRes.ok) {
+            var cMsg = (cData && cData.error && cData.error.message) ? cData.error.message : (typeof cData === 'string' ? cData : ('HTTP ' + cRes.status));
+            throw new Error(cMsg);
+          }
+
+          var chatImg = deeplyExtractImage(cData);
+          if (chatImg) {
+            onSuccess(chatImg);
+          } else {
+            var rawPreview = typeof cData === 'object' ? JSON.stringify(cData) : String(cData);
+            throw new Error('中转站未给出图片链接。返回内容：' + rawPreview.slice(0, 120));
+          }
+        });
       })
       .catch(function(finalErr) {
         setGeneratingState(false);
         var displayMsg = finalErr.message || '请求失败';
         if (debugBox) {
           debugBox.style.display = 'block';
-          debugBox.textContent = '【中转返回报错】' + displayMsg;
+          debugBox.textContent = '【排查提示】' + displayMsg;
         }
-        if (window.AppNav) AppNav.showToast('绘图失败，原因已显示在下方');
+        if (window.AppNav) AppNav.showToast('绘图遇到阻碍，请看下方提示');
       });
     });
 
@@ -363,6 +383,12 @@
     var stage = document.getElementById('aiPreviewStage');
     var resultImg = document.getElementById('aiResultImg');
     if (stage && resultImg) {
+      resultImg.onload = function() {
+        stage.classList.add('has-result');
+      };
+      resultImg.onerror = function() {
+        stage.classList.add('has-result');
+      };
       resultImg.src = url;
       stage.classList.add('has-result');
     }
