@@ -341,17 +341,17 @@
       }
 
       var currentSnapshot = JSON.stringify({
-        name: (document.getElementById('fieldName') ? document.getElementById('fieldName').value : '').trim().replace(/[✞✟✠]/g, ''),
-        gender: (document.getElementById('fieldGender') ? document.getElementById('fieldGender').value : '').trim(),
-        age: (document.getElementById('fieldAge') ? document.getElementById('fieldAge').value : '').trim(),
-        height: (document.getElementById('fieldHeight') ? document.getElementById('fieldHeight').value : '').trim(),
-        birthday: (document.getElementById('fieldBirthday') ? document.getElementById('fieldBirthday').value : '').trim(),
-        zodiac: (document.getElementById('fieldZodiac') ? document.getElementById('fieldZodiac').value : '').trim(),
-        appearance: (document.getElementById('fieldAppearance') ? document.getElementById('fieldAppearance').value : '').trim(),
-        personality: (document.getElementById('fieldPersonality') ? document.getElementById('fieldPersonality').value : '').trim(),
-        tags: (document.getElementById('fieldTags') ? document.getElementById('fieldTags').value : '').trim(),
-        hobbies: (document.getElementById('fieldHobbies') ? document.getElementById('fieldHobbies').value : '').trim(),
-        background: (document.getElementById('fieldBackground') ? document.getElementById('fieldBackground').value : '').trim()
+        name: (document.getElementById('fieldName') ? document.getElementById('fieldName').value : '').replace(/[✞✟✠]/g, ''),
+        gender: (document.getElementById('fieldGender') ? document.getElementById('fieldGender').value : ''),
+        age: (document.getElementById('fieldAge') ? document.getElementById('fieldAge').value : ''),
+        height: (document.getElementById('fieldHeight') ? document.getElementById('fieldHeight').value : ''),
+        birthday: (document.getElementById('fieldBirthday') ? document.getElementById('fieldBirthday').value : ''),
+        zodiac: (document.getElementById('fieldZodiac') ? document.getElementById('fieldZodiac').value : ''),
+        appearance: (document.getElementById('fieldAppearance') ? document.getElementById('fieldAppearance').value : ''),
+        personality: (document.getElementById('fieldPersonality') ? document.getElementById('fieldPersonality').value : ''),
+        tags: (document.getElementById('fieldTags') ? document.getElementById('fieldTags').value : ''),
+        hobbies: (document.getElementById('fieldHobbies') ? document.getElementById('fieldHobbies').value : ''),
+        background: (document.getElementById('fieldBackground') ? document.getElementById('fieldBackground').value : '')
       });
 
       var isModified = (originalSnapshot !== currentSnapshot);
@@ -359,22 +359,22 @@
       if (isModified) {
         var shouldSave = confirm('检测到内容已修改，是否保存？');
         if (shouldSave) {
-          var nameVal = (document.getElementById('fieldName') ? document.getElementById('fieldName').value : '').trim().replace(/[✞✟✠]/g, '');
-          if (!nameVal) {
+          var nameVal = (document.getElementById('fieldName') ? document.getElementById('fieldName').value : '').replace(/[✞✟✠]/g, '');
+          if (!nameVal.trim()) {
             AppNav.showToast('姓名不能为空哦');
             return;
           }
           cur.name = nameVal;
-          cur.gender = document.getElementById('fieldGender').value.trim() || '女';
-          cur.age = document.getElementById('fieldAge').value.trim() || '18';
-          cur.height = document.getElementById('fieldHeight').value.trim() || '165cm';
-          cur.birthday = document.getElementById('fieldBirthday').value.trim();
-          cur.zodiac = document.getElementById('fieldZodiac').value.trim() || '天秤座';
-          cur.appearance = document.getElementById('fieldAppearance').value.trim();
-          cur.personality = document.getElementById('fieldPersonality').value.trim();
-          cur.tags = document.getElementById('fieldTags').value.trim();
-          cur.hobbies = document.getElementById('fieldHobbies').value.trim();
-          cur.background = document.getElementById('fieldBackground').value.trim();
+          cur.gender = document.getElementById('fieldGender').value || '女';
+          cur.age = document.getElementById('fieldAge').value || '18';
+          cur.height = document.getElementById('fieldHeight').value || '165cm';
+          cur.birthday = document.getElementById('fieldBirthday').value;
+          cur.zodiac = document.getElementById('fieldZodiac').value || '天秤座';
+          cur.appearance = document.getElementById('fieldAppearance').value;
+          cur.personality = document.getElementById('fieldPersonality').value;
+          cur.tags = document.getElementById('fieldTags').value;
+          cur.hobbies = document.getElementById('fieldHobbies').value;
+          cur.background = document.getElementById('fieldBackground').value;
 
           if (cur.birthday) {
             var cleanDigits = cur.birthday.replace(/[^0-9]/g, '');
@@ -481,23 +481,23 @@
     }
 
     document.getElementById('generateCardBtn').addEventListener('click', function() {
-      var nameVal = document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, '');
-      if (!nameVal) {
+      var nameVal = document.getElementById('fieldName').value.replace(/[✞✟✠]/g, '');
+      if (!nameVal.trim()) {
         AppNav.showToast('墨墨，请在第一栏写下姓名哦');
         return;
       }
 
       cur.name = nameVal;
-      cur.gender = document.getElementById('fieldGender').value.trim() || '女';
-      cur.age = document.getElementById('fieldAge').value.trim() || '18';
-      cur.height = document.getElementById('fieldHeight').value.trim() || '165cm';
-      cur.birthday = document.getElementById('fieldBirthday').value.trim();
-      cur.zodiac = document.getElementById('fieldZodiac').value.trim() || '天秤座';
-      cur.appearance = document.getElementById('fieldAppearance').value.trim();
-      cur.personality = document.getElementById('fieldPersonality').value.trim();
-      cur.tags = document.getElementById('fieldTags').value.trim();
-      cur.hobbies = document.getElementById('fieldHobbies').value.trim();
-      cur.background = document.getElementById('fieldBackground').value.trim();
+      cur.gender = document.getElementById('fieldGender').value || '女';
+      cur.age = document.getElementById('fieldAge').value || '18';
+      cur.height = document.getElementById('fieldHeight').value || '165cm';
+      cur.birthday = document.getElementById('fieldBirthday').value;
+      cur.zodiac = document.getElementById('fieldZodiac').value || '天秤座';
+      cur.appearance = document.getElementById('fieldAppearance').value;
+      cur.personality = document.getElementById('fieldPersonality').value;
+      cur.tags = document.getElementById('fieldTags').value;
+      cur.hobbies = document.getElementById('fieldHobbies').value;
+      cur.background = document.getElementById('fieldBackground').value;
 
       if (cur.birthday) {
         var cleanDigits = cur.birthday.replace(/[^0-9]/g, '');
@@ -571,7 +571,7 @@
       return;
     }
 
-    if (cur.name) cur.name = cur.name.replace(/[✞✟✠]/g, '').trim();
+    if (cur.name) cur.name = cur.name.replace(/[✞✟✠]/g, '');
 
     container.className = 'app-content archive-page-wrap';
     var hasPhotoClass = cur.photo ? ' has-img' : '';
@@ -622,7 +622,7 @@
   }
 
   // ==========================================
-  // 渲染 5 种模板（支持换行排版显示）
+  // 渲染 5 种模板（空格与换行 100% 忠实保留）
   // ==========================================
   function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
     if (tplIdx === 0) {
@@ -714,16 +714,42 @@
 
     var cardBox = document.getElementById('cardContainerBox');
     if (cardBox) {
-      var touchStartX = 0, touchEndX = 0;
+      var touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
+      var isInputTarget = false;
+
       cardBox.addEventListener('touchstart', function(e) {
+        var activeEl = document.activeElement;
+        if (activeEl && activeEl.isContentEditable) {
+          isInputTarget = true;
+          return;
+        }
+        if (e.target.closest('[contenteditable="true"]')) {
+          isInputTarget = true;
+          return;
+        }
+
+        isInputTarget = false;
         touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchEndX = touchStartX;
+        touchEndY = touchStartY;
       }, { passive: true });
-      cardBox.addEventListener('touchend', function(e) {
-        touchEndX = e.changedTouches[0].clientX;
-        var diff = touchEndX - touchStartX;
-        if (Math.abs(diff) > 50) {
+
+      cardBox.addEventListener('touchmove', function(e) {
+        if (isInputTarget) return;
+        touchEndX = e.touches[0].clientX;
+        touchEndY = e.touches[0].clientY;
+      }, { passive: true });
+
+      cardBox.addEventListener('touchend', function() {
+        if (isInputTarget) return;
+
+        var diffX = touchEndX - touchStartX;
+        var diffY = touchEndY - touchStartY;
+
+        if (Math.abs(diffX) > 65 && Math.abs(diffX) > Math.abs(diffY) * 2) {
           syncDirectEdits(cur);
-          if (diff < 0) {
+          if (diffX < 0) {
             currentTplIdx = (currentTplIdx + 1) % 5;
           } else {
             currentTplIdx = (currentTplIdx - 1 + 5) % 5;
@@ -816,12 +842,14 @@
           reader.onload = function(e) {
             if (window.AppCropper) {
               AppCropper.open(e.target.result, { aspectRatio: 1 / 1.35 }, function(croppedData) {
+                syncDirectEdits(cur); // 重点：上传图片前先无损抓取并保存当前界面的空格与文字
                 cur.photo = croppedData;
                 saveCurrentToDB(function() {
                   renderStep3();
                 });
               });
             } else {
+              syncDirectEdits(cur);
               cur.photo = e.target.result;
               saveCurrentToDB(function() {
                 renderStep3();
@@ -839,7 +867,6 @@
     bindLiveEdits(cur);
   }
 
-  // 绑定卡片上所有可编辑文本的失焦自动存库
   function bindLiveEdits(cur) {
     var editables = document.querySelectorAll('.arch-card-wrapper [contenteditable="true"]');
     editables.forEach(function(el) {
@@ -850,7 +877,7 @@
     });
   }
 
-  // 重点：使用 innerText 提取文本，完整保留回车与换行符
+  // 重点：使用 innerText 提取，绝不削减任何首尾或连续空格
   function getCleanText(node) {
     if (!node) return '';
     var text = node.innerText !== undefined ? node.innerText : node.textContent;
@@ -866,19 +893,22 @@
     var tag2Node = document.getElementById('cardTag2');
     var tag3Node = document.getElementById('cardTag3');
 
-    if (nameNode) cur.name = getCleanText(nameNode).replace(/[✞✟✠]/g, '').trim();
+    if (nameNode) cur.name = getCleanText(nameNode).replace(/[✞✟✠]/g, '');
     if (bioNode) cur['bio' + currentTplIdx] = getCleanText(bioNode);
-    if (serialNode) cur.serial = getCleanText(serialNode).trim();
-    if (userIdNode) cur.userid = getCleanText(userIdNode).trim();
-    if (tag1Node) cur.tag1 = getCleanText(tag1Node).trim();
-    if (tag2Node) cur.tag2 = getCleanText(tag2Node).trim();
-    if (tag3Node) cur.tag3 = getCleanText(tag3Node).trim();
+    if (serialNode) cur.serial = getCleanText(serialNode);
+    if (userIdNode) cur.userid = getCleanText(userIdNode);
+    if (tag1Node) cur.tag1 = getCleanText(tag1Node);
+    if (tag2Node) cur.tag2 = getCleanText(tag2Node);
+    if (tag3Node) cur.tag3 = getCleanText(tag3Node);
   }
 
-  // 格式化换行输出
+  // 重点：把换行转为 <br>，同时把连续空格转为 &nbsp; 保证 HTML 绝对不吞空格
   function formatLineBreaks(str) {
     if (!str) return '';
-    return esc(str).replace(/\n/g, '<br>');
+    var safe = esc(str);
+    safe = safe.replace(/\n/g, '<br>');
+    safe = safe.replace(/  /g, '&nbsp;&nbsp;');
+    return safe;
   }
 
   function esc(str) {
@@ -887,3 +917,4 @@
   }
 
 })();
+
