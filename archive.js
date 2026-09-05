@@ -734,57 +734,38 @@
       renderStep3();
     });
 
-    // ============ 核心：严格防误触手势拦截器 ============
-    var cardBox = document.getElementById('cardContainerBox');
-    if (cardBox) {
-      var touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
-      var isInputActive = false;
+      // 彻底移除滑动切卡冲突，全力支持右滑丝滑返回桌面首页！
+    var screenWrapper = container.querySelector('.archive-page-screen') || container;
+    var touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
 
-      cardBox.addEventListener('touchstart', function(e) {
-        // 只要墨墨当前处于任何输入焦点，或者点在文字编辑框上，100% 锁死禁止翻页
-        var activeEl = document.activeElement;
-        if (activeEl && (activeEl.isContentEditable || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-          isInputActive = true;
-          return;
-        }
-        if (e.target.closest('[contenteditable="true"]')) {
-          isInputActive = true;
-          return;
-        }
+    screenWrapper.addEventListener('touchstart', function(e) {
+      // 如果正在打字，不触发返回
+      var activeEl = document.activeElement;
+      if (activeEl && (activeEl.isContentEditable || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+      if (e.target.closest('[contenteditable="true"]')) return;
 
-        isInputActive = false;
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        touchEndX = touchStartX;
-        touchEndY = touchStartY;
-      }, { passive: true });
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchEndX = touchStartX;
+      touchEndY = touchStartY;
+    }, { passive: true });
 
-      cardBox.addEventListener('touchmove', function(e) {
-        if (isInputActive) return;
-        touchEndX = e.touches[0].clientX;
-        touchEndY = e.touches[0].clientY;
-      }, { passive: true });
+    screenWrapper.addEventListener('touchmove', function(e) {
+      touchEndX = e.touches[0].clientX;
+      touchEndY = e.touches[0].clientY;
+    }, { passive: true });
 
-      cardBox.addEventListener('touchend', function() {
-        // 输入状态下彻底无视一切滑动手势
-        if (isInputActive) return;
-
-        var diffX = touchEndX - touchStartX;
-        var diffY = touchEndY - touchStartY;
-
-               // 平时只要轻扫 35px 且横向大于纵向，立刻丝滑翻页！
-        if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
-          syncDirectEdits(cur);
-          if (diffX < 0) {
-            currentTplIdx = (currentTplIdx + 1) % 5;
-          } else {
-            currentTplIdx = (currentTplIdx - 1 + 5) % 5;
-          }
-          cur.tplIdx = currentTplIdx;
-          saveCurrentToDB();
-          renderStep3();
-        }
-      }, { passive: true });
+    screenWrapper.addEventListener('touchend', function() {
+      var diffX = touchEndX - touchStartX;
+      var diffY = touchEndY - touchStartY;
+      // 只要向右划动超过 45px 且横向大于纵向，立刻保存并返回桌面
+      if (diffX > 45 && Math.abs(diffX) > Math.abs(diffY)) {
+        syncDirectEdits(cur);
+        saveCurrentToDB(function() {
+          if (window.AppNav) AppNav.showPage('home');
+        });
+      }
+    }, { passive: true });
     }
 
     document.getElementById('dockEditBtn').addEventListener('click', function() {
