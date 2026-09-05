@@ -11,6 +11,7 @@
 .t1-bio, .t2-bio, .t3-bio, .t4-bio, .t5-sub-cn {
   white-space: pre-wrap !important; /* 开启严密空格与换行支持 */
 }
+
 /* ========== 彻底消灭所有可编辑文字的蓝色外框与背景 ========== */
 .arch-card-wrapper [contenteditable="true"],
 [contenteditable="true"] {
@@ -22,7 +23,7 @@
 .arch-card-wrapper [contenteditable="true"]:focus,
 [contenteditable="true"]:focus {
   outline: none !important;
-  background: transparent !important; /* 彻底移除蓝色背景块 */
+  background: transparent !important;
   box-shadow: none !important;
   border-color: inherit !important;
 }
@@ -55,32 +56,26 @@
 .archive-page-screen {
   width: 100%;
   min-height: 100%;
-  padding: calc(12px + var(--safe-top)) 16px calc(14px + var(--safe-bottom));
+  padding: calc(12px + var(--safe-top)) 16px calc(20px + var(--safe-bottom));
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 }
 
-/* 第 1 个底页：纯粹高级冷浅灰（彻底去除偏蓝光晕） */
+/* 5 种底页配色风格 */
 .archive-page-screen.screen-bg-0 {
   background-color: #f2f4f7 !important;
   background-image: linear-gradient(180deg, #f7f9fb 0%, #ebedf0 100%) !important;
 }
-
-/* 第 2 个底页：浅灰光晕背景 */
 .archive-page-screen.screen-bg-1 {
   background-color: #eef2f7 !important;
   background-image: 
     radial-gradient(circle at 20% 15%, rgba(176, 204, 232, 0.45) 0%, transparent 40%),
     radial-gradient(circle at 80% 85%, rgba(136, 171, 218, 0.35) 0%, transparent 40%) !important;
 }
-
-/* 第 3 个底页：实心纯白色 */
 .archive-page-screen.screen-bg-2 {
   background: #ffffff !important;
 }
-
-/* 第 4 个底页：实心灰粉色 */
 .archive-page-screen.screen-bg-3 {
   background-color: #f2e8eb !important;
   background-image: 
@@ -88,10 +83,17 @@
     radial-gradient(#e2d3d8 1.2px, transparent 1.2px) !important;
   background-size: 100% 100%, 16px 16px !important;
 }
-
-/* 第 5 个底页：实心纯白色 */
 .archive-page-screen.screen-bg-4 {
   background: #ffffff !important;
+}
+
+/* 角色端暗夜底色联动 */
+.archive-page-screen.char-screen-bg-3 {
+  background-color: #08090d !important;
+  background-image: 
+    radial-gradient(circle at 50% 15%, rgba(136, 171, 218, 0.15) 0%, transparent 60%),
+    radial-gradient(rgba(136, 171, 218, 0.08) 1.2px, transparent 1.2px) !important;
+  background-size: 100% 100%, 16px 16px !important;
 }
 
 .archive-showcase-wrap {
@@ -141,6 +143,8 @@
   height: 120px;
   color: rgba(20, 22, 25, 0.16);
 }
+.char-screen-bg-3 .celestial-crescent-emblem { color: rgba(136, 171, 218, 0.22); }
+
 .celestial-crescent-emblem svg {
   width: 100%;
   height: 100%;
@@ -160,6 +164,7 @@
   border: 1px solid rgba(20, 22, 25, 0.08);
   border-radius: 20px;
 }
+.char-screen-bg-3 .astrolabe-poly { border-color: rgba(136, 171, 218, 0.15); }
 .astrolabe-poly::after {
   content: '';
   position: absolute;
@@ -175,6 +180,7 @@
   color: rgba(20, 22, 25, 0.4);
   line-height: 1;
 }
+.char-screen-bg-3 .art-star { color: rgba(136, 171, 218, 0.4); }
 .art-star.s1 { top: 8px; left: 105px; font-size: 11px; }
 .art-star.s2 { top: 8px; right: 20px; font-size: 9px; }
 .art-star.s3 { bottom: 6px; left: 40%; font-size: 8px; }
@@ -214,6 +220,7 @@
   padding: 2px;
   margin-left: -4px;
 }
+.char-screen-bg-3 .arch-native-back { color: #f8fafc; }
 .arch-native-back:active { opacity: 0.5; }
 .arch-native-back svg {
   width: 24px;
@@ -239,6 +246,7 @@
   letter-spacing: 1px;
   color: var(--dark-pure);
 }
+.char-screen-bg-3 .archive-title { color: #ffffff; }
 
 .archive-header-right {
   display: flex;
@@ -265,17 +273,13 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.03);
   transition: all 0.15s ease;
 }
-.arch-tool-pill:active {
-  background: #e2e6ea;
-  transform: scale(0.96);
+.char-screen-bg-3 .arch-tool-pill {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.18);
 }
-.arch-tool-pill svg {
-  width: 12px;
-  height: 12px;
-  stroke: currentColor;
-  stroke-width: 2.2;
-  fill: none;
-}
+.arch-tool-pill:active { background: #e2e6ea; transform: scale(0.96); }
+.arch-tool-pill svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.2; fill: none; }
 
 .archive-nav-capsule {
   display: flex;
@@ -291,6 +295,10 @@
   position: relative;
   overflow: hidden;
   z-index: 1;
+}
+.char-screen-bg-3 .archive-nav-capsule {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .nav-glider-pill {
@@ -335,6 +343,7 @@
 .archive-full-card-box {
   width: 100%;
   max-width: 370px;
+  height: 520px;
   display: flex;
   justify-content: center;
   touch-action: pan-y;
@@ -832,7 +841,7 @@
   width: 100%; background: linear-gradient(90deg, rgba(246, 237, 240, 0.2), rgba(235, 219, 224, 0.8), rgba(246, 237, 240, 0.2));
   border-top: 1px solid #ebdbe0; border-bottom: 1px solid #ebdbe0; padding: 4px 0;
   display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 9.5px;
-  font-weight: 800; letter-spacing: 3px; color: #966b7a; text-transform: uppercase;
+  font-weight: 800; letter-spacing: 2px; color: #966b7a; text-transform: uppercase;
 }
 .t4-stats-matrix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; width: 100%; }
 .t4-stat-box {
@@ -1004,7 +1013,9 @@
   letter-spacing: 0.5px;
 }
 
-/* ========== 底部吸底控制坞 ========== */
+/* ======================================================== */
+/* 底部吸底控制坞（恢复正常安全层级·绝不遮挡抽屉弹窗）       */
+/* ======================================================== */
 .archive-bottom-dock {
   display: flex;
   align-items: center;
@@ -1013,9 +1024,9 @@
   width: 100%;
   max-width: 360px;
   padding-top: 6px;
-  position: relative !important;
-  z-index: 50 !important;
-  pointer-events: auto !important;
+  position: relative;
+  z-index: 10; /* 合理层级：在页面上正常交互，同时低于 2500 的抽屉遮罩 */
+  pointer-events: auto;
 }
 
 .dock-arrow-btn {
@@ -1197,25 +1208,25 @@
 .journal-seal-stamp { width: 38px; height: 38px; border: 1.5px solid #18191c; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 6.5px; font-weight: 900; letter-spacing: 0.5px; transform: rotate(-8deg); color: #18191c; opacity: 0.85; }
 .seal-star { font-size: 8px; line-height: 1; }
 
-/* ========== 用户档案抽屉 ========== */
-.user-drawer-mask { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 2500; display: none; }
-.user-drawer-mask.show { display: block; }
-.user-drawer-card { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; border-radius: 20px 20px 0 0; padding: 18px 18px calc(20px + var(--safe-bottom)); z-index: 2600; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); max-height: 65vh; display: flex; flex-direction: column; }
-.user-drawer-card.show { transform: translateY(0); }
-.drawer-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.06); }
-.drawer-title { font-size: 15px; font-weight: 800; color: #18191c; }
-.drawer-close-btn { background: none; border: none; font-size: 15px; color: #94a3b8; cursor: pointer; padding: 3px; }
-.drawer-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px 0 4px; }
-.drawer-user-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: #f8fafc; border: 1px solid rgba(0,0,0,0.04); cursor: pointer; }
-.drawer-user-item.active { background: #f1f5f9; border-color: #18191c; }
-.drawer-avatar { width: 38px; height: 38px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: #64748b; overflow: hidden; font-size: 13px; flex-shrink: 0; }
-.drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.drawer-user-info { flex: 1; min-width: 0; }
-.drawer-user-name { font-size: 13.5px; font-weight: 800; color: #18191c; display: flex; align-items: center; gap: 5px; }
-.drawer-active-tag { font-size: 8.5px; font-weight: 700; color: #ffffff; background: #18191c; padding: 1px 5px; border-radius: 3px; }
-.drawer-user-date { font-size: 9.5px; color: #94a3b8; font-family: monospace; margin-top: 1px; }
-.drawer-del-btn { background: none; border: none; color: #ef4444; font-size: 11.5px; font-weight: 600; padding: 5px 8px; cursor: pointer; border-radius: 5px; }
-.drawer-del-btn:active { background: rgba(239, 68, 68, 0.1); }
+/* ========== 用户/角色档案抽屉（保持 2500/2600 盖住所有底层内容） ========== */
+.user-drawer-mask, .char-drawer-mask { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 2500; display: none; }
+.user-drawer-mask.show, .char-drawer-mask.show { display: block; }
+.user-drawer-card, .char-drawer-card { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; border-radius: 20px 20px 0 0; padding: 18px 18px calc(20px + var(--safe-bottom)); z-index: 2600; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); max-height: 65vh; display: flex; flex-direction: column; }
+.user-drawer-card.show, .char-drawer-card.show { transform: translateY(0); }
+.drawer-header, .char-drawer-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+.drawer-title, .char-drawer-title { font-size: 15px; font-weight: 800; color: #18191c; }
+.drawer-close-btn, .char-drawer-close { background: none; border: none; font-size: 15px; color: #94a3b8; cursor: pointer; padding: 3px; }
+.drawer-list, .char-drawer-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px 0 4px; }
+.drawer-user-item, .char-drawer-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: #f8fafc; border: 1px solid rgba(0,0,0,0.04); cursor: pointer; }
+.drawer-user-item.active, .char-drawer-item.active { background: #f1f5f9; border-color: #18191c; }
+.drawer-avatar, .char-drawer-avatar { width: 38px; height: 38px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: #64748b; overflow: hidden; font-size: 13px; flex-shrink: 0; }
+.drawer-avatar img, .char-drawer-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.drawer-user-info, .char-drawer-info { flex: 1; min-width: 0; }
+.drawer-user-name, .char-drawer-name { font-size: 13.5px; font-weight: 800; color: #18191c; display: flex; align-items: center; gap: 5px; }
+.drawer-active-tag, .char-active-tag { font-size: 8.5px; font-weight: 700; color: #ffffff; background: #18191c; padding: 1px 5px; border-radius: 3px; }
+.drawer-user-date, .char-drawer-date { font-size: 9.5px; color: #94a3b8; font-family: monospace; margin-top: 1px; }
+.drawer-del-btn, .char-drawer-del { background: none; border: none; color: #ef4444; font-size: 11.5px; font-weight: 600; padding: 5px 8px; cursor: pointer; border-radius: 5px; }
+.drawer-del-btn:active, .char-drawer-del:active { background: rgba(239, 68, 68, 0.1); }
 
 /* 02-05 扩大编辑按钮样式 */
 .expand-edit-btn {
@@ -1250,7 +1261,7 @@
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  z-index: 9999;
+  z-index: 3000;
   display: none;
   align-items: flex-end;
   justify-content: center;
