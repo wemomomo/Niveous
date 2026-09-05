@@ -1,3 +1,4 @@
+
 (function(){
   'use strict';
 
@@ -57,293 +58,6 @@
 
   window.AppDB = { open: openDB, save: dbSave, get: dbGet, delete: dbDelete };
 
-  // ============ 跨沙盒协议级 Cookie 读取工具 ============
-  function parseServerCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for (var i = 0; i < ca.length; i++) {
-      var c = ca[i];
-      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-      if (c.indexOf(nameEQ) === 0) {
-        try {
-          return JSON.parse(decodeURIComponent(c.substring(nameEQ.length, c.length)));
-        } catch(e) {
-          return decodeURIComponent(c.substring(nameEQ.length, c.length));
-        }
-      }
-    }
-    return null;
-  }
-
-  function getGlobalSession() {
-    try {
-      var token = localStorage.getItem('app_auth_token');
-      var info = localStorage.getItem('app_user_info');
-      if (token && info) {
-        return { token: token, userInfo: JSON.parse(info) };
-      }
-    } catch(e) {}
-
-    var session = parseServerCookie('niveous_session');
-    if (session && session.token && session.username) {
-      return {
-        token: session.token,
-        userInfo: { username: session.username }
-      };
-    }
-
-    return null;
-  }
-
-  function clearAllAuth() {
-    try {
-      localStorage.removeItem('app_auth_token');
-      localStorage.removeItem('app_user_info');
-    } catch(e) {}
-    document.cookie = 'niveous_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-  }
-
-  // ============ 纯硬件设备指纹 ============
-  function getStableDeviceId(callback) {
-    var cookieDev = parseServerCookie('shared_device_id');
-    if (cookieDev && typeof cookieDev === 'string') {
-      callback(cookieDev);
-      return;
-    }
-
-    try {
-      var localDev = localStorage.getItem('shared_device_id');
-      if (localDev) {
-        callback(localDev);
-        return;
-      }
-    } catch(e) {}
-
-    dbGet('app_device_fingerprint', function(savedId) {
-      if (savedId) {
-        try { localStorage.setItem('shared_device_id', savedId); } catch(e){}
-        callback(savedId);
-        return;
-      }
-
-      var components = [];
-      components.push(screen.width + 'x' + screen.height);
-      components.push(window.devicePixelRatio || 1);
-      components.push(new Date().getTimezoneOffset());
-      components.push(navigator.language || navigator.userLanguage || '');
-      components.push(navigator.hardwareConcurrency || 0);
-      components.push(navigator.maxTouchPoints || 0);
-      components.push(screen.colorDepth || 0);
-
-      var rawString = components.join('|');
-      var hash = simpleHash(rawString);
-      var deviceId = 'hw_' + hash.substring(0, 12);
-
-      dbSave('app_device_fingerprint', deviceId, function() {
-        try { localStorage.setItem('shared_device_id', deviceId); } catch(e){}
-        callback(deviceId);
-      });
-    });
-  }
-
-  function simpleHash(str) {
-    var hash = 0;
-    for (var i = 0; i < str.length; i++) {
-      var char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(36);
-  }
-
-  function getApiEndpoint(action) {
-    return '/api/' + action;
-  }
-
-  // ============ 登录门禁逻辑 ============
-  function checkActivation() {
-    var mask = document.getElementById('authGateMask');
-    var usernameInput = document.getElementById('authUsernameInput');
-    var passwordInput = document.getElementById('authPasswordInput');
-    var submitBtn = document.getElementById('authSubmitBtn');
-    if (!mask) return;
-
-    function onLoginVerified(token, userInfo) {
-      dbSave('app_auth_token', token, function() {
-        dbSave('app_user_info', userInfo, function() {
-          try {
-            localStorage.setItem('app_auth_token', token);
-            localStorage.setItem('app_user_info', JSON.stringify(userInfo));
-          } catch(e) {}
-          mask.classList.remove('show');
-        });
-      });
-    }
-
-    function kickOut(message) {
-      dbDelete('app_auth_token', function() {
-        dbDelete('app_user_info', function() {
-          clearAllAuth();
-          mask.classList.add('show');
-          if (message) showToast(message);
-        });
-      });
-    }
-
-    function realTimeVerify(userInfo) {
-      getStableDeviceId(function(deviceId) {
-        fetch(getApiEndpoint('login') + '?_t=' + Date.now(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json; charset=utf-8' },
-          body: JSON.stringify({
-            username: userInfo.username,
-            password: userInfo.password || '',
-            deviceId: deviceId,
-            verifyOnly: true
-          })
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-          if (!data.success) {
-            kickOut(data.message || '账号已失效');
-          }
-        })
-        .catch(function() {});
-      });
-    }
-
-    dbGet('app_user_info', function(userInfo) {
-      dbGet('app_auth_token', function(token) {
-        if (token && userInfo && userInfo.username) {
-          mask.classList.remove('show');
-          realTimeVerify(userInfo);
-        } else {
-          var session = getGlobalSession();
-          if (session && session.token && session.userInfo && session.userInfo.username) {
-            onLoginVerified(session.token, session.userInfo);
-            realTimeVerify(session.userInfo);
-          } else {
-            mask.classList.add('show');
-          }
-        }
-      });
-    });
-
-    document.addEventListener('visibilitychange', function() {
-      if (document.visibilityState === 'visible') {
-        dbGet('app_user_info', function(userInfo) {
-          if (userInfo && userInfo.username) realTimeVerify(userInfo);
-        });
-      }
-    });
-
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function() {
-        var username = (usernameInput.value || '').trim();
-        var password = (passwordInput.value || '').trim();
-        if (!username || !password) { showToast('请输入账号和密码'); return; }
-
-        getStableDeviceId(function(deviceId) {
-          submitBtn.disabled = true;
-          submitBtn.textContent = '进入中...';
-
-          fetch(getApiEndpoint('login') + '?_t=' + Date.now(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=utf-8' },
-            body: JSON.stringify({ username: username, password: password, deviceId: deviceId })
-          })
-          .then(function(res) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return res.json();
-          })
-          .then(function(data) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '进入';
-
-            if (data.success && data.token) {
-              var info = { username: data.username, password: password };
-              onLoginVerified(data.token, info);
-              showToast('欢迎回来');
-              window.dispatchEvent(new CustomEvent('loginSuccess'));
-            } else {
-              showToast(data.message || '登录失败');
-            }
-          })
-          .catch(function() {
-            submitBtn.disabled = false;
-            submitBtn.textContent = '进入';
-            showToast('登录失败，请重试');
-          });
-        });
-      });
-    }
-
-    var loginBox = document.getElementById('authLoginBox');
-    var registerBox = document.getElementById('authRegisterBox');
-    var goRegisterBtn = document.getElementById('authGoRegister');
-    var goLoginBtn = document.getElementById('authGoLogin');
-    var registerBtn = document.getElementById('authRegisterBtn');
-
-    if (goRegisterBtn) {
-      goRegisterBtn.addEventListener('click', function() {
-        loginBox.classList.add('auth-hidden');
-        registerBox.classList.remove('auth-hidden');
-      });
-    }
-
-    if (goLoginBtn) {
-      goLoginBtn.addEventListener('click', function() {
-        registerBox.classList.add('auth-hidden');
-        loginBox.classList.remove('auth-hidden');
-      });
-    }
-
-    if (registerBtn) {
-      registerBtn.addEventListener('click', function() {
-        var inviteCode = (document.getElementById('authInviteInput').value || '').trim();
-        var regUser = (document.getElementById('authRegUserInput').value || '').trim();
-        var regPass = (document.getElementById('authRegPassInput').value || '').trim();
-
-        if (!inviteCode || !regUser || !regPass) { showToast('请填写完整信息'); return; }
-
-        getStableDeviceId(function(deviceId) {
-          registerBtn.disabled = true;
-          registerBtn.textContent = '注册中...';
-
-          fetch(getApiEndpoint('register') + '?_t=' + Date.now(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=utf-8' },
-            body: JSON.stringify({
-              inviteCode: inviteCode,
-              username: regUser,
-              password: regPass,
-              deviceId: deviceId
-            })
-          })
-          .then(function(res) { return res.json(); })
-          .then(function(data) {
-            registerBtn.disabled = false;
-            registerBtn.textContent = '注册并登录';
-
-            if (data.success && data.token) {
-              var info = { username: data.username, password: regPass };
-              onLoginVerified(data.token, info);
-              showToast('注册成功，欢迎进入');
-              window.dispatchEvent(new CustomEvent('loginSuccess'));
-            } else {
-              showToast(data.message || '注册失败');
-            }
-          })
-          .catch(function() {
-            registerBtn.disabled = false;
-            registerBtn.textContent = '注册并登录';
-            showToast('网络异常，请重试');
-          });
-        });
-      });
-    }
-  }
-
   // ============ 页面外壳与导航 ============
   var dock = document.querySelector('.tab-bar');
   var dockEditBtn = document.querySelector('.tabbar-edit-btn');
@@ -380,6 +94,7 @@
       if (p.dataset.page === name) { p.classList.add('active'); p.style.transform = ''; }
       else { p.classList.remove('active'); }
     });
+    
     var desktopPagination = document.getElementById('desktopPagination');
     if (name === 'home') { 
       if (dock) dock.style.display = 'flex'; 
@@ -450,10 +165,24 @@
 
   function bindNavigation() {
     document.querySelectorAll('.tab-item').forEach(function(tab) {
-      tab.addEventListener('click', function() { showPage(this.dataset.tab); });
+      tab.addEventListener('click', function() { 
+        var targetTab = this.dataset.tab;
+        if (targetTab === 'offline') {
+          showToast('✦ 线下功能正在精心筹备中 ✦');
+          return;
+        }
+        if (targetTab === 'check') {
+          showToast('✦ 查岗系统正在研发中 ✦');
+          return;
+        }
+        showPage(targetTab); 
+      });
     });
+
     document.addEventListener('click', function(e) { var b = e.target.closest('[data-back]'); if (b) showPage(b.dataset.back); });
     document.addEventListener('click', function(e) { var g = e.target.closest('[data-goto]'); if (g) showPage(g.dataset.goto); });
+    
+    // 打开指定独立 App
     document.addEventListener('click', function(e) {
       var appItem = e.target.closest('[data-open-app]');
       if (appItem && appItem.dataset.openApp) {
@@ -461,12 +190,28 @@
       }
     });
 
-    // 智能右滑返回拦截（对档案展示区进行手势冲突保护，防止切卡片误退）
+    // 监听左侧图标点击（美化、世界书、论坛等开发中提示）
+    document.addEventListener('click', function(e) {
+      var coupleItem = e.target.closest('.couple-icon-item');
+      if (coupleItem && !coupleItem.dataset.openApp && !coupleItem.dataset.goto) {
+        var action = coupleItem.dataset.action;
+        if (action === 'beautify') {
+          showToast('✦ 美化功能正在精心筹备中 ✦');
+        } else if (action === 'worldbook') {
+          showToast('✦ 世界书系统正在载入中 ✦');
+        } else if (action === 'forum') {
+          showToast('✦ 论坛社区即将开放 ✦');
+        } else {
+          showToast('✦ 该功能正在精心研发中 ✦');
+        }
+      }
+    });
+
     document.querySelectorAll('.app-page').forEach(function(page) {
       var startX = 0, currentX = 0, isDragging = false;
       page.addEventListener('touchstart', function(e) { 
-        if (e.touches[0].clientX > 30) return; // 只有从最左侧边缘 30px 以内发起才算返回
-        if (e.target.closest('.archive-full-card-box')) return; // 处于卡片区则不触发全页后退
+        if (e.touches[0].clientX > 40) return; 
+        if (page.dataset.page === 'archive') return; // 档案页由专属逻辑接管
         isDragging = true; 
         startX = e.touches[0].clientX; 
         page.style.transition = 'none'; 
@@ -483,7 +228,7 @@
         isDragging = false;
         page.style.transition = 'transform 0.3s cubic-bezier(0.2,0.8,0.2,1)';
         var backBtn = page.querySelector('[data-back]');
-        if (currentX > window.innerWidth*0.35 && backBtn) { 
+        if (currentX > window.innerWidth*0.3 && backBtn) { 
           showPage(backBtn.dataset.back); 
           setTimeout(function() { page.style.transform = ''; }, 300); 
         } else { 
@@ -674,12 +419,25 @@
   }
   window.PhotoAction={show:function(onSelect,onDelete){photoActionOnSelect=onSelect;photoActionOnDelete=onDelete;photoActionMask.classList.add('show');photoActionCard.classList.add('show');}};
 
-  // ============ Toast ============
+  // ============ Toast（智能刷新·柔和冰蓝碎花框） ============
+  var currentToastTimer = null;
   function showToast(message) {
-    var toast=document.createElement('div'); toast.className='toast-message'; toast.textContent=message;
+    var existing = document.querySelector('.toast-message');
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+      clearTimeout(currentToastTimer);
+    }
+    var toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.textContent = message;
     document.body.appendChild(toast);
-    setTimeout(function(){toast.classList.add('show');},10);
-    setTimeout(function(){toast.classList.remove('show');setTimeout(function(){document.body.removeChild(toast);},300);},2000);
+    setTimeout(function(){ toast.classList.add('show'); }, 10);
+    currentToastTimer = setTimeout(function(){
+      toast.classList.remove('show');
+      setTimeout(function(){
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 300);
+    }, 2000);
   }
 
   window.AppNav = { showPage: showPage, showToast: showToast };
@@ -690,7 +448,6 @@
     initAppShells();
     setupDesktopSlider();
     bindNavigation();
-    checkActivation();
   });
 
 })();
