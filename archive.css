@@ -469,7 +469,7 @@
 .t2-frame {
   position: relative; border: 1px solid rgba(30, 36, 45, 0.15);
   background: #ffffff; border-radius: 20px; padding: 11px 16px;
-  display: flex; flex-direction: column; gap: 6px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 8px; overflow: hidden;
 }
 .t2-cross {
   position: absolute; font-size: 11px; color: #94a3b8; font-weight: 300; pointer-events: none; z-index: 10;
@@ -486,7 +486,7 @@
 /* 第 2 款相框：固定高度 */
 .t2-photo-stage {
   width: 100%;
-  height: 350px;
+  height: 345px;
   border-radius: 14px;
   position: relative;
   overflow: hidden;
@@ -516,7 +516,7 @@
 .t2-wave-bar:nth-child(3) { height: 6px; animation-delay: 0.4s; }
 @keyframes waveBounce { 0% { transform: scaleY(0.4); } 100% { transform: scaleY(1.2); } }
 
-.t2-footer { display: flex; flex-direction: column; gap: 10px; padding: 4px 4px 0; }
+.t2-footer { display: flex; flex-direction: column; gap: 8px; padding: 4px 4px 0; }
 .t2-user-row { display: flex; justify-content: space-between; align-items: center; }
 .t2-username { font-size: 20px; font-weight: 800; color: #1e242d; letter-spacing: 0.5px; }
 .t2-stars { color: #7fa5d1; font-size: 13px; letter-spacing: 2px; }
