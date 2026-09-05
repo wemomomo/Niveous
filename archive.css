@@ -1,3 +1,20 @@
+
+/* ========== 彻底消灭所有可编辑文字的蓝色外框与背景 ========== */
+.arch-card-wrapper [contenteditable="true"],
+[contenteditable="true"] {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-user-modify: read-write-plaintext-only;
+}
+
+.arch-card-wrapper [contenteditable="true"]:focus,
+[contenteditable="true"]:focus {
+  outline: none !important;
+  background: transparent !important; /* 彻底移除蓝色背景块 */
+  box-shadow: none !important;
+  border-color: inherit !important;
+}
+
 /* ========== 彻底隐藏全局 app-header ========== */
 [data-page="archive"] .app-header {
   display: none !important;
