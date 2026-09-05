@@ -296,9 +296,9 @@ html, body {
 .photo-action-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: transparent !important;       /* 彻底变透明，无发黑发暗 */
+  backdrop-filter: none !important;          /* 移除毛玻璃模糊 */
+  -webkit-backdrop-filter: none !important;
   z-index: 11000;
   display: none;
 }
