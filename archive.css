@@ -40,9 +40,12 @@
     radial-gradient(circle at 80% 85%, rgba(136, 171, 218, 0.35) 0%, transparent 40%) !important;
 }
 
-/* 第 2 个底页：实心纯白色 */
+/* 第 2 个底页：与第 1 张完全相同的浅灰光晕背景 */
 .archive-page-screen.screen-bg-1 {
-  background: #ffffff !important;
+  background-color: #eef2f7 !important;
+  background-image: 
+    radial-gradient(circle at 20% 15%, rgba(176, 204, 232, 0.45) 0%, transparent 40%),
+    radial-gradient(circle at 80% 85%, rgba(136, 171, 218, 0.35) 0%, transparent 40%) !important;
 }
 
 /* 第 3 个底页：实心纯白色 */
@@ -397,18 +400,16 @@
 /* ======================================================== */
 /* 风格 2：双对角冰蓝缎带亚克力                             */
 /* ======================================================== */
+/* ========== 第二张卡片：100% 还原最初纯白半透明亚克力 ========== */
 .t2-wrapper {
   width: 100%;
-  background: 
-    radial-gradient(circle at 85% 15%, rgba(136, 171, 218, 0.45) 0%, transparent 55%),
-    radial-gradient(circle at 15% 85%, rgba(160, 190, 225, 0.35) 0%, transparent 60%),
-    linear-gradient(145deg, #e3ebf5 0%, #cfdceb 50%, #b8cde3 100%);
+  background: rgba(255, 255, 255, 0.9) !important;
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   border-radius: 28px;
   padding: 18px 18px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 25px 60px rgba(70, 95, 125, 0.22), inset 0 1px 3px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 25px 60px rgba(50, 75, 105, 0.18), inset 0 1px 2px #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -429,14 +430,17 @@
   text-align: center; padding: 6px 0; transform: rotate(45deg);
   box-shadow: 0 -3px 8px rgba(127, 165, 209, 0.35); z-index: 20; user-select: none;
 }
+
 .t2-top-ring {
   width: 32px;
   height: 8px;
-  background: #ffffff;
+  background: #cbd5e1 !important; /* 还原原本的高级温润灰底色 */
   border-radius: 4px;
-  margin: 0 auto -4px;
+  margin: 0 auto 6px !important; 
+  box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.25) !important; /* 还原内阴影，让它向下凹陷，像个真正的镂空圆孔 */
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+  border: none !important; /* 彻底去掉多余的白色边框 */
 }
 .t2-top-ring::after {
   content: none;
