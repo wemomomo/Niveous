@@ -187,7 +187,7 @@
       if (window.AppNav) AppNav.showPage('home');
     });
 
-        // 尚未建立用户面板：支持丝滑右滑返回桌面首页
+    // 尚未建立用户面板：支持丝滑右滑返回桌面首页
     var step1Panel = document.getElementById('archStep1');
     if (step1Panel) {
       var s1StartX = 0, s1StartY = 0, s1EndX = 0, s1EndY = 0;
@@ -206,12 +206,15 @@
       step1Panel.addEventListener('touchend', function() {
         var diffX = s1EndX - s1StartX;
         var diffY = s1EndY - s1StartY;
-        // 只要向右滑超过 40px 且横向滑动大于纵向，立刻返回桌面
         if (diffX > 40 && Math.abs(diffX) > Math.abs(diffY)) {
           if (window.AppNav) AppNav.showPage('home');
         }
       });
     }
+
+    document.getElementById('goToStep2Btn').addEventListener('click', function() {
+      createNewUser();
+    });
   }
 
   // ==========================================
@@ -607,7 +610,7 @@
       + '</div>'
       + '<div class="arch-header-right">'
       + '<button class="arch-tool-pill" id="actionNewBtn" type="button"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>'
-      + '<button class="arch-tool-pill" id="actionListBtn" type="button"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>用户列表 (' + userList.length + ')</span></button>'
+      + '<button class="arch-tool-pill" id="actionListBtn" type="button"><span>用户列表 (' + userList.length + ')</span></button>'
       + '</div>'
       + '</div>'
 
@@ -653,7 +656,7 @@
         + '<div class="t1-inner">'
         + '<div class="t1-header"><div><div class="t1-serial" id="cardSerial" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.serial) + '</div><div class="t1-title" contenteditable="true" spellcheck="false"><span>MEMORIES</span><span>✦</span></div></div><div class="t1-stamp" contenteditable="true" spellcheck="false">★ SPECIAL</div></div>'
         + '<div class="t1-body">'
-        + '<div class="t1-left-rail"><div class="t1-qr-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="15" y="15" width="5" height="5" fill="currentColor"/></svg></div><div class="t1-barcode-lines"><div class="t1-bline thick"></div><div class="t1-bline thin"></div><div class="t1-bline"></div><div class="t1-bline thick"></div><div class="t1-bline"></div><div class="t1-bline thin"></div><div class="t1-bline thick"></div></div><div class="t1-vertical-code" contenteditable="true" spellcheck="false">LUCKY-TODAY</div></div>'
+        + '<div class="t1-left-rail"><div class="t1-qr-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" width="1.5" fill="none"/><rect x="15" y="15" width="5" height="5" fill="currentColor"/></svg></div><div class="t1-barcode-lines"><div class="t1-bline thick"></div><div class="t1-bline thin"></div><div class="t1-bline"></div><div class="t1-bline thick"></div><div class="t1-bline"></div><div class="t1-bline thin"></div><div class="t1-bline thick"></div></div><div class="t1-vertical-code" contenteditable="true" spellcheck="false">LUCKY-TODAY</div></div>'
         + '<div class="t1-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
         + '<div class="t1-right-rail"><span class="t1-star">✦</span><span class="t1-dash"></span><span class="t1-rail-dot"></span><span class="t1-star">✧</span><span class="t1-rail-dot"></span><span class="t1-dash"></span><span class="t1-star">✦</span></div>'
         + '</div>'
@@ -734,12 +737,11 @@
       renderStep3();
     });
 
-      // 彻底移除滑动切卡冲突，全力支持右滑丝滑返回桌面首页！
+    // 彻底移除滑动切卡冲突，全力支持右滑丝滑返回桌面首页！
     var screenWrapper = container.querySelector('.archive-page-screen') || container;
     var touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
 
     screenWrapper.addEventListener('touchstart', function(e) {
-      // 如果正在打字，不触发返回
       var activeEl = document.activeElement;
       if (activeEl && (activeEl.isContentEditable || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
       if (e.target.closest('[contenteditable="true"]')) return;
@@ -758,7 +760,6 @@
     screenWrapper.addEventListener('touchend', function() {
       var diffX = touchEndX - touchStartX;
       var diffY = touchEndY - touchStartY;
-      // 只要向右划动超过 45px 且横向大于纵向，立刻保存并返回桌面
       if (diffX > 45 && Math.abs(diffX) > Math.abs(diffY)) {
         syncDirectEdits(cur);
         saveCurrentToDB(function() {
@@ -766,7 +767,6 @@
         });
       }
     }, { passive: true });
-    }
 
     document.getElementById('dockEditBtn').addEventListener('click', function() {
       syncDirectEdits(cur);
@@ -815,7 +815,7 @@
         });
       });
 
-            drawerCard.querySelectorAll('.drawer-del-btn').forEach(function(btn) {
+      drawerCard.querySelectorAll('.drawer-del-btn').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
           var delId = this.dataset.delId;
