@@ -7,7 +7,10 @@
   var currentRatio = '1:1';
   var isGenerating = false;
   var timerInterval = null;
-  var elapsedSeconds = 0;
+  var startTimestamp = 0;
+
+  var STORAGE_TASK_KEY = 'ai_image_active_task';
+  var STORAGE_LAST_RESULT_KEY = 'ai_image_last_result';
 
   function createModalDOM() {
     if (document.getElementById('aiImageModalOverlay')) return;
@@ -27,7 +30,7 @@
 
       + '<div class="ai-image-body">'
       
-      // 1. 模型选择/输入栏 (带极速 Flux / Imagen / Dalle 快捷标签)
+      // 1. 模型选择/输入栏
       + '<div style="display:flex; flex-direction:column; gap:6px; background:#f8fafc; padding:8px 10px; border-radius:12px; border:1px solid rgba(0,0,0,0.06);">'
       + '<div style="display:flex; justify-content:space-between; align-items:center;">'
       + '<span style="font-size:11px; font-weight:700; color:#64748b;">生图模型 (极速通道)</span>'
@@ -58,7 +61,7 @@
       + '</div>'
       + '</div>'
 
-      // 4. 图像生成展示舞台 (支持直接点击放大长按保存)
+      // 4. 图像生成展示舞台
       + '<div class="ai-preview-stage" id="aiPreviewStage" style="aspect-ratio:1/1;">'
       + '<img id="aiResultImg" src="" alt="AI生成图像" title="点击或长按可存储到手机相册">'
       + '<div class="ai-stage-empty">'
@@ -98,6 +101,7 @@
 
     document.body.appendChild(overlay);
     bindModalEvents();
+    restorePersistedResult();
   }
 
   function bindModalEvents() {
@@ -163,7 +167,6 @@
       });
     }
 
-    // 采用图片
     if (adoptBtn) {
       adoptBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
@@ -175,7 +178,6 @@
       });
     }
 
-    // 存入图床
     if (saveImgbedBtn) {
       saveImgbedBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
@@ -191,7 +193,6 @@
       });
     }
 
-    // 下载保存到手机相册
     if (downloadBtn) {
       downloadBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
@@ -199,7 +200,6 @@
       });
     }
 
-    // 点击图片也可以在新窗口打开或直接保存
     if (resultImg) {
       resultImg.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
@@ -208,7 +208,25 @@
     }
   }
 
-  // 苹果 iOS / 原生下载图片工具
+  // 页面前后台切换监听（防止切后台导致时钟冻结与结果丢失）
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      restorePersistedResult();
+      if (isGenerating && startTimestamp > 0) {
+        updateProgressStatus();
+      }
+    }
+  });
+
+  function restorePersistedResult() {
+    try {
+      var saved = localStorage.getItem(STORAGE_LAST_RESULT_KEY);
+      if (saved && !currentGeneratedUrl) {
+        showGeneratedResult(saved);
+      }
+    } catch(e){}
+  }
+
   function downloadImageToDevice(url) {
     if (url.indexOf('data:image') === 0) {
       var a = document.createElement('a');
@@ -221,7 +239,6 @@
       return;
     }
 
-    // 如果是远程 http url，转换成 blob 下载
     if (window.AppNav) AppNav.showToast('正在准备高清原图...');
     fetch(url)
       .then(function(res) { return res.blob(); })
@@ -237,13 +254,11 @@
         if (window.AppNav) AppNav.showToast('✦ 已保存至手机下载/相册 ✦');
       })
       .catch(function() {
-        // 如果跨域拦截，直接打开新标签页供长按存储
         window.open(url, '_blank');
         if (window.AppNav) AppNav.showToast('✦ 已打开大图，长按即可保存 ✦');
       });
   }
 
-  // 万能穿透提取器
   function deeplyExtractImage(obj) {
     if (!obj) return '';
 
@@ -284,7 +299,7 @@
     return '';
   }
 
-  // 双引擎极速生图
+  // 双引擎极速生图（持久化守护版）
   function executeDualEngineGeneration(prompt) {
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
     
@@ -306,6 +321,15 @@
     var chatUrl = rootUrl + '/chat/completions';
 
     setGeneratingState(true);
+
+    // 记录后台任务元数据
+    try {
+      localStorage.setItem(STORAGE_TASK_KEY, JSON.stringify({
+        prompt: prompt,
+        model: chosenModel,
+        time: Date.now()
+      }));
+    } catch(e){}
 
     // 引擎 1：标准生图
     fetch(imagesUrl, {
@@ -377,6 +401,7 @@
       })
       .catch(function(finalErr) {
         setGeneratingState(false);
+        try { localStorage.removeItem(STORAGE_TASK_KEY); } catch(e){}
         var displayMsg = finalErr.message || '请求失败';
         if (debugBox) {
           debugBox.style.display = 'block';
@@ -388,8 +413,25 @@
 
     function onSuccess(url) {
       setGeneratingState(false);
+      try {
+        localStorage.removeItem(STORAGE_TASK_KEY);
+        localStorage.setItem(STORAGE_LAST_RESULT_KEY, url);
+      } catch(e){}
       showGeneratedResult(url);
       if (window.AppNav) AppNav.showToast('✦ 绘制成功 ✦');
+    }
+  }
+
+  function updateProgressStatus() {
+    var statusText = document.getElementById('aiProgressStatusText');
+    if (!statusText || !startTimestamp) return;
+    var currentElapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+    if (currentElapsed < 5) {
+      statusText.textContent = '⚡ 正在极速连接画师... (' + currentElapsed + 's)';
+    } else if (currentElapsed < 15) {
+      statusText.textContent = '✨ 正在高精光影渲染... (' + currentElapsed + 's)';
+    } else {
+      statusText.textContent = '🎨 正在进行细节高清处理... (' + currentElapsed + 's)';
     }
   }
 
@@ -397,34 +439,22 @@
     isGenerating = generating;
     var stage = document.getElementById('aiPreviewStage');
     var startBtn = document.getElementById('aiStartGenBtn');
-    var statusText = document.getElementById('aiProgressStatusText');
     var resultActions = document.getElementById('aiResultActions');
     if (!stage || !startBtn) return;
 
     if (generating) {
-      elapsedSeconds = 0;
+      startTimestamp = Date.now();
       stage.classList.remove('has-result');
       stage.classList.add('is-generating');
       startBtn.disabled = true;
       startBtn.querySelector('span').textContent = '正在极速绘制中...';
       if (resultActions) resultActions.style.display = 'none';
 
-      if (statusText) statusText.textContent = '正在连接极速画师... (0s)';
-
+      updateProgressStatus();
       clearInterval(timerInterval);
-      timerInterval = setInterval(function() {
-        elapsedSeconds++;
-        if (statusText) {
-          if (elapsedSeconds < 5) {
-            statusText.textContent = '⚡ 正在极速连接画师... (' + elapsedSeconds + 's)';
-          } else if (elapsedSeconds < 12) {
-            statusText.textContent = '✨ 正在高精光影渲染... (' + elapsedSeconds + 's)';
-          } else {
-            statusText.textContent = '🎨 正在进行细节高清处理... (' + elapsedSeconds + 's)';
-          }
-        }
-      }, 1000);
+      timerInterval = setInterval(updateProgressStatus, 1000);
     } else {
+      startTimestamp = 0;
       clearInterval(timerInterval);
       stage.classList.remove('is-generating');
       startBtn.disabled = false;
@@ -455,7 +485,6 @@
   function openStudio(options, callback) {
     createModalDOM();
     currentCallback = callback || null;
-    currentGeneratedUrl = '';
     
     var overlay = document.getElementById('aiImageModalOverlay');
     var promptInput = document.getElementById('aiPromptInput');
@@ -465,11 +494,9 @@
     var debugBox = document.getElementById('aiDebugErrorBox');
 
     if (debugBox) { debugBox.style.display = 'none'; debugBox.textContent = ''; }
-    if (stage) stage.classList.remove('has-result', 'is-generating');
-    if (resultActions) resultActions.style.display = 'none';
 
-    if (promptInput) {
-      promptInput.value = (options && options.defaultPrompt) ? options.defaultPrompt : '';
+    if (promptInput && options && options.defaultPrompt) {
+      promptInput.value = options.defaultPrompt;
     }
 
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
@@ -477,10 +504,11 @@
       if (activeApi && activeApi.model && /(image|flux|dall|sd|midjourney)/i.test(activeApi.model)) {
         customModelInput.value = activeApi.model;
       } else {
-        customModelInput.value = 'flux-schnell'; // 默认优先走极速 Flux 引擎
+        customModelInput.value = 'flux-schnell';
       }
     }
 
+    restorePersistedResult();
     if (overlay) overlay.classList.add('show');
   }
 
