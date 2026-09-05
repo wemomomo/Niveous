@@ -241,7 +241,7 @@ html, body {
   height: 110px;
   max-width: calc(100vw - 32px);
   padding: 10px 24px;
-  border-radius: 14px;
+  border-radius: 1px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
