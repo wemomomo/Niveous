@@ -11,7 +11,7 @@
   var currentTplIdx = 0; // 0:浅灰底页, 1:浅灰光晕, 2:纯白底页, 3:灰粉底页, 4:纯白底页
 
   var DEFAULT_BIOS = [
-    '“在这清冷如霜的世界里，\n你是我唯一的满月与浪漫。”',
+    '把梦放进富士山里融化         🍎 -夢を富士山に入れて溶かす苹果',
     '“把心动藏在银河的微光里，\n每一步都是奔向你的轨迹。”',
     '“岁月在信笺里酿成了诗，\n而你是我写给余生最温柔的篇章。”',
     '“以粉晶与月光为誓，将灵魂刻入永恒的冠冕，\n唯你是我至高无上的偏爱。”',
@@ -622,7 +622,7 @@
   }
 
   // ==========================================
-  // 渲染 5 种模板（空格与换行 100% 忠实保留）
+  // 渲染 5 种模板
   // ==========================================
   function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
     if (tplIdx === 0) {
@@ -631,7 +631,7 @@
         + '<div class="t1-inner">'
         + '<div class="t1-header"><div><div class="t1-serial" id="cardSerial" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.serial) + '</div><div class="t1-title" contenteditable="true" spellcheck="false"><span>MEMORIES</span><span>✦</span></div></div><div class="t1-stamp" contenteditable="true" spellcheck="false">★ SPECIAL</div></div>'
         + '<div class="t1-body">'
-        + '<div class="t1-left-rail"><div class="t1-qr-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="15" y="15" width="5" height="5" fill="currentColor"/></svg></div><div class="t1-barcode-lines"><div class="t1-bline thick"></div><div class="t1-bline thin"></div><div class="t1-bline"></div><div class="t1-bline thick"></div><div class="t1-bline"></div><div class="t1-bline thin"></div><div class="t1-bline thick"></div></div><div class="t1-vertical-code" contenteditable="true" spellcheck="false">LUCKY-TODAY</div></div>'
+        + '<div class="t1-left-rail"><div class="t1-qr-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="15" y="15" width="5" height="5" fill="currentColor"/></svg></div><div class="t1-barcode-lines"><div class="t1-bline thick"></div><div class="t1-bline thin"></div><div class="t1-bline"></div><div class="t1-bline thick"></div><div class="t1-bline"></div><div class="t1-bline thin"></div><div class="t1-bline thick"></div></div><div class="t1-vertical-code" contenteditable="true" spellcheck="false">LUCKY-TODAY</div></div>'
         + '<div class="t1-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
         + '<div class="t1-right-rail"><span class="t1-star">✦</span><span class="t1-dash"></span><span class="t1-rail-dot"></span><span class="t1-star">✧</span><span class="t1-rail-dot"></span><span class="t1-dash"></span><span class="t1-star">✦</span></div>'
         + '</div>'
@@ -712,23 +712,25 @@
       renderStep3();
     });
 
+    // ============ 核心：严格防误触手势拦截器 ============
     var cardBox = document.getElementById('cardContainerBox');
     if (cardBox) {
       var touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
-      var isInputTarget = false;
+      var isInputActive = false;
 
       cardBox.addEventListener('touchstart', function(e) {
+        // 只要墨墨当前处于任何输入焦点，或者点在文字编辑框上，100% 锁死禁止翻页
         var activeEl = document.activeElement;
-        if (activeEl && activeEl.isContentEditable) {
-          isInputTarget = true;
+        if (activeEl && (activeEl.isContentEditable || activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+          isInputActive = true;
           return;
         }
         if (e.target.closest('[contenteditable="true"]')) {
-          isInputTarget = true;
+          isInputActive = true;
           return;
         }
 
-        isInputTarget = false;
+        isInputActive = false;
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
         touchEndX = touchStartX;
@@ -736,18 +738,20 @@
       }, { passive: true });
 
       cardBox.addEventListener('touchmove', function(e) {
-        if (isInputTarget) return;
+        if (isInputActive) return;
         touchEndX = e.touches[0].clientX;
         touchEndY = e.touches[0].clientY;
       }, { passive: true });
 
       cardBox.addEventListener('touchend', function() {
-        if (isInputTarget) return;
+        // 输入状态下彻底无视一切滑动手势
+        if (isInputActive) return;
 
         var diffX = touchEndX - touchStartX;
         var diffY = touchEndY - touchStartY;
 
-        if (Math.abs(diffX) > 65 && Math.abs(diffX) > Math.abs(diffY) * 2) {
+        // 仅当真正的横向滑动距离大于 75px，且横向滑动幅度大于纵向 3 倍时才触发翻页
+        if (Math.abs(diffX) > 75 && Math.abs(diffX) > Math.abs(diffY) * 3) {
           syncDirectEdits(cur);
           if (diffX < 0) {
             currentTplIdx = (currentTplIdx + 1) % 5;
@@ -867,27 +871,23 @@
     bindLiveEdits(cur);
   }
 
-  // ============ 核心：iOS WebKit 专用的全无损换行与空格提取器 ============
+  // ============ iOS WebKit 专用的全无损换行与空格提取器 ============
   function getHtmlWithBreaks(node) {
     if (!node) return '';
     var clone = node.cloneNode(true);
 
-    // 把所有的 <br> 显式转为换行符
     var breaks = clone.querySelectorAll('br');
     breaks.forEach(function(br) {
       br.parentNode.replaceChild(document.createTextNode('\n'), br);
     });
 
-    // 把所有的 <div> / <p>（iOS 敲回车默认插入的块）尾部追加换行符
     var blocks = clone.querySelectorAll('div, p');
     blocks.forEach(function(b) {
       b.appendChild(document.createTextNode('\n'));
     });
 
     var raw = clone.textContent || '';
-    // 把 &nbsp; 替换为标准空格
     raw = raw.replace(/\u00a0/g, ' ');
-    // 移除最尾部多余的单个换行符，但绝不删除开头的空格与回车
     return raw.replace(/\n+$/, '');
   }
 
@@ -909,7 +909,6 @@
     if (tag3Node) cur.tag3 = getHtmlWithBreaks(tag3Node);
   }
 
-  // 绑定实时输入、失焦、及退出 PWA 时的三重保险存储
   function bindLiveEdits(cur) {
     var editables = document.querySelectorAll('.arch-card-wrapper [contenteditable="true"]');
     editables.forEach(function(el) {
@@ -922,7 +921,6 @@
       });
     });
 
-    // PWA 专属：离开应用/锁屏瞬间强制持久化封存
     window.addEventListener('pagehide', function() {
       syncDirectEdits(cur);
       saveCurrentToDB();
