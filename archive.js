@@ -812,11 +812,10 @@
         });
       });
 
-      drawerCard.querySelectorAll('.drawer-del-btn').forEach(function(btn) {
+            drawerCard.querySelectorAll('.drawer-del-btn').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
           e.stopPropagation();
           var delId = this.dataset.delId;
-          if (!confirm('确定要删除这位用户的档案吗？')) return;
           userList = userList.filter(function(u) { return u.id !== delId; });
           if (currentUserId === delId) {
             currentUserId = userList.length ? userList[0].id : null;
@@ -824,6 +823,7 @@
           saveCurrentToDB(function() {
             if (userList.length) renderStep3();
             else renderStep1();
+            if (window.AppNav) AppNav.showToast('✦ 档案已成功删除 ✦');
           });
         });
       });
