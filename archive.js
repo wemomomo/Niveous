@@ -750,8 +750,8 @@
         var diffX = touchEndX - touchStartX;
         var diffY = touchEndY - touchStartY;
 
-        // 仅当真正的横向滑动距离大于 75px，且横向滑动幅度大于纵向 3 倍时才触发翻页
-        if (Math.abs(diffX) > 75 && Math.abs(diffX) > Math.abs(diffY) * 3) {
+               // 平时只要轻扫 35px 且横向大于纵向，立刻丝滑翻页！
+        if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
           syncDirectEdits(cur);
           if (diffX < 0) {
             currentTplIdx = (currentTplIdx + 1) % 5;
