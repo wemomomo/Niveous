@@ -11,11 +11,11 @@
   var currentTplIdx = 0; // 0:浅灰底页, 1:浅灰光晕, 2:纯白底页, 3:灰粉底页, 4:纯白底页
 
   var DEFAULT_BIOS = [
-    '“在这清冷如霜的世界里，你是我唯一的满月与浪漫。”',
-    '“把心动藏在银河的微光里，每一步都是奔向你的轨迹。”',
-    '“岁月在信笺里酿成了诗，而你是我写给余生最温柔的篇章。”',
-    '“以粉晶与月光为誓，将灵魂刻入永恒的冠冕，唯你是我至高无上的偏爱。”',
-    '“在这漫长胶片的每一帧里，我都只为你聚焦。”'
+    '“在这清冷如霜的世界里，\n你是我唯一的满月与浪漫。”',
+    '“把心动藏在银河的微光里，\n每一步都是奔向你的轨迹。”',
+    '“岁月在信笺里酿成了诗，\n而你是我写给余生最温柔的篇章。”',
+    '“以粉晶与月光为誓，将灵魂刻入永恒的冠冕，\n唯你是我至高无上的偏爱。”',
+    '“在这漫长胶片的每一帧里，\n我都只为你聚焦。”'
   ];
 
   var defaultProfile = {
@@ -622,23 +622,23 @@
   }
 
   // ==========================================
-  // 渲染 5 种模板（所有文字区域 100% 自由编辑）
+  // 渲染 5 种模板（支持换行排版显示）
   // ==========================================
   function renderCardTemplateHtml(cur, tplIdx, hasPhotoClass) {
     if (tplIdx === 0) {
       // 01. 冰蓝票根
       return '<div class="arch-card-wrapper t1-wrapper">'
         + '<div class="t1-inner">'
-        + '<div class="t1-header"><div><div class="t1-serial" id="cardSerial" contenteditable="true" spellcheck="false">' + esc(cur.serial) + '</div><div class="t1-title" contenteditable="true" spellcheck="false"><span>MEMORIES</span><span>✦</span></div></div><div class="t1-stamp" contenteditable="true" spellcheck="false">★ SPECIAL</div></div>'
+        + '<div class="t1-header"><div><div class="t1-serial" id="cardSerial" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.serial) + '</div><div class="t1-title" contenteditable="true" spellcheck="false"><span>MEMORIES</span><span>✦</span></div></div><div class="t1-stamp" contenteditable="true" spellcheck="false">★ SPECIAL</div></div>'
         + '<div class="t1-body">'
         + '<div class="t1-left-rail"><div class="t1-qr-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="15" y="15" width="5" height="5" fill="currentColor"/></svg></div><div class="t1-barcode-lines"><div class="t1-bline thick"></div><div class="t1-bline thin"></div><div class="t1-bline"></div><div class="t1-bline thick"></div><div class="t1-bline"></div><div class="t1-bline thin"></div><div class="t1-bline thick"></div></div><div class="t1-vertical-code" contenteditable="true" spellcheck="false">LUCKY-TODAY</div></div>'
         + '<div class="t1-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
         + '<div class="t1-right-rail"><span class="t1-star">✦</span><span class="t1-dash"></span><span class="t1-rail-dot"></span><span class="t1-star">✧</span><span class="t1-rail-dot"></span><span class="t1-dash"></span><span class="t1-star">✦</span></div>'
         + '</div>'
         + '<div class="t1-footer"><div class="t1-cutout-left"></div><div class="t1-cutout-right"></div>'
-        + '<div class="t1-user-row"><div class="t1-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t1-userid" id="cardUserId" contenteditable="true" spellcheck="false">' + esc(cur.userid) + '</div></div>'
-        + '<div class="t1-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio0 || DEFAULT_BIOS[0]) + '</div>'
-        + '<div class="t1-tags"><span class="t1-tag primary" id="cardTag1" contenteditable="true" spellcheck="false">' + esc(cur.tag1) + '</span><span class="t1-tag" id="cardTag2" contenteditable="true" spellcheck="false">' + esc(cur.tag2) + '</span><span class="t1-tag" id="cardTag3" contenteditable="true" spellcheck="false">' + esc(cur.tag3) + '</span></div>'
+        + '<div class="t1-user-row"><div class="t1-username" id="cardName" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.name) + '</div><div class="t1-userid" id="cardUserId" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.userid) + '</div></div>'
+        + '<div class="t1-bio" id="cardBio" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.bio0 || DEFAULT_BIOS[0]) + '</div>'
+        + '<div class="t1-tags"><span class="t1-tag primary" id="cardTag1" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.tag1) + '</span><span class="t1-tag" id="cardTag2" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.tag2) + '</span><span class="t1-tag" id="cardTag3" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.tag3) + '</span></div>'
         + '</div></div></div>';
     } else if (tplIdx === 1) {
       // 02. 缎带亚克力
@@ -647,8 +647,8 @@
         + '<div class="t2-frame"><div class="t2-cross tl">+</div><div class="t2-cross tr">+</div><div class="t2-cross bl">+</div><div class="t2-cross br">+</div>'
         + '<div class="t2-top-bar"><div class="t2-icons" contenteditable="true" spellcheck="false"><span>♡</span><span>★</span><span>♪</span><span>☆</span></div><div class="t2-brand" contenteditable="true" spellcheck="false">NIVEOUS ARCHIVE</div></div>'
         + '<div class="t2-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t2-music-pill"><div class="t2-music-wave"><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div><div class="t2-wave-bar"></div></div><span contenteditable="true" spellcheck="false">PLAYING</span></div></div>'
-        + '<div class="t2-footer"><div class="t2-user-row"><div class="t2-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t2-stars" contenteditable="true" spellcheck="false">✦ ✦ ✦</div></div>'
-        + '<div class="t2-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio1 || DEFAULT_BIOS[1]) + '</div>'
+        + '<div class="t2-footer"><div class="t2-user-row"><div class="t2-username" id="cardName" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.name) + '</div><div class="t2-stars" contenteditable="true" spellcheck="false">✦ ✦ ✦</div></div>'
+        + '<div class="t2-bio" id="cardBio" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.bio1 || DEFAULT_BIOS[1]) + '</div>'
         + '<div class="t2-barcode-deck"><div class="t2-barcode-wrap"><div class="t2-graphic"><div class="t2-bar w2"></div><div class="t2-bar"></div><div class="t2-bar w3"></div><div class="t2-bar"></div><div class="t2-bar w2"></div><div class="t2-bar"></div></div><span class="t2-digits" contenteditable="true" spellcheck="false">4 892019 330219</span></div><div class="t2-tag" contenteditable="true" spellcheck="false"><span>♡</span><span>SPECIAL EDITION</span></div></div>'
         + '</div></div></div>';
     } else if (tplIdx === 2) {
@@ -658,8 +658,8 @@
         + '<div class="t3-perfs-right"><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div></div>'
         + '<div class="t3-inner-box"><div class="t3-header-row"><div class="t3-postmark"><div class="t3-pm-circle" contenteditable="true" spellcheck="false">PARIS</div><div class="t3-pm-lines"><div class="t3-pm-line"></div><div class="t3-pm-line"></div></div></div><div class="t3-tag-text" contenteditable="true" spellcheck="false"><span>♡</span><span>LETTRE D\'AMOUR</span></div></div>'
         + '<div class="t3-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t3-photo-tag" contenteditable="true" spellcheck="false"><span>♥</span><span>NO. ' + esc(cur.birthday || '0000') + '</span></div></div>'
-        + '<div class="t3-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t3-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t3-serial" contenteditable="true" spellcheck="false">POSTAGE</div></div>'
-        + '<div class="t3-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio2 || DEFAULT_BIOS[2]) + '</div>'
+        + '<div class="t3-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t3-username" id="cardName" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.name) + '</div><div class="t3-serial">POSTAGE</div></div>'
+        + '<div class="t3-bio" id="cardBio" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.bio2 || DEFAULT_BIOS[2]) + '</div>'
         + '<div class="t3-bottom-deck"><div class="t3-french-tags"><span class="t3-french-quote" contenteditable="true" spellcheck="false">« Pour toujours et à jamais »</span><div class="t3-chips"><span class="t3-chip" contenteditable="true" spellcheck="false">✦ 燕麦手作</span><span class="t3-chip" contenteditable="true" spellcheck="false">♡ 典藏信笺</span></div></div><div class="t3-wax-seal"><div class="t3-wax-inner" contenteditable="true" spellcheck="false">✦</div></div></div>'
         + '</div></div></div>';
     } else if (tplIdx === 3) {
@@ -668,8 +668,8 @@
         + '<div class="t4-inner-frame"><div class="t4-cross tl">✟</div><div class="t4-cross tr">✟</div><div class="t4-cross bl">✟</div><div class="t4-cross br">✟</div>'
         + '<div class="t4-header"><div class="t4-title-wrap"><span>✠</span><span class="t4-title" contenteditable="true" spellcheck="false">SANCTUARY</span></div><div class="t4-stamp" contenteditable="true" spellcheck="false">ROSE · ' + esc(cur.birthday || '0000') + '</div></div>'
         + '<div class="t4-arch-stage' + hasPhotoClass + '" id="cardPhotoBtn"><div class="t4-arch-overlay" contenteditable="true" spellcheck="false">✦ ETERNAL ✦</div><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
-        + '<div class="t4-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t4-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t4-serial" contenteditable="true" spellcheck="false">ROSE #001</div></div>'
-        + '<div class="t4-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio3 || DEFAULT_BIOS[3]) + '</div>'
+        + '<div class="t4-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t4-username" id="cardName" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.name) + '</div><div class="t4-serial">ROSE #001</div></div>'
+        + '<div class="t4-bio" id="cardBio" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.bio3 || DEFAULT_BIOS[3]) + '</div>'
         + '<div class="t4-plague-bar" contenteditable="true" spellcheck="false">✟ SACRED OATH · IN PERPETUUM ✟</div>'
         + '<div class="t4-stats-matrix"><div class="t4-stat-box"><span class="t4-stat-label" contenteditable="true" spellcheck="false">DEVOTION</span><span class="t4-stat-val" contenteditable="true" spellcheck="false">100% 纯粹</span></div><div class="t4-stat-box"><span class="t4-stat-label" contenteditable="true" spellcheck="false">BOUND</span><span class="t4-stat-val" contenteditable="true" spellcheck="false">灵魂共鸣</span></div><div class="t4-stat-box"><span class="t4-stat-label" contenteditable="true" spellcheck="false">STATUS</span><span class="t4-stat-val" contenteditable="true" spellcheck="false">永恒偏爱</span></div></div>'
         + '</div></div></div>';
@@ -679,8 +679,8 @@
         + '<div class="t5-sprockets"><div class="t5-hole"></div><div class="t5-hole"></div><span class="t5-sprocket-code" contenteditable="true" spellcheck="false">▶ NIVEOUS 35mm</span><div class="t5-hole"></div><div class="t5-hole"></div></div>'
         + '<div class="t5-header-bar"><div class="t5-scene"><span class="t5-dot"></span><span contenteditable="true" spellcheck="false">SCENE 01</span></div><span class="t5-fps" contenteditable="true" spellcheck="false">ISO 400 · 24 FPS</span></div>'
         + '<div class="t5-frame-stage' + hasPhotoClass + '" id="cardPhotoBtn"><span class="t5-edge-mark" contenteditable="true" spellcheck="false">SAFETY FILM ★</span><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div></div>'
-        + '<div class="t5-footer-wrap"><div class="t5-username-row"><div class="t5-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><span class="t5-director" contenteditable="true" spellcheck="false">PROD. BY LOVE</span></div>'
-        + '<div class="t5-subtitles-box"><div class="t5-sub-cn" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio4 || DEFAULT_BIOS[4]) + '</div><div class="t5-sub-en" contenteditable="true" spellcheck="false">"In every frame of this endless reel, you are my only focus."</div></div>'
+        + '<div class="t5-footer-wrap"><div class="t5-username-row"><div class="t5-username" id="cardName" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.name) + '</div><span class="t5-director" contenteditable="true" spellcheck="false">PROD. BY LOVE</span></div>'
+        + '<div class="t5-subtitles-box"><div class="t5-sub-cn" id="cardBio" contenteditable="true" spellcheck="false">' + formatLineBreaks(cur.bio4 || DEFAULT_BIOS[4]) + '</div><div class="t5-sub-en" contenteditable="true" spellcheck="false">"In every frame of this endless reel, you are my only focus."</div></div>'
         + '<div class="t5-stub"><div style="display:flex; align-items:center; gap:6px;"><span class="t5-admit-pill" contenteditable="true" spellcheck="false">ADMIT ONE</span><span style="font-size:8.5px; color:#a0aec0; font-family:monospace;" contenteditable="true" spellcheck="false">SEAT: VIP</span></div><span style="font-size:8px; color:#828a94; font-family:monospace;" contenteditable="true" spellcheck="false">№ 9248-FILM</span></div>'
         + '</div>'
         + '<div class="t5-sprockets" style="margin-top:2px;"><div class="t5-hole"></div><div class="t5-hole"></div><span class="t5-sprocket-code" contenteditable="true" spellcheck="false">KODAK FRAME 24A</span><div class="t5-hole"></div><div class="t5-hole"></div></div>'
@@ -850,6 +850,13 @@
     });
   }
 
+  // 重点：使用 innerText 提取文本，完整保留回车与换行符
+  function getCleanText(node) {
+    if (!node) return '';
+    var text = node.innerText !== undefined ? node.innerText : node.textContent;
+    return text.replace(/^\n+|\n+$/g, '');
+  }
+
   function syncDirectEdits(cur) {
     var nameNode = document.getElementById('cardName');
     var bioNode = document.getElementById('cardBio');
@@ -859,13 +866,19 @@
     var tag2Node = document.getElementById('cardTag2');
     var tag3Node = document.getElementById('cardTag3');
 
-    if (nameNode) cur.name = nameNode.textContent.replace(/[✞✟✠]/g, '').trim();
-    if (bioNode) cur['bio' + currentTplIdx] = bioNode.textContent.trim();
-    if (serialNode) cur.serial = serialNode.textContent.trim();
-    if (userIdNode) cur.userid = userIdNode.textContent.trim();
-    if (tag1Node) cur.tag1 = tag1Node.textContent.trim();
-    if (tag2Node) cur.tag2 = tag2Node.textContent.trim();
-    if (tag3Node) cur.tag3 = tag3Node.textContent.trim();
+    if (nameNode) cur.name = getCleanText(nameNode).replace(/[✞✟✠]/g, '').trim();
+    if (bioNode) cur['bio' + currentTplIdx] = getCleanText(bioNode);
+    if (serialNode) cur.serial = getCleanText(serialNode).trim();
+    if (userIdNode) cur.userid = getCleanText(userIdNode).trim();
+    if (tag1Node) cur.tag1 = getCleanText(tag1Node).trim();
+    if (tag2Node) cur.tag2 = getCleanText(tag2Node).trim();
+    if (tag3Node) cur.tag3 = getCleanText(tag3Node).trim();
+  }
+
+  // 格式化换行输出
+  function formatLineBreaks(str) {
+    if (!str) return '';
+    return esc(str).replace(/\n/g, '<br>');
   }
 
   function esc(str) {
