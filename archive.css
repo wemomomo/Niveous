@@ -1030,8 +1030,8 @@
 @keyframes crystalSparkleSlow { 0% { opacity: 0; transform: scale(0.3); } 100% { opacity: 1; transform: scale(1); } }
 
 .empty-sparkle { position: absolute; font-size: 11px; color: #868e96; opacity: 0; }
-.archive-panel-active .empty-sparkle.s1 { top: 4px; right: 6px; animation: sparkleSlowIn 1.2s ease 4.8s forwards; }
-.archive-panel-active .empty-sparkle.s2 { bottom: 6px; left: 4px; animation: sparkleSlowIn 1.2s ease 5.2s forwards; }
+.archive-panel-active .empty-sparkle.s1 { top: 4px; right: 6px; animation: sparkleSlowIn 1s ease 3s forwards; }
+.archive-panel-active .empty-sparkle.s2 { bottom: 6px; left: 4px; animation: sparkleSlowIn 1s ease 3.2s forwards; }
 @keyframes sparkleSlowIn { 0% { opacity: 0; transform: scale(0.4); } 100% { opacity: 0.85; transform: scale(1); } }
 
 .empty-title { font-size: 17px; font-weight: 700; color: #18191c; letter-spacing: 0.5px; margin-bottom: 6px; }
