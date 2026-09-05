@@ -1,1 +1,351 @@
 
+/* ========== AI 生图工坊 · 全局全屏沉浸弹窗 ========== */
+.ai-image-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 15000;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.ai-image-modal-overlay.show {
+  display: flex;
+  animation: aiModalFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes aiModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 主操作卡面板 (贴合 iOS 底部安全区) */
+.ai-image-modal-panel {
+  width: 100%;
+  max-width: 430px;
+  max-height: 90vh;
+  background: #ffffff;
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 18px calc(18px + var(--safe-bottom));
+  box-shadow: 0 -12px 45px rgba(0, 0, 0, 0.18);
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.ai-image-modal-overlay.show .ai-image-modal-panel {
+  transform: translateY(0);
+}
+
+/* 顶部标题栏 */
+.ai-image-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(24, 25, 28, 0.08);
+  flex-shrink: 0;
+}
+.ai-image-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ai-image-title-icon {
+  font-size: 14px;
+  color: #88abda;
+}
+.ai-image-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #18191c;
+  letter-spacing: 0.5px;
+}
+.ai-image-close-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ai-image-close-btn:active {
+  color: #18191c;
+  transform: scale(0.9);
+}
+
+/* 滚动内容区 */
+.ai-image-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 1. 提示词输入区 */
+.ai-prompt-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid rgba(136, 171, 218, 0.25);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.ai-prompt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ai-prompt-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+.ai-auto-prompt-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: #4a6b8f;
+  background: #eaf2fb;
+  border: 0.5px solid rgba(136, 171, 218, 0.5);
+  padding: 2.5px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.ai-auto-prompt-pill:active {
+  transform: scale(0.94);
+  background: #d8e8f8;
+}
+
+.ai-prompt-textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #18191c;
+  font-family: inherit;
+  outline: none;
+  resize: none;
+  min-height: 54px;
+  max-height: 110px;
+}
+.ai-prompt-textarea::placeholder {
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+/* 2. 画幅比例与模型选择栏 */
+.ai-options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ai-ratio-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
+  border: 0.5px solid rgba(0, 0, 0, 0.04);
+}
+.ai-ratio-chip {
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+.ai-ratio-chip.active {
+  background: #ffffff;
+  color: #18191c;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.ai-model-badge {
+  font-size: 10.5px;
+  font-family: monospace;
+  font-weight: 700;
+  color: #88abda;
+  background: #f8fafc;
+  border: 1px solid rgba(136, 171, 218, 0.35);
+  padding: 5px 9px;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+/* 3. 图像生成展示舞台 */
+.ai-preview-stage {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 300px;
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-preview-stage.has-result {
+  border-style: solid;
+  border-color: #18191c;
+  background: #000000;
+}
+
+.ai-preview-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+.ai-preview-stage.has-result img {
+  display: block;
+}
+
+/* 空状态占位提示 */
+.ai-stage-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+}
+.ai-stage-empty svg {
+  width: 32px;
+  height: 32px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.3;
+}
+.ai-stage-empty span {
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.ai-preview-stage.has-result .ai-stage-empty,
+.ai-preview-stage.is-generating .ai-stage-empty {
+  display: none;
+}
+
+/* 生图中：优雅凝晶动画 */
+.ai-generating-box {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #334e68;
+}
+.ai-preview-stage.is-generating .ai-generating-box {
+  display: flex;
+}
+.ai-generating-crystal {
+  width: 42px;
+  height: 42px;
+  animation: crystalSpin 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes crystalSpin {
+  0% { transform: rotate(0deg) scale(0.9); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(0.9); }
+}
+.ai-generating-text {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #4a6b8f;
+}
+
+/* 4. 底部执行按钮组 */
+.ai-action-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(24, 25, 28, 0.08);
+  flex-shrink: 0;
+}
+
+.ai-generate-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: 14px;
+  background: #18191c;
+  color: #ffffff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(24, 25, 28, 0.2);
+  font-family: inherit;
+}
+.ai-generate-btn:active {
+  transform: scale(0.97);
+  background: #000000;
+}
+.ai-generate-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* 生成成功后的采纳按钮栏 */
+.ai-result-actions {
+  display: none;
+  gap: 8px;
+  width: 100%;
+}
+.ai-preview-stage.has-result ~ .ai-action-footer .ai-result-actions {
+  display: flex;
+}
+.ai-result-btn {
+  flex: 1;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: inherit;
+  border: 1px solid rgba(24, 25, 28, 0.15);
+  background: #ffffff;
+  color: #18191c;
+}
+.ai-result-btn.primary {
+  background: #18191c;
+  color: #ffffff;
+  border: none;
+}
+.ai-result-btn:active {
+  transform: scale(0.96);
+}
