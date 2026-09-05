@@ -349,7 +349,7 @@
 
     document.getElementById('archBackBtn').addEventListener('click', handleStep2Back);
 
-    // 绑定右滑返回手势（防误触：横向位移大于50px且横向倾斜度明显大于纵向滑动）
+        // 绑定右滑返回手势（阻止事件冒泡，防止被全局劫持退回桌面）
     var step2Panel = document.getElementById('archStep2');
     if (step2Panel) {
       var sStartX = 0, sStartY = 0, sEndX = 0, sEndY = 0;
@@ -363,12 +363,17 @@
       step2Panel.addEventListener('touchmove', function(e) {
         sEndX = e.touches[0].clientX;
         sEndY = e.touches[0].clientY;
+        // 只要是在向右滑，立刻阻止事件向上冒泡到外层 app-page！
+        if (sEndX - sStartX > 10) {
+          e.stopPropagation();
+        }
       }, { passive: true });
 
-      step2Panel.addEventListener('touchend', function() {
+      step2Panel.addEventListener('touchend', function(e) {
         var diffX = sEndX - sStartX;
         var diffY = sEndY - sStartY;
-        if (diffX > 55 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+        if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
+          e.stopPropagation();
           handleStep2Back();
         }
       });
