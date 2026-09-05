@@ -1,10 +1,8 @@
 
-/* 开启换行支持，让回车分行在卡片上完美呈现 */
 .arch-card-wrapper [contenteditable="true"],
 .t1-bio, .t2-bio, .t3-bio, .t4-bio, .t5-sub-cn {
-  white-space: pre-line !important;
+  white-space: pre-wrap !important; /* 👈 开启严密空格与换行支持 */
 }
-
 /* ========== 彻底消灭所有可编辑文字的蓝色外框与背景 ========== */
 .arch-card-wrapper [contenteditable="true"],
 [contenteditable="true"] {
