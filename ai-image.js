@@ -4,8 +4,10 @@
 
   var currentCallback = null;
   var currentGeneratedUrl = '';
-  var currentRatio = '3:4';
+  var currentRatio = '1:1';
   var isGenerating = false;
+  var timerInterval = null;
+  var elapsedSeconds = 0;
 
   function createModalDOM() {
     if (document.getElementById('aiImageModalOverlay')) return;
@@ -30,12 +32,12 @@
       + '<div style="display:flex; justify-content:space-between; align-items:center;">'
       + '<span style="font-size:11px; font-weight:700; color:#64748b;">生图模型</span>'
       + '<div style="display:flex; gap:4px;">'
-      + '<button class="ai-quick-model-btn" data-model="dall-e-3" style="font-size:9.5px; padding:2px 6px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">dall-e-3</button>'
-      + '<button class="ai-quick-model-btn" data-model="imagen-3" style="font-size:9.5px; padding:2px 6px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">imagen-3</button>'
-      + '<button class="ai-quick-model-btn" data-model="flux-schnell" style="font-size:9.5px; padding:2px 6px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">flux</button>'
+      + '<button class="ai-quick-model-btn" data-model="dall-e-3" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">dall-e-3</button>'
+      + '<button class="ai-quick-model-btn" data-model="imagen-3" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">imagen-3</button>'
+      + '<button class="ai-quick-model-btn" data-model="flux-schnell" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">flux</button>'
       + '</div>'
       + '</div>'
-      + '<input type="text" id="aiCustomModelInput" placeholder="输入中转站支持的生图模型名" style="width:100%; border:none; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; font-size:12px; font-family:monospace; outline:none; color:#18191c;">'
+      + '<input type="text" id="aiCustomModelInput" placeholder="输入中转站支持的生图模型名" style="width:100%; border:none; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; font-size:12px; font-family:monospace; outline:none; color:#18191c;">'
       + '</div>'
 
       // 2. 提示词输入区
@@ -71,7 +73,7 @@
       + '<polygon points="6,24 20,20 24,24 20,28" stroke="#88abda" stroke-width="1.5" fill="none"/>'
       + '<polygon points="42,24 28,20 24,24 28,28" stroke="#88abda" stroke-width="1.5" fill="none"/>'
       + '</svg>'
-      + '<span class="ai-generating-text">正在唤醒灵感勾勒立绘...</span>'
+      + '<span class="ai-generating-text" id="aiProgressStatusText">正在连接画师通道... (0s)</span>'
       + '</div>'
       + '</div>'
 
@@ -139,7 +141,7 @@
       autoPromptBtn.addEventListener('click', function() {
         var raw = (promptInput.value || '').trim();
         if (!raw) {
-          promptInput.value = '1boy, handsome anime male, silver hair, deep blue eyes, gentle expression, highly detailed, masterpiece, best quality';
+          promptInput.value = '1boy, handsome anime male, silver hair, deep blue eyes, gentle smile, masterpiece, high quality';
         } else {
           promptInput.value = raw + ', highly detailed, masterpiece, anime aesthetic, 8k resolution';
         }
@@ -188,7 +190,7 @@
     }
   }
 
-  // 执行生图核心逻辑 (全自动双通道容错)
+  // 执行生图核心逻辑 (带秒数进度 + 45s 超时强制保护)
   function executeGeneration(prompt) {
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
     
@@ -205,9 +207,15 @@
 
     setGeneratingState(true);
 
-    // 标准图像端点请求
+    // 45秒超时控制器
+    var controller = new AbortController();
+    var timeoutId = setTimeout(function() {
+      controller.abort();
+    }, 45000);
+
     fetch(imageEndpoint, {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + activeApi.key
@@ -216,11 +224,11 @@
         model: chosenModel,
         prompt: prompt,
         n: 1,
-        size: '1024x1024',
-        response_format: 'url'
+        size: '1024x1024'
       })
     })
     .then(function(res) {
+      clearTimeout(timeoutId);
       return res.json().then(function(data) {
         if (!res.ok) {
           var errMsg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
@@ -244,14 +252,20 @@
       }
     })
     .catch(function(err) {
+      clearTimeout(timeoutId);
       setGeneratingState(false);
-      var msg = err.message || '请求失败';
-      if (msg.indexOf('404') >= 0 || msg.indexOf('not found') >= 0 || msg.indexOf('model') >= 0) {
-        if (window.AppNav) AppNav.showToast('模型「' + chosenModel + '」不存在，请换个模型名');
+      
+      var msg = err.message || '';
+      if (err.name === 'AbortError') {
+        if (window.AppNav) AppNav.showToast('绘图超时(45s)，中转站响应过慢');
+      } else if (msg.indexOf('404') >= 0 || msg.indexOf('not found') >= 0 || msg.indexOf('model') >= 0) {
+        if (window.AppNav) AppNav.showToast('模型「' + chosenModel + '」不存在或未开通');
       } else if (msg.indexOf('401') >= 0 || msg.indexOf('key') >= 0) {
         if (window.AppNav) AppNav.showToast('API Key 无效或未授权');
-      } else {
+      } else if (msg) {
         if (window.AppNav) AppNav.showToast(msg);
+      } else {
+        if (window.AppNav) AppNav.showToast('生图失败，请检查中转站支持的模型');
       }
     });
   }
@@ -260,14 +274,34 @@
     isGenerating = generating;
     var stage = document.getElementById('aiPreviewStage');
     var startBtn = document.getElementById('aiStartGenBtn');
+    var statusText = document.getElementById('aiProgressStatusText');
     if (!stage || !startBtn) return;
 
     if (generating) {
+      elapsedSeconds = 0;
       stage.classList.remove('has-result');
       stage.classList.add('is-generating');
       startBtn.disabled = true;
       startBtn.querySelector('span').textContent = '正在绘制中...';
+
+      if (statusText) statusText.textContent = '正在连接画师通道... (0s)';
+
+      // 实时动态进度秒数与阶段提示
+      clearInterval(timerInterval);
+      timerInterval = setInterval(function() {
+        elapsedSeconds++;
+        if (statusText) {
+          if (elapsedSeconds < 5) {
+            statusText.textContent = '📡 正在连接画师通道... (' + elapsedSeconds + 's)';
+          } else if (elapsedSeconds < 15) {
+            statusText.textContent = '✨ 正在构图与光影渲染... (' + elapsedSeconds + 's)';
+          } else {
+            statusText.textContent = '🎨 正在进行细节高清升采样... (' + elapsedSeconds + 's)';
+          }
+        }
+      }, 1000);
     } else {
+      clearInterval(timerInterval);
       stage.classList.remove('is-generating');
       startBtn.disabled = false;
       startBtn.querySelector('span').textContent = '重新绘制';
@@ -314,6 +348,7 @@
   function closeModal() {
     var overlay = document.getElementById('aiImageModalOverlay');
     if (overlay) overlay.classList.remove('show');
+    if (timerInterval) clearInterval(timerInterval);
   }
 
   window.AppAiImage = {
