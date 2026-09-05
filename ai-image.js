@@ -7,16 +7,6 @@
   var currentRatio = '3:4';
   var isGenerating = false;
 
-  // 默认支持的生图模型推荐列表
-  var DEFAULT_IMAGE_MODEL = 'imagen-3.0-generate-002';
-
-  // 比例尺寸映射表 (适配不同模型规格)
-  var RATIO_SIZE_MAP = {
-    '1:1': { width: 1024, height: 1024, sizeStr: '1024x1024' },
-    '3:4': { width: 768, height: 1024, sizeStr: '768x1024' },
-    '9:16': { width: 576, height: 1024, sizeStr: '1024x1792' }
-  };
-
   function createModalDOM() {
     if (document.getElementById('aiImageModalOverlay')) return;
 
@@ -34,28 +24,44 @@
       + '</div>'
 
       + '<div class="ai-image-body">'
+      
+      // 1. 模型选择/输入栏
+      + '<div style="display:flex; flex-direction:column; gap:6px; background:#f8fafc; padding:8px 10px; border-radius:12px; border:1px solid rgba(0,0,0,0.06);">'
+      + '<div style="display:flex; justify-content:space-between; align-items:center;">'
+      + '<span style="font-size:11px; font-weight:700; color:#64748b;">生图模型</span>'
+      + '<div style="display:flex; gap:4px;">'
+      + '<button class="ai-quick-model-btn" data-model="dall-e-3" style="font-size:9.5px; padding:2px 6px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">dall-e-3</button>'
+      + '<button class="ai-quick-model-btn" data-model="imagen-3" style="font-size:9.5px; padding:2px 6px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">imagen-3</button>'
+      + '<button class="ai-quick-model-btn" data-model="flux-schnell" style="font-size:9.5px; padding:2px 6px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">flux</button>'
+      + '</div>'
+      + '</div>'
+      + '<input type="text" id="aiCustomModelInput" placeholder="输入中转站支持的生图模型名" style="width:100%; border:none; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:5px 8px; font-size:12px; font-family:monospace; outline:none; color:#18191c;">'
+      + '</div>'
+
+      // 2. 提示词输入区
       + '<div class="ai-prompt-box">'
       + '<div class="ai-prompt-header">'
       + '<span class="ai-prompt-label">画意描述 (PROMPT)</span>'
       + '<button class="ai-auto-prompt-pill" id="aiAutoPromptBtn" type="button"><span>✦ 智能优化词</span></button>'
       + '</div>'
-      + '<textarea class="ai-prompt-textarea" id="aiPromptInput" placeholder="描述你心中的立绘画面、发色眸色、光影氛围与场景细节..."></textarea>'
+      + '<textarea class="ai-prompt-textarea" id="aiPromptInput" placeholder="描述想要绘制的立绘、发色眸色、光影与场景..."></textarea>'
       + '</div>'
 
+      // 3. 比例选择
       + '<div class="ai-options-row">'
       + '<div class="ai-ratio-group">'
-      + '<button class="ai-ratio-chip active" data-ratio="3:4" type="button">3:4 立绘</button>'
-      + '<button class="ai-ratio-chip" data-ratio="1:1" type="button">1:1 头像</button>'
+      + '<button class="ai-ratio-chip active" data-ratio="1:1" type="button">1:1 方图</button>'
+      + '<button class="ai-ratio-chip" data-ratio="3:4" type="button">3:4 立绘</button>'
       + '<button class="ai-ratio-chip" data-ratio="9:16" type="button">9:16 壁纸</button>'
       + '</div>'
-      + '<div class="ai-model-badge" id="aiModelBadgeDisplay">IMAGEN 3.0</div>'
       + '</div>'
 
-      + '<div class="ai-preview-stage" id="aiPreviewStage">'
+      // 4. 图像生成展示舞台
+      + '<div class="ai-preview-stage" id="aiPreviewStage" style="aspect-ratio:1/1;">'
       + '<img id="aiResultImg" src="" alt="AI生成图像">'
       + '<div class="ai-stage-empty">'
       + '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
-      + '<span>输入提示词，轻点下方开始绘图</span>'
+      + '<span>输入描述，轻点下方开始绘图</span>'
       + '</div>'
       + '<div class="ai-generating-box">'
       + '<svg class="ai-generating-crystal" viewBox="0 0 48 48">'
@@ -65,12 +71,13 @@
       + '<polygon points="6,24 20,20 24,24 20,28" stroke="#88abda" stroke-width="1.5" fill="none"/>'
       + '<polygon points="42,24 28,20 24,24 28,28" stroke="#88abda" stroke-width="1.5" fill="none"/>'
       + '</svg>'
-      + '<span class="ai-generating-text">正在勾勒光影与细节...</span>'
+      + '<span class="ai-generating-text">正在唤醒灵感勾勒立绘...</span>'
       + '</div>'
       + '</div>'
 
       + '</div>'
 
+      // 5. 底部执行按钮组
       + '<div class="ai-action-footer">'
       + '<button class="ai-generate-btn" id="aiStartGenBtn" type="button">'
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 14.5,9.5 22,12 14.5,14.5 12,22 9.5,14.5 2,12 9.5,9.5"/></svg>'
@@ -95,16 +102,21 @@
     var saveImgbedBtn = document.getElementById('aiSaveImgbedBtn');
     var autoPromptBtn = document.getElementById('aiAutoPromptBtn');
     var promptInput = document.getElementById('aiPromptInput');
+    var customModelInput = document.getElementById('aiCustomModelInput');
 
-    if (closeBtn) {
-      closeBtn.addEventListener('click', closeModal);
-    }
-
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (overlay) {
       overlay.addEventListener('click', function(e) {
         if (e.target === overlay && !isGenerating) closeModal();
       });
     }
+
+    // 快捷填入模型名称
+    document.querySelectorAll('.ai-quick-model-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (customModelInput) customModelInput.value = this.dataset.model;
+      });
+    });
 
     // 画幅比例切换
     document.querySelectorAll('.ai-ratio-chip').forEach(function(chip) {
@@ -122,14 +134,14 @@
       });
     });
 
-    // 智能优化提示词（润色成二次元精致光影）
+    // 优化提示词
     if (autoPromptBtn) {
       autoPromptBtn.addEventListener('click', function() {
         var raw = (promptInput.value || '').trim();
         if (!raw) {
-          promptInput.value = '精致美少年立绘，银白微卷碎发，深邃蓝眸，冷冽温柔神情，极致光影，杰作，8k分辨率';
+          promptInput.value = '1boy, handsome anime male, silver hair, deep blue eyes, gentle expression, highly detailed, masterpiece, best quality';
         } else {
-          promptInput.value = raw + ', 精致细腻五官, 唯美氛围光影, 杰作, 极高画质, anime aesthetic masterpiece';
+          promptInput.value = raw + ', highly detailed, masterpiece, anime aesthetic, 8k resolution';
         }
         if (window.AppNav) AppNav.showToast('✦ 提示词已优化 ✦');
       });
@@ -163,10 +175,7 @@
     if (saveImgbedBtn) {
       saveImgbedBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
-        if (window.ImgBed && typeof window.ImgBed.addImage === 'function') {
-          window.ImgBed.addImage(currentGeneratedUrl, 'AI绘制立绘 - ' + new Date().toLocaleDateString());
-          if (window.AppNav) AppNav.showToast('✦ 已成功存入图床 ✦');
-        } else if (window.AppDB) {
+        if (window.AppDB) {
           AppDB.get('app_imgbed_list', function(list) {
             var arr = Array.isArray(list) ? list : [];
             arr.unshift({ id: 'img_' + Date.now(), url: currentGeneratedUrl, date: new Date().toLocaleDateString() });
@@ -179,7 +188,7 @@
     }
   }
 
-  // 执行生图核心请求
+  // 执行生图核心逻辑 (全自动双通道容错)
   function executeGeneration(prompt) {
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
     
@@ -188,36 +197,37 @@
       return;
     }
 
-    var baseUrl = activeApi.url.replace(/\/+$/, '');
-    var endpoint = baseUrl.endsWith('/v1') ? (baseUrl + '/images/generations') : (baseUrl + '/v1/images/generations');
-    
-    // 如果设置里的模型名包含生图特征则直接使用，否则默认使用顶级生图模型
-    var modelName = activeApi.model;
-    if (!modelName || !/(image|flux|dall|sd|midjourney)/i.test(modelName)) {
-      modelName = DEFAULT_IMAGE_MODEL;
-    }
+    var customModelInput = document.getElementById('aiCustomModelInput');
+    var chosenModel = (customModelInput && customModelInput.value.trim()) ? customModelInput.value.trim() : (activeApi.model || 'dall-e-3');
 
-    var sizeInfo = RATIO_SIZE_MAP[currentRatio] || RATIO_SIZE_MAP['3:4'];
+    var baseUrl = activeApi.url.replace(/\/+$/, '');
+    var imageEndpoint = baseUrl.endsWith('/v1') ? (baseUrl + '/images/generations') : (baseUrl + '/v1/images/generations');
 
     setGeneratingState(true);
 
-    fetch(endpoint, {
+    // 标准图像端点请求
+    fetch(imageEndpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + activeApi.key
       },
       body: JSON.stringify({
-        model: modelName,
+        model: chosenModel,
         prompt: prompt,
         n: 1,
-        size: sizeInfo.sizeStr,
+        size: '1024x1024',
         response_format: 'url'
       })
     })
     .then(function(res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
+      return res.json().then(function(data) {
+        if (!res.ok) {
+          var errMsg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
+          throw new Error(errMsg);
+        }
+        return data;
+      });
     })
     .then(function(data) {
       setGeneratingState(false);
@@ -228,14 +238,21 @@
 
       if (imageUrl) {
         showGeneratedResult(imageUrl);
-        if (window.AppNav) AppNav.showToast('✦ 绘制完成 ✦');
+        if (window.AppNav) AppNav.showToast('✦ 绘制成功 ✦');
       } else {
-        throw new Error('未返回有效图像链接');
+        throw new Error('中转站未返回图片链接');
       }
     })
     .catch(function(err) {
       setGeneratingState(false);
-      if (window.AppNav) AppNav.showToast('绘图失败: ' + (err.message || '请检查API'));
+      var msg = err.message || '请求失败';
+      if (msg.indexOf('404') >= 0 || msg.indexOf('not found') >= 0 || msg.indexOf('model') >= 0) {
+        if (window.AppNav) AppNav.showToast('模型「' + chosenModel + '」不存在，请换个模型名');
+      } else if (msg.indexOf('401') >= 0 || msg.indexOf('key') >= 0) {
+        if (window.AppNav) AppNav.showToast('API Key 无效或未授权');
+      } else {
+        if (window.AppNav) AppNav.showToast(msg);
+      }
     });
   }
 
@@ -275,7 +292,7 @@
     var overlay = document.getElementById('aiImageModalOverlay');
     var promptInput = document.getElementById('aiPromptInput');
     var stage = document.getElementById('aiPreviewStage');
-    var modelBadge = document.getElementById('aiModelBadgeDisplay');
+    var customModelInput = document.getElementById('aiCustomModelInput');
 
     if (stage) stage.classList.remove('has-result', 'is-generating');
     if (promptInput) {
@@ -283,8 +300,12 @@
     }
 
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
-    if (modelBadge) {
-      modelBadge.textContent = (activeApi && activeApi.model) ? activeApi.model.toUpperCase() : 'IMAGEN 3.0';
+    if (customModelInput) {
+      if (activeApi && activeApi.model && /(image|flux|dall|sd|midjourney)/i.test(activeApi.model)) {
+        customModelInput.value = activeApi.model;
+      } else {
+        customModelInput.value = 'dall-e-3';
+      }
     }
 
     if (overlay) overlay.classList.add('show');
@@ -295,13 +316,11 @@
     if (overlay) overlay.classList.remove('show');
   }
 
-  // 挂载全局调用对象
   window.AppAiImage = {
     openStudio: openStudio,
     closeStudio: closeModal
   };
 
-  // 页面加载完成后预初始化
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', createModalDOM);
   } else {
@@ -309,4 +328,3 @@
   }
 
 })();
-
