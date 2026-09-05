@@ -1,7 +1,7 @@
 
 .arch-card-wrapper [contenteditable="true"],
 .t1-bio, .t2-bio, .t3-bio, .t4-bio, .t5-sub-cn {
-  white-space: pre-wrap !important; /* 👈 开启严密空格与换行支持 */
+  white-space: pre-wrap !important; /* 开启严密空格与换行支持 */
 }
 /* ========== 彻底消灭所有可编辑文字的蓝色外框与背景 ========== */
 .arch-card-wrapper [contenteditable="true"],
@@ -386,7 +386,7 @@
   position: relative;
   flex-shrink: 0;
 
-  /* 👈 重点在这里：控制图片底部跟这条虚线之间的距离 */
+  /* 重点在这里：控制图片底部跟这条虚线之间的距离 */
   margin-top: 12px !important; 
 }
 .t1-cutout-left, .t1-cutout-right {
@@ -468,8 +468,8 @@
 }
 .t2-frame {
   position: relative; border: 1px solid rgba(30, 36, 45, 0.15);
-  background: #ffffff; border-radius: 20px; padding: 11px 16px;
-  display: flex; flex-direction: column; gap: 8px; overflow: hidden;
+  background: #ffffff; border-radius: 20px; padding: 8px 16px;
+  display: flex; flex-direction: column; gap: 6px; overflow: hidden;
 }
 .t2-cross {
   position: absolute; font-size: 11px; color: #94a3b8; font-weight: 300; pointer-events: none; z-index: 10;
@@ -486,7 +486,7 @@
 /* 第 2 款相框：固定高度 */
 .t2-photo-stage {
   width: 100%;
-  height: 345px;
+  height: 355px;
   border-radius: 14px;
   position: relative;
   overflow: hidden;
