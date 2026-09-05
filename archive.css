@@ -995,15 +995,36 @@
 }
 
 .frost-crystal-svg { width: 46px; height: 46px; overflow: visible; }
-.crystal-stroke { stroke: #18191c; stroke-width: 1.25; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+/* 冰晶描边：清透柔和冰蓝 */
+.crystal-stroke { 
+  stroke: #6a8ca8 !important; 
+  stroke-width: 1.3; 
+  stroke-linecap: round; 
+  stroke-linejoin: round; 
+  fill: none; 
+}
 
-.archive-panel-active .crystal-core { opacity: 0; transform-origin: 24px 24px; animation: crystalCoreSlow 1.4s cubic-bezier(0.2, 0.8, 0.3, 1) 0.5s forwards; }
+/* 冰晶星核与极点微芒：深邃冰蓝 */
+.crystal-core circle[fill],
+.crystal-sparkles circle[fill] {
+  fill: #6a8ca8 !important;
+}
+
+/* 四周闪烁的小星芒符号 */
+.empty-sparkle {
+  position: absolute;
+  font-size: 11px;
+  color: #88abda !important;
+  opacity: 0;
+}
+
+.archive-panel-active .crystal-core { opacity: 0; transform-origin: 24px 24px; animation: crystalCoreSlow 1s cubic-bezier(0.2, 0.8, 0.3, 1) 0.5s forwards; }
 @keyframes crystalCoreSlow { 0% { opacity: 0; transform: scale(0.2) rotate(-45deg); } 100% { opacity: 1; transform: scale(1) rotate(0deg); } }
-.archive-panel-active .crystal-spears { stroke-dasharray: 60; stroke-dashoffset: 60; animation: crystalDrawSpears 2.0s cubic-bezier(0.3, 0, 0.2, 1) 1.6s forwards; }
+.archive-panel-active .crystal-spears { stroke-dasharray: 60; stroke-dashoffset: 60; animation: crystalDrawSpears 1.5s cubic-bezier(0.3, 0, 0.2, 1) 1.6s forwards; }
 @keyframes crystalDrawSpears { to { stroke-dashoffset: 0; } }
-.archive-panel-active .crystal-petals { stroke-dasharray: 50; stroke-dashoffset: 50; animation: crystalDrawPetals 2.0s cubic-bezier(0.3, 0, 0.2, 1) 3.2s forwards; }
+.archive-panel-active .crystal-petals { stroke-dasharray: 50; stroke-dashoffset: 50; animation: crystalDrawPetals 1.5s cubic-bezier(0.3, 0, 0.2, 1) 3.2s forwards; }
 @keyframes crystalDrawPetals { to { stroke-dashoffset: 0; } }
-.archive-panel-active .crystal-sparkles { opacity: 0; transform-origin: 24px 24px; animation: crystalSparkleSlow 1.2s ease-out 4.8s forwards; }
+.archive-panel-active .crystal-sparkles { opacity: 0; transform-origin: 24px 24px; animation: crystalSparkleSlow 0.5s ease-out 3.5s forwards; }
 @keyframes crystalSparkleSlow { 0% { opacity: 0; transform: scale(0.3); } 100% { opacity: 1; transform: scale(1); } }
 
 .empty-sparkle { position: absolute; font-size: 11px; color: #868e96; opacity: 0; }
@@ -1303,7 +1324,7 @@
 .expand-clear-btn {
   background: none;
   border: none;
-  color: #fa5252;
+  color: #c94a4a;
   font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
