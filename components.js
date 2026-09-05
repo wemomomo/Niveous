@@ -13,14 +13,12 @@
     setupCoupleStyle();
   }
 
-  // 极速启动：就绪立刻执行，未就绪监听事件，绝不设无意义的 setTimeout 拖慢冷启动
   if (window._dbReady) {
     initAllComponents();
   } else {
     window.addEventListener('dbReady', initAllComponents, { once: true });
   }
 
-  // 极简高性能纯文本粘贴拦截
   function bindPlainTextPaste(el) {
     if (!el) return;
     el.addEventListener('paste', function(e) {
@@ -48,13 +46,17 @@
     if (addBgBtn) {
       addBgBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        window.PhotoAction.show(
-          function() { bgFileInput.click(); },
-          function() {
-            if (bgLayer) bgLayer.style.backgroundImage = '';
-            if (window.AppDB) window.AppDB.delete('home_bg_img');
-          }
-        );
+        if (window.PhotoAction) {
+          window.PhotoAction.show(
+            function() { bgFileInput.click(); },
+            function() {
+              if (bgLayer) bgLayer.style.backgroundImage = '';
+              if (window.AppDB) window.AppDB.delete('home_bg_img');
+            }
+          );
+        } else {
+          bgFileInput.click();
+        }
       });
     }
 
@@ -153,33 +155,43 @@
       style: { glass: false, color: '#ffffff', opacity: 80 }
     };
 
+    // 背景图点击：已设置背景时弹出选择/删除，无背景时直接选照片
     if (cardUpper) {
       cardUpper.addEventListener('click', function(e) {
         e.stopPropagation();
-        window.PhotoAction.show(
-          function() { bgFileInput.click(); },
-          function() {
-            if (cardBg) {
-              cardBg.style.backgroundImage = '';
-              cardBg.classList.remove('has-bg');
+        if (cardBg && cardBg.classList.contains('has-bg') && window.PhotoAction) {
+          window.PhotoAction.show(
+            function() { bgFileInput.click(); },
+            function() {
+              if (cardBg) {
+                cardBg.style.backgroundImage = '';
+                cardBg.classList.remove('has-bg');
+              }
+              if (window.AppDB) window.AppDB.delete('card_bg');
             }
-            if (window.AppDB) window.AppDB.delete('card_bg');
-          }
-        );
+          );
+        } else {
+          bgFileInput.click();
+        }
       });
     }
 
+    // 头像点击：已有头像时精准弹出【选择照片 / 删除照片】碎花卡片
     if (avatarBtn) {
       avatarBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        window.PhotoAction.show(
-          function() { avatarFileInput.click(); },
-          function() {
-            if (avatarImg) avatarImg.src = '';
-            avatarBtn.classList.remove('has-img');
-            if (window.AppDB) window.AppDB.delete('card_avatar');
-          }
-        );
+        if (avatarBtn.classList.contains('has-img') && window.PhotoAction) {
+          window.PhotoAction.show(
+            function() { avatarFileInput.click(); },
+            function() {
+              if (avatarImg) avatarImg.src = '';
+              avatarBtn.classList.remove('has-img');
+              if (window.AppDB) window.AppDB.delete('card_avatar');
+            }
+          );
+        } else {
+          avatarFileInput.click();
+        }
       });
     }
 
@@ -387,17 +399,22 @@
 
     var msgBadgeState = { bgColor: '#8e8e93', textColor: '#ffffff' };
 
+    // 消息角色头像：已有头像时弹出选择/删除
     if (messageAvatar) {
       messageAvatar.addEventListener('click', function(e) {
         e.stopPropagation();
-        window.PhotoAction.show(
-          function() { avatarFileInput.click(); },
-          function() {
-            if (messageAvatarImg) messageAvatarImg.src = '';
-            messageAvatar.classList.remove('has-img');
-            if (window.AppDB) window.AppDB.delete('message_avatar');
-          }
-        );
+        if (messageAvatar.classList.contains('has-img') && window.PhotoAction) {
+          window.PhotoAction.show(
+            function() { avatarFileInput.click(); },
+            function() {
+              if (messageAvatarImg) messageAvatarImg.src = '';
+              messageAvatar.classList.remove('has-img');
+              if (window.AppDB) window.AppDB.delete('message_avatar');
+            }
+          );
+        } else {
+          avatarFileInput.click();
+        }
       });
     }
 
@@ -518,7 +535,7 @@
     }
   }
 
-  // ============ 情侣展示区样式定制模块 ============
+  // ============ 头像展示区样式定制模块 ============
   function setupCoupleStyle() {
     var coupleEditBtn = document.querySelector('[data-edit-target="couple"]');
     var couplePopup = null;
@@ -740,7 +757,6 @@
     });
   }
 
-  // 极速启动：0 延迟秒开
   if (window._dbReady) {
     initCoupleSection();
   } else {
@@ -823,11 +839,16 @@
 
   function handleAvatarClick(idx) {
     var key = 'avatar' + idx;
-    if (coupleData[key]) {
-      window.PhotoAction.show(
-        function() { pickCoupleAvatar(idx); },
-        function() { deleteCoupleAvatar(idx); }
-      );
+    var circle = document.getElementById('coupleAvatar' + idx);
+    if (coupleData[key] || (circle && circle.classList.contains('has-img'))) {
+      if (window.PhotoAction) {
+        window.PhotoAction.show(
+          function() { pickCoupleAvatar(idx); },
+          function() { deleteCoupleAvatar(idx); }
+        );
+      } else {
+        pickCoupleAvatar(idx);
+      }
     } else {
       pickCoupleAvatar(idx);
     }
