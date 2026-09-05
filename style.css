@@ -206,7 +206,7 @@ html, body {
   opacity: 0;
   pointer-events: none;
   background-color: transparent !important;
-  border-radius: 12px;
+  border-radius: 1px;
   box-shadow: 0 10px 30px rgba(136, 171, 218, 0.22);
   color: #334e68;
   font-size: 13.5px;
