@@ -193,8 +193,10 @@
   }
 
   // ==========================================
-  // 步骤 2：手账录入填单（支持右滑返回）
+  // 步骤 2：手账录入填单（含全局捕获级右滑手势）
   // ==========================================
+  var step2BackHandler = null;
+
   function renderStep2() {
     var cur = getCurrentUser() || defaultProfile;
     container.className = 'app-content archive-page-wrap';
@@ -219,12 +221,12 @@
       + '<div class="journal-section">'
       + '<div class="section-lead-title"><div class="section-name"><span class="sec-index">01.</span><span>基础身份</span></div><span class="section-tag-en">IDENTITY</span></div>'
       + '<div class="ruled-row-grid">'
-      + '<div class="ruled-item"><span class="ruled-label">姓名 / 专属称呼</span><input type="text" class="ruled-input" id="fieldName" value="' + esc(cur.name) + '" placeholder="如：墨墨"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">性别</span><input type="text" class="ruled-input" id="fieldGender" value="' + esc(cur.gender) + '" placeholder="如：女"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">年龄</span><input type="text" class="ruled-input" id="fieldAge" value="' + esc(cur.age) + '" placeholder="如：18"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">身高</span><input type="text" class="ruled-input" id="fieldHeight" value="' + esc(cur.height) + '" placeholder="如：165cm"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">姓名 / 专属称呼</span><input type="text" class="ruled-input" id="fieldName" value="' + esc(cur.name) + '" placeholder=""></div>'
+      + '<div class="ruled-item"><span class="ruled-label">性别</span><input type="text" class="ruled-input" id="fieldGender" value="' + esc(cur.gender) + '" placeholder=""></div>'
+      + '<div class="ruled-item"><span class="ruled-label">年龄</span><input type="text" class="ruled-input" id="fieldAge" value="' + esc(cur.age) + '" placeholder=""></div>'
+      + '<div class="ruled-item"><span class="ruled-label">身高</span><input type="text" class="ruled-input" id="fieldHeight" value="' + esc(cur.height) + '" placeholder=""></div>'
       + '<div class="ruled-item"><span class="ruled-label">生日</span><input type="text" class="ruled-input" id="fieldBirthday" value="' + esc(cur.birthday) + '" placeholder="如：09.24"></div>'
-      + '<div class="ruled-item"><span class="ruled-label">星座</span><input type="text" class="ruled-input" id="fieldZodiac" value="' + esc(cur.zodiac) + '" placeholder="如：天秤座"></div>'
+      + '<div class="ruled-item"><span class="ruled-label">星座</span><input type="text" class="ruled-input" id="fieldZodiac" value="' + esc(cur.zodiac) + '" placeholder=""></div>'
       + '</div>'
       + '</div>'
 
@@ -280,20 +282,19 @@
       background: cur.background || ''
     });
 
-    // 核心通用返回处理（点击返回键 & 右滑手势共用）
-    function handleStep2Back() {
+    step2BackHandler = function() {
       var currentSnapshot = JSON.stringify({
-        name: document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, ''),
-        gender: document.getElementById('fieldGender').value.trim(),
-        age: document.getElementById('fieldAge').value.trim(),
-        height: document.getElementById('fieldHeight').value.trim(),
-        birthday: document.getElementById('fieldBirthday').value.trim(),
-        zodiac: document.getElementById('fieldZodiac').value.trim(),
-        appearance: document.getElementById('fieldAppearance').value.trim(),
-        personality: document.getElementById('fieldPersonality').value.trim(),
-        tags: document.getElementById('fieldTags').value.trim(),
-        hobbies: document.getElementById('fieldHobbies').value.trim(),
-        background: document.getElementById('fieldBackground').value.trim()
+        name: (document.getElementById('fieldName') ? document.getElementById('fieldName').value : '').trim().replace(/[✞✟✠]/g, ''),
+        gender: (document.getElementById('fieldGender') ? document.getElementById('fieldGender').value : '').trim(),
+        age: (document.getElementById('fieldAge') ? document.getElementById('fieldAge').value : '').trim(),
+        height: (document.getElementById('fieldHeight') ? document.getElementById('fieldHeight').value : '').trim(),
+        birthday: (document.getElementById('fieldBirthday') ? document.getElementById('fieldBirthday').value : '').trim(),
+        zodiac: (document.getElementById('fieldZodiac') ? document.getElementById('fieldZodiac').value : '').trim(),
+        appearance: (document.getElementById('fieldAppearance') ? document.getElementById('fieldAppearance').value : '').trim(),
+        personality: (document.getElementById('fieldPersonality') ? document.getElementById('fieldPersonality').value : '').trim(),
+        tags: (document.getElementById('fieldTags') ? document.getElementById('fieldTags').value : '').trim(),
+        hobbies: (document.getElementById('fieldHobbies') ? document.getElementById('fieldHobbies').value : '').trim(),
+        background: (document.getElementById('fieldBackground') ? document.getElementById('fieldBackground').value : '').trim()
       });
 
       var isModified = (originalSnapshot !== currentSnapshot);
@@ -301,7 +302,7 @@
       if (isModified) {
         var shouldSave = confirm('检测到内容已修改，是否保存？');
         if (shouldSave) {
-          var nameVal = document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, '');
+          var nameVal = (document.getElementById('fieldName') ? document.getElementById('fieldName').value : '').trim().replace(/[✞✟✠]/g, '');
           if (!nameVal) {
             AppNav.showToast('姓名不能为空哦');
             return;
@@ -345,39 +346,9 @@
       } else {
         renderStep1();
       }
-    }
+    };
 
-    document.getElementById('archBackBtn').addEventListener('click', handleStep2Back);
-
-        // 绑定右滑返回手势（阻止事件冒泡，防止被全局劫持退回桌面）
-    var step2Panel = document.getElementById('archStep2');
-    if (step2Panel) {
-      var sStartX = 0, sStartY = 0, sEndX = 0, sEndY = 0;
-      step2Panel.addEventListener('touchstart', function(e) {
-        sStartX = e.touches[0].clientX;
-        sStartY = e.touches[0].clientY;
-        sEndX = sStartX;
-        sEndY = sStartY;
-      }, { passive: true });
-
-      step2Panel.addEventListener('touchmove', function(e) {
-        sEndX = e.touches[0].clientX;
-        sEndY = e.touches[0].clientY;
-        // 只要是在向右滑，立刻阻止事件向上冒泡到外层 app-page！
-        if (sEndX - sStartX > 10) {
-          e.stopPropagation();
-        }
-      }, { passive: true });
-
-      step2Panel.addEventListener('touchend', function(e) {
-        var diffX = sEndX - sStartX;
-        var diffY = sEndY - sStartY;
-        if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY) * 1.2) {
-          e.stopPropagation();
-          handleStep2Back();
-        }
-      });
-    }
+    document.getElementById('archBackBtn').addEventListener('click', step2BackHandler);
 
     document.getElementById('generateCardBtn').addEventListener('click', function() {
       var nameVal = document.getElementById('fieldName').value.trim().replace(/[✞✟✠]/g, '');
@@ -410,6 +381,57 @@
       });
     });
   }
+
+  // ==========================================
+  // 全局捕获级拦截锁：彻底截断退回主页的手势
+  // ==========================================
+  (function initGlobalSwipeInterceptor() {
+    var touchStartX = 0, touchStartY = 0, touchCurX = 0, touchCurY = 0;
+    var isIntercepting = false;
+
+    window.addEventListener('touchstart', function(e) {
+      var step2 = document.getElementById('archStep2');
+      if (!step2 || !step2.classList.contains('step-active')) {
+        isIntercepting = false;
+        return;
+      }
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchCurX = touchStartX;
+      touchCurY = touchStartY;
+      isIntercepting = true;
+      
+      // 只要处于编辑页，在左边缘触摸时直接切断向外部 app-page 传递，防止触发桌面返回
+      if (touchStartX <= 60) {
+        e.stopPropagation();
+      }
+    }, { capture: true, passive: true });
+
+    window.addEventListener('touchmove', function(e) {
+      if (!isIntercepting) return;
+      touchCurX = e.touches[0].clientX;
+      touchCurY = e.touches[0].clientY;
+      var diffX = touchCurX - touchStartX;
+      var diffY = touchCurY - touchStartY;
+      if (diffX > 10 && diffX > Math.abs(diffY)) {
+        // 向右滑时立刻阻止 app-page 整体平移退回桌面
+        e.stopPropagation();
+      }
+    }, { capture: true, passive: true });
+
+    window.addEventListener('touchend', function(e) {
+      if (!isIntercepting) return;
+      isIntercepting = false;
+      var diffX = touchCurX - touchStartX;
+      var diffY = touchCurY - touchStartY;
+      if (diffX > 50 && diffX > Math.abs(diffY) * 1.2) {
+        e.stopPropagation();
+        if (typeof step2BackHandler === 'function') {
+          step2BackHandler();
+        }
+      }
+    }, { capture: true, passive: true });
+  })();
 
   // ==========================================
   // 步骤 3：5 个专属底页容器展示
@@ -504,7 +526,7 @@
       return '<div class="arch-card-wrapper t3-wrapper">'
         + '<div class="t3-perfs-left"><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div></div>'
         + '<div class="t3-perfs-right"><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div><div class="t3-perf-hole"></div></div>'
-        + '<div class="t3-inner-box"><div class="t3-header-row"><div class="t3-postmark"><div class="t3-pm-circle">PARIS</div><div class="t3-pm-lines"><div class="t3-pm-line"></div><div class="t3-pm-line"></div><div class="t3-pm-line"></div></div></div><div class="t3-tag-text"><span>♡</span><span>LETTRE D\'AMOUR</span></div></div>'
+        + '<div class="t3-inner-box"><div class="t3-header-row"><div class="t3-postmark"><div class="t3-pm-circle">PARIS</div><div class="t3-pm-lines"><div class="t3-pm-line"></div><div class="t3-pm-line"></div></div></div><div class="t3-tag-text"><span>♡</span><span>LETTRE D\'AMOUR</span></div></div>'
         + '<div class="t3-photo-stage' + hasPhotoClass + '" id="cardPhotoBtn"><img id="cardPhotoImg" src="' + esc(cur.photo) + '" alt="立绘"><div class="t1-photo-empty"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>上传立绘</span></div><div class="t3-photo-tag"><span>♥</span><span>NO. ' + esc(cur.birthday || '0000') + '</span></div></div>'
         + '<div class="t3-footer-body"><div style="display:flex; justify-content:space-between; align-items:baseline;"><div class="t3-username" id="cardName" contenteditable="true" spellcheck="false">' + esc(cur.name) + '</div><div class="t3-serial">POSTAGE</div></div>'
         + '<div class="t3-bio" id="cardBio" contenteditable="true" spellcheck="false">' + esc(cur.bio2 || DEFAULT_BIOS[2]) + '</div>'
