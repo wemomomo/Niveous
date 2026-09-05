@@ -174,7 +174,7 @@
       + '</div>'
       + '</div>'
       + '<h2 class="empty-title">尚未建立用户档案</h2>'
-      + '<p class="empty-desc">记录你的专属身份、立绘特写与心动寄语，生成独一无二的高定纸质票根小卡。</p>'
+      + '<p class="empty-desc">记录你的专属身份、立绘特写。</p>'
       + '<button class="action-trigger-btn" id="goToStep2Btn" type="button">'
       + '<svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
       + '<span>新建用户档案</span>'
@@ -319,7 +319,7 @@
 
       + '<button class="action-trigger-btn" id="generateCardBtn" style="max-width:100%; height:44px; border-radius:12px;" type="button">'
       + '<svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>'
-      + '<span>封存档案并生成小卡</span>'
+      + '<span>资料入库并进入模板生成</span>'
       + '</button>'
       + '</div>'
       + '</div>'
