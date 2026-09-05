@@ -27,24 +27,24 @@
 
       + '<div class="ai-image-body">'
       
-      // 1. 模型选择/输入栏
+      // 1. 模型选择/输入栏 (带极速 Flux / Imagen / Dalle 快捷标签)
       + '<div style="display:flex; flex-direction:column; gap:6px; background:#f8fafc; padding:8px 10px; border-radius:12px; border:1px solid rgba(0,0,0,0.06);">'
       + '<div style="display:flex; justify-content:space-between; align-items:center;">'
-      + '<span style="font-size:11px; font-weight:700; color:#64748b;">生图模型</span>'
+      + '<span style="font-size:11px; font-weight:700; color:#64748b;">生图模型 (极速通道)</span>'
       + '<div style="display:flex; gap:4px;">'
+      + '<button class="ai-quick-model-btn" data-model="flux-schnell" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #88abda; background:#eaf3fa; color:#334e68; font-weight:700; cursor:pointer;" type="button">⚡极速Flux</button>'
       + '<button class="ai-quick-model-btn" data-model="dall-e-3" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">dall-e-3</button>'
       + '<button class="ai-quick-model-btn" data-model="imagen-3" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">imagen-3</button>'
-      + '<button class="ai-quick-model-btn" data-model="flux-schnell" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">flux</button>'
       + '</div>'
       + '</div>'
-      + '<input type="text" id="aiCustomModelInput" placeholder="输入中转站支持的模型名" style="width:100%; border:none; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; font-size:12px; font-family:monospace; outline:none; color:#18191c;">'
+      + '<input type="text" id="aiCustomModelInput" placeholder="输入模型名 (如 flux-schnell / dall-e-3)" style="width:100%; border:none; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; font-size:12px; font-family:monospace; outline:none; color:#18191c;">'
       + '</div>'
 
       // 2. 提示词输入区
       + '<div class="ai-prompt-box">'
       + '<div class="ai-prompt-header">'
       + '<span class="ai-prompt-label">画意描述 (PROMPT)</span>'
-      + '<button class="ai-auto-prompt-pill" id="aiAutoPromptBtn" type="button"><span>✦ 智能优化词</span></button>'
+      + '<button class="ai-auto-prompt-pill" id="aiAutoPromptBtn" type="button"><span>✦ 智能润色</span></button>'
       + '</div>'
       + '<textarea class="ai-prompt-textarea" id="aiPromptInput" placeholder="描述想要绘制的立绘、发色眸色、光影与场景..."></textarea>'
       + '</div>'
@@ -58,9 +58,9 @@
       + '</div>'
       + '</div>'
 
-      // 4. 图像生成展示舞台
+      // 4. 图像生成展示舞台 (支持直接点击放大长按保存)
       + '<div class="ai-preview-stage" id="aiPreviewStage" style="aspect-ratio:1/1;">'
-      + '<img id="aiResultImg" src="" alt="AI生成图像">'
+      + '<img id="aiResultImg" src="" alt="AI生成图像" title="点击或长按可存储到手机相册">'
       + '<div class="ai-stage-empty">'
       + '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
       + '<span>输入描述，轻点下方开始绘图</span>'
@@ -73,24 +73,25 @@
       + '<polygon points="6,24 20,20 24,24 20,28" stroke="#88abda" stroke-width="1.5" fill="none"/>'
       + '<polygon points="42,24 28,20 24,24 28,28" stroke="#88abda" stroke-width="1.5" fill="none"/>'
       + '</svg>'
-      + '<span class="ai-generating-text" id="aiProgressStatusText">正在连接画师通道... (0s)</span>'
+      + '<span class="ai-generating-text" id="aiProgressStatusText">正在连接极速通道... (0s)</span>'
       + '</div>'
       + '</div>'
 
-      // 5. 诊断报错输出框 (手机端直显)
+      // 5. 诊断报错输出框
       + '<div id="aiDebugErrorBox" style="display:none; font-size:11px; color:#c94a4a; background:#fdf2f2; border:1px solid #fecaca; border-radius:8px; padding:6px 10px; line-height:1.4; word-break:break-all;"></div>'
 
       + '</div>'
 
-      // 6. 底部执行按钮组
+      // 6. 底部执行与下载按钮组
       + '<div class="ai-action-footer">'
       + '<button class="ai-generate-btn" id="aiStartGenBtn" type="button">'
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 14.5,9.5 22,12 14.5,14.5 12,22 9.5,14.5 2,12 9.5,9.5"/></svg>'
       + '<span>开始绘制立绘</span>'
       + '</button>'
-      + '<div class="ai-result-actions" id="aiResultActions">'
-      + '<button class="ai-result-btn" id="aiSaveImgbedBtn" type="button">保存到图床</button>'
-      + '<button class="ai-result-btn primary" id="aiAdoptBtn" type="button">✦ 采用此立绘</button>'
+      + '<div class="ai-result-actions" id="aiResultActions" style="display:none; gap:6px; width:100%;">'
+      + '<button class="ai-result-btn" id="aiDownloadPhotoBtn" type="button" style="color:#0284c7; border-color:rgba(2,132,199,0.3); background:#f0f9ff;"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>保存相册</span></button>'
+      + '<button class="ai-result-btn" id="aiSaveImgbedBtn" type="button"><span>存入图床</span></button>'
+      + '<button class="ai-result-btn primary" id="aiAdoptBtn" type="button"><span>✦ 采用立绘</span></button>'
       + '</div>'
       + '</div>'
       + '</div>';
@@ -105,9 +106,11 @@
     var startBtn = document.getElementById('aiStartGenBtn');
     var adoptBtn = document.getElementById('aiAdoptBtn');
     var saveImgbedBtn = document.getElementById('aiSaveImgbedBtn');
+    var downloadBtn = document.getElementById('aiDownloadPhotoBtn');
     var autoPromptBtn = document.getElementById('aiAutoPromptBtn');
     var promptInput = document.getElementById('aiPromptInput');
     var customModelInput = document.getElementById('aiCustomModelInput');
+    var resultImg = document.getElementById('aiResultImg');
 
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
     if (overlay) {
@@ -160,6 +163,7 @@
       });
     }
 
+    // 采用图片
     if (adoptBtn) {
       adoptBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
@@ -171,6 +175,7 @@
       });
     }
 
+    // 存入图床
     if (saveImgbedBtn) {
       saveImgbedBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
@@ -185,13 +190,63 @@
         }
       });
     }
+
+    // 下载保存到手机相册
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', function() {
+        if (!currentGeneratedUrl) return;
+        downloadImageToDevice(currentGeneratedUrl);
+      });
+    }
+
+    // 点击图片也可以在新窗口打开或直接保存
+    if (resultImg) {
+      resultImg.addEventListener('click', function() {
+        if (!currentGeneratedUrl) return;
+        if (window.AppNav) AppNav.showToast('✦ 长按图片即可直接存储到系统相册 ✦');
+      });
+    }
   }
 
-  // 万能穿透提取器（递归深挖任何字段里的图片与 Base64）
+  // 苹果 iOS / 原生下载图片工具
+  function downloadImageToDevice(url) {
+    if (url.indexOf('data:image') === 0) {
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'niveous-art-' + Date.now() + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      if (window.AppNav) AppNav.showToast('✦ 图片已开始保存 ✦');
+      return;
+    }
+
+    // 如果是远程 http url，转换成 blob 下载
+    if (window.AppNav) AppNav.showToast('正在准备高清原图...');
+    fetch(url)
+      .then(function(res) { return res.blob(); })
+      .then(function(blob) {
+        var blobUrl = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = 'niveous-ai-' + Date.now() + '.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+        if (window.AppNav) AppNav.showToast('✦ 已保存至手机下载/相册 ✦');
+      })
+      .catch(function() {
+        // 如果跨域拦截，直接打开新标签页供长按存储
+        window.open(url, '_blank');
+        if (window.AppNav) AppNav.showToast('✦ 已打开大图，长按即可保存 ✦');
+      });
+  }
+
+  // 万能穿透提取器
   function deeplyExtractImage(obj) {
     if (!obj) return '';
 
-    // 1. 如果直接是字符串
     if (typeof obj === 'string') {
       var str = obj.trim();
       if (str.indexOf('data:image/') === 0) return str;
@@ -205,7 +260,6 @@
       return '';
     }
 
-    // 2. 如果是标准 OpenAI images 格式
     if (obj.data && Array.isArray(obj.data) && obj.data.length > 0) {
       var first = obj.data[0];
       if (first.url) return first.url;
@@ -213,7 +267,6 @@
       if (first.image) return first.image;
     }
 
-    // 3. 如果是 Chat 格式
     if (obj.choices && Array.isArray(obj.choices) && obj.choices.length > 0) {
       var msg = obj.choices[0].message;
       if (msg && msg.content) {
@@ -222,7 +275,6 @@
       }
     }
 
-    // 4. 通用私有字段检索
     if (obj.url && typeof obj.url === 'string') return obj.url;
     if (obj.image_url && typeof obj.image_url === 'string') return obj.image_url;
     if (obj.image && typeof obj.image === 'string') return deeplyExtractImage(obj.image);
@@ -232,7 +284,7 @@
     return '';
   }
 
-  // 双引擎生图核心
+  // 双引擎极速生图
   function executeDualEngineGeneration(prompt) {
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
     
@@ -245,7 +297,7 @@
     }
 
     var customModelInput = document.getElementById('aiCustomModelInput');
-    var chosenModel = (customModelInput && customModelInput.value.trim()) ? customModelInput.value.trim() : (activeApi.model || 'dall-e-3');
+    var chosenModel = (customModelInput && customModelInput.value.trim()) ? customModelInput.value.trim() : (activeApi.model || 'flux-schnell');
 
     var cleanBase = activeApi.url.replace(/\/+$/, '');
     var rootUrl = cleanBase.endsWith('/v1') ? cleanBase : (cleanBase + '/v1');
@@ -255,7 +307,7 @@
 
     setGeneratingState(true);
 
-    // 引擎 1：尝试标准生图端点
+    // 引擎 1：标准生图
     fetch(imagesUrl, {
       method: 'POST',
       headers: {
@@ -346,6 +398,7 @@
     var stage = document.getElementById('aiPreviewStage');
     var startBtn = document.getElementById('aiStartGenBtn');
     var statusText = document.getElementById('aiProgressStatusText');
+    var resultActions = document.getElementById('aiResultActions');
     if (!stage || !startBtn) return;
 
     if (generating) {
@@ -353,20 +406,21 @@
       stage.classList.remove('has-result');
       stage.classList.add('is-generating');
       startBtn.disabled = true;
-      startBtn.querySelector('span').textContent = '正在绘制中...';
+      startBtn.querySelector('span').textContent = '正在极速绘制中...';
+      if (resultActions) resultActions.style.display = 'none';
 
-      if (statusText) statusText.textContent = '正在连接画师通道... (0s)';
+      if (statusText) statusText.textContent = '正在连接极速画师... (0s)';
 
       clearInterval(timerInterval);
       timerInterval = setInterval(function() {
         elapsedSeconds++;
         if (statusText) {
           if (elapsedSeconds < 5) {
-            statusText.textContent = '📡 正在连接画师通道... (' + elapsedSeconds + 's)';
-          } else if (elapsedSeconds < 15) {
-            statusText.textContent = '✨ 正在构图与光影渲染... (' + elapsedSeconds + 's)';
+            statusText.textContent = '⚡ 正在极速连接画师... (' + elapsedSeconds + 's)';
+          } else if (elapsedSeconds < 12) {
+            statusText.textContent = '✨ 正在高精光影渲染... (' + elapsedSeconds + 's)';
           } else {
-            statusText.textContent = '🎨 正在进行细节高清升采样... (' + elapsedSeconds + 's)';
+            statusText.textContent = '🎨 正在进行细节高清处理... (' + elapsedSeconds + 's)';
           }
         }
       }, 1000);
@@ -382,15 +436,19 @@
     currentGeneratedUrl = url;
     var stage = document.getElementById('aiPreviewStage');
     var resultImg = document.getElementById('aiResultImg');
+    var resultActions = document.getElementById('aiResultActions');
     if (stage && resultImg) {
       resultImg.onload = function() {
         stage.classList.add('has-result');
+        if (resultActions) resultActions.style.display = 'flex';
       };
       resultImg.onerror = function() {
         stage.classList.add('has-result');
+        if (resultActions) resultActions.style.display = 'flex';
       };
       resultImg.src = url;
       stage.classList.add('has-result');
+      if (resultActions) resultActions.style.display = 'flex';
     }
   }
 
@@ -403,10 +461,13 @@
     var promptInput = document.getElementById('aiPromptInput');
     var stage = document.getElementById('aiPreviewStage');
     var customModelInput = document.getElementById('aiCustomModelInput');
+    var resultActions = document.getElementById('aiResultActions');
     var debugBox = document.getElementById('aiDebugErrorBox');
 
     if (debugBox) { debugBox.style.display = 'none'; debugBox.textContent = ''; }
     if (stage) stage.classList.remove('has-result', 'is-generating');
+    if (resultActions) resultActions.style.display = 'none';
+
     if (promptInput) {
       promptInput.value = (options && options.defaultPrompt) ? options.defaultPrompt : '';
     }
@@ -416,7 +477,7 @@
       if (activeApi && activeApi.model && /(image|flux|dall|sd|midjourney)/i.test(activeApi.model)) {
         customModelInput.value = activeApi.model;
       } else {
-        customModelInput.value = 'dall-e-3';
+        customModelInput.value = 'flux-schnell'; // 默认优先走极速 Flux 引擎
       }
     }
 
