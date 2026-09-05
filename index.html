@@ -32,6 +32,7 @@
 <link rel="stylesheet" href="worldbook.css">
 <link rel="stylesheet" href="forum.css">
 <link rel="stylesheet" href="archive.css">
+<link rel="stylesheet" href="character.css">
 <link rel="stylesheet" href="ai-image.css">
 </head>
 <body>
@@ -205,11 +206,11 @@
             </div>
           </div>
 
-          <!-- 桌面第 2 屏 (图床等应用专属屏幕) -->
+          <!-- 桌面第 2 屏 (图床、AI生图等应用专属屏幕) -->
           <div class="desktop-screen" data-screen-idx="1">
             <div class="desktop-apps-container">
               
-              <!-- 图标：图床 -->
+              <!-- 图标 1：图床 -->
               <div class="couple-icon-item" data-goto="imgbed" data-open-app="imgbed">
                 <div class="couple-icon-circle">
                   <svg viewBox="0 0 24 24">
@@ -219,6 +220,19 @@
                   </svg>
                 </div>
                 <span>图床</span>
+              </div>
+
+              <!-- 图标 2：AI 生图工坊 (点击秒开) -->
+              <div class="couple-icon-item" id="desktopAiImageBtn" data-action="ai-image">
+                <div class="couple-icon-circle">
+                  <!-- 星芒画笔微光图标 -->
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"/>
+                    <circle cx="19" cy="5" r="1.5" fill="currentColor"/>
+                    <circle cx="5" cy="19" r="1.5" fill="currentColor"/>
+                  </svg>
+                </div>
+                <span>生图</span>
               </div>
 
             </div>
@@ -237,6 +251,7 @@
 
     <!-- App 空壳页面挂载点 -->
     <div class="page app-page" data-page="archive"></div>
+    <div class="page app-page" data-page="character"></div>
     <div class="page app-page" data-page="imgbed"></div>
     <div class="page app-page" data-page="wechat"></div>
     <div class="page app-page" data-page="offline"></div>
@@ -324,6 +339,7 @@
 <script src="worldbook.js"></script>
 <script src="forum.js"></script>
 <script src="archive.js"></script>
+<script src="character.js"></script>
 <script src="ai-image.js"></script>
 </body>
 </html>
