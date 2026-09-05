@@ -195,12 +195,16 @@
       var coupleItem = e.target.closest('.couple-icon-item');
       if (coupleItem && !coupleItem.dataset.openApp && !coupleItem.dataset.goto) {
         var action = coupleItem.dataset.action;
-        if (action === 'beautify') {
+           if (action === 'beautify') {
           showToast('✦ 美化功能正在精心筹备中 ✦');
         } else if (action === 'worldbook') {
           showToast('✦ 世界书系统正在载入中 ✦');
         } else if (action === 'forum') {
           showToast('✦ 论坛社区即将开放 ✦');
+        } else if (action === 'ai-image') {
+          if (window.AppAiImage && typeof window.AppAiImage.openStudio === 'function') {
+            window.AppAiImage.openStudio();
+          }
         } else {
           showToast('✦ 该功能正在精心研发中 ✦');
         }
