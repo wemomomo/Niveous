@@ -37,7 +37,7 @@
       + '<button class="ai-quick-model-btn" data-model="flux-schnell" style="font-size:9.5px; padding:2.5px 7px; border-radius:4px; border:0.5px solid #cbd5e1; background:#fff; cursor:pointer;" type="button">flux</button>'
       + '</div>'
       + '</div>'
-      + '<input type="text" id="aiCustomModelInput" placeholder="输入中转站支持的生图模型名" style="width:100%; border:none; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; font-size:12px; font-family:monospace; outline:none; color:#18191c;">'
+      + '<input type="text" id="aiCustomModelInput" placeholder="输入中转站支持的模型名" style="width:100%; border:none; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; font-size:12px; font-family:monospace; outline:none; color:#18191c;">'
       + '</div>'
 
       // 2. 提示词输入区
@@ -77,9 +77,12 @@
       + '</div>'
       + '</div>'
 
+      // 5. 诊断报错输出框 (手机端直显)
+      + '<div id="aiDebugErrorBox" style="display:none; font-size:11px; color:#c94a4a; background:#fdf2f2; border:1px solid #fecaca; border-radius:8px; padding:6px 10px; line-height:1.4; word-break:break-all;"></div>'
+
       + '</div>'
 
-      // 5. 底部执行按钮组
+      // 6. 底部执行按钮组
       + '<div class="ai-action-footer">'
       + '<button class="ai-generate-btn" id="aiStartGenBtn" type="button">'
       + '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 14.5,9.5 22,12 14.5,14.5 12,22 9.5,14.5 2,12 9.5,9.5"/></svg>'
@@ -113,14 +116,12 @@
       });
     }
 
-    // 快捷填入模型名称
     document.querySelectorAll('.ai-quick-model-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         if (customModelInput) customModelInput.value = this.dataset.model;
       });
     });
 
-    // 画幅比例切换
     document.querySelectorAll('.ai-ratio-chip').forEach(function(chip) {
       chip.addEventListener('click', function() {
         document.querySelectorAll('.ai-ratio-chip').forEach(function(c){ c.classList.remove('active'); });
@@ -136,12 +137,11 @@
       });
     });
 
-    // 优化提示词
     if (autoPromptBtn) {
       autoPromptBtn.addEventListener('click', function() {
         var raw = (promptInput.value || '').trim();
         if (!raw) {
-          promptInput.value = '1boy, handsome anime male, silver hair, deep blue eyes, gentle smile, masterpiece, high quality';
+          promptInput.value = '1boy, handsome anime male, silver hair, deep blue eyes, gentle smile, masterpiece, best quality, 8k resolution';
         } else {
           promptInput.value = raw + ', highly detailed, masterpiece, anime aesthetic, 8k resolution';
         }
@@ -149,7 +149,6 @@
       });
     }
 
-    // 开始绘制
     if (startBtn) {
       startBtn.addEventListener('click', function() {
         var prompt = (promptInput.value || '').trim();
@@ -157,11 +156,10 @@
           if (window.AppNav) AppNav.showToast('请先输入想要绘制的描述哦');
           return;
         }
-        executeGeneration(prompt);
+        executeDualEngineGeneration(prompt);
       });
     }
 
-    // 采用图片
     if (adoptBtn) {
       adoptBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
@@ -173,7 +171,6 @@
       });
     }
 
-    // 保存到图床
     if (saveImgbedBtn) {
       saveImgbedBtn.addEventListener('click', function() {
         if (!currentGeneratedUrl) return;
@@ -190,10 +187,28 @@
     }
   }
 
-  // 执行生图核心逻辑 (带秒数进度 + 45s 超时强制保护)
-  function executeGeneration(prompt) {
+  // 提取 Markdown 或文本中的图片链接
+  function extractImageUrlFromText(text) {
+    if (!text) return '';
+    // 匹配 ![...](http...)
+    var mdMatch = text.match(/!\[.*?\]\((https?:\/\/[^\s\)]+)\)/i);
+    if (mdMatch && mdMatch[1]) return mdMatch[1];
+    // 匹配常规图片 URL
+    var urlMatch = text.match(/(https?:\/\/[^\s"'<>]+\.(?:png|jpg|jpeg|webp|gif))/i);
+    if (urlMatch && urlMatch[1]) return urlMatch[1];
+    // 匹配通用 HTTP 链接（中转站临时生图链接）
+    var genericMatch = text.match(/(https?:\/\/[^\s"'<>]+)/i);
+    if (genericMatch && genericMatch[1]) return genericMatch[1];
+    return '';
+  }
+
+  // 双引擎生图核心（Engine 1: /images/generations ➔ Engine 2: /chat/completions）
+  function executeDualEngineGeneration(prompt) {
     var activeApi = (window.ApiConfig && typeof window.ApiConfig.getActive === 'function') ? window.ApiConfig.getActive() : null;
     
+    var debugBox = document.getElementById('aiDebugErrorBox');
+    if (debugBox) { debugBox.style.display = 'none'; debugBox.textContent = ''; }
+
     if (!activeApi || !activeApi.url || !activeApi.key) {
       if (window.AppNav) AppNav.showToast('请先在「设置 ➔ API配置」中配置接口');
       return;
@@ -202,20 +217,18 @@
     var customModelInput = document.getElementById('aiCustomModelInput');
     var chosenModel = (customModelInput && customModelInput.value.trim()) ? customModelInput.value.trim() : (activeApi.model || 'dall-e-3');
 
-    var baseUrl = activeApi.url.replace(/\/+$/, '');
-    var imageEndpoint = baseUrl.endsWith('/v1') ? (baseUrl + '/images/generations') : (baseUrl + '/v1/images/generations');
+    // 清理 URL 结尾
+    var cleanBase = activeApi.url.replace(/\/+$/, '');
+    var rootUrl = cleanBase.endsWith('/v1') ? cleanBase : (cleanBase + '/v1');
+
+    var imagesUrl = rootUrl + '/images/generations';
+    var chatUrl = rootUrl + '/chat/completions';
 
     setGeneratingState(true);
 
-    // 45秒超时控制器
-    var controller = new AbortController();
-    var timeoutId = setTimeout(function() {
-      controller.abort();
-    }, 45000);
-
-    fetch(imageEndpoint, {
+    // 引擎 1：尝试标准生图接口
+    fetch(imagesUrl, {
       method: 'POST',
-      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + activeApi.key
@@ -228,46 +241,84 @@
       })
     })
     .then(function(res) {
-      clearTimeout(timeoutId);
-      return res.json().then(function(data) {
-        if (!res.ok) {
-          var errMsg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
-          throw new Error(errMsg);
-        }
-        return data;
-      });
+      if (!res.ok) {
+        // 如果端点 404 或不支持，抛错转入引擎 2
+        return res.json().then(function(errData) {
+          var msg = (errData && errData.error && errData.error.message) ? errData.error.message : ('HTTP ' + res.status);
+          throw new Error('IMG_FAILED:' + msg);
+        }).catch(function(e) {
+          throw new Error('IMG_FAILED:' + (e.message || res.status));
+        });
+      }
+      return res.json();
     })
     .then(function(data) {
-      setGeneratingState(false);
-      var imageUrl = '';
+      var img = '';
       if (data && data.data && data.data[0]) {
-        imageUrl = data.data[0].url || (data.data[0].b64_json ? ('data:image/png;base64,' + data.data[0].b64_json) : '');
+        img = data.data[0].url || (data.data[0].b64_json ? ('data:image/png;base64,' + data.data[0].b64_json) : '');
       }
-
-      if (imageUrl) {
-        showGeneratedResult(imageUrl);
-        if (window.AppNav) AppNav.showToast('✦ 绘制成功 ✦');
+      if (img) {
+        onSuccess(img);
       } else {
-        throw new Error('中转站未返回图片链接');
+        throw new Error('IMG_FAILED:未返回图片链接');
       }
     })
-    .catch(function(err) {
-      clearTimeout(timeoutId);
-      setGeneratingState(false);
-      
-      var msg = err.message || '';
-      if (err.name === 'AbortError') {
-        if (window.AppNav) AppNav.showToast('绘图超时(45s)，中转站响应过慢');
-      } else if (msg.indexOf('404') >= 0 || msg.indexOf('not found') >= 0 || msg.indexOf('model') >= 0) {
-        if (window.AppNav) AppNav.showToast('模型「' + chosenModel + '」不存在或未开通');
-      } else if (msg.indexOf('401') >= 0 || msg.indexOf('key') >= 0) {
-        if (window.AppNav) AppNav.showToast('API Key 无效或未授权');
-      } else if (msg) {
-        if (window.AppNav) AppNav.showToast(msg);
-      } else {
-        if (window.AppNav) AppNav.showToast('生图失败，请检查中转站支持的模型');
-      }
+    .catch(function(imgErr) {
+      // 引擎 2：如果标准接口失败，无缝切入 Chat 对话生图接口
+      var statusText = document.getElementById('aiProgressStatusText');
+      if (statusText) statusText.textContent = '🔄 切换对话画师协议中...';
+
+      fetch(chatUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + activeApi.key
+        },
+        body: JSON.stringify({
+          model: chosenModel,
+          messages: [{ role: 'user', content: 'Generate an image: ' + prompt }]
+        })
+      })
+      .then(function(cRes) {
+        if (!cRes.ok) {
+          return cRes.json().then(function(cData) {
+            var msg = (cData && cData.error && cData.error.message) ? cData.error.message : ('HTTP ' + cRes.status);
+            throw new Error(msg);
+          }).catch(function(e) {
+            throw new Error(e.message || ('HTTP ' + cRes.status));
+          });
+        }
+        return cRes.json();
+      })
+      .then(function(chatData) {
+        var reply = '';
+        if (chatData && chatData.choices && chatData.choices[0] && chatData.choices[0].message) {
+          reply = chatData.choices[0].message.content || '';
+        }
+        var foundUrl = extractImageUrlFromText(reply);
+        if (foundUrl) {
+          onSuccess(foundUrl);
+        } else {
+          var firstErr = imgErr.message.replace(/^IMG_FAILED:/, '');
+          throw new Error('画师未返回图片。中转报错：' + (firstErr || reply.slice(0, 80)));
+        }
+      })
+      .catch(function(finalErr) {
+        setGeneratingState(false);
+        var displayMsg = finalErr.message || '请求失败';
+        if (debugBox) {
+          debugBox.style.display = 'block';
+          debugBox.textContent = '【中转返回报错】' + displayMsg;
+        }
+        if (window.AppNav) AppNav.showToast('绘图失败，原因已显示在下方');
+      });
     });
+
+    function onSuccess(url) {
+      setGeneratingState(false);
+      showGeneratedResult(url);
+      if (window.AppNav) AppNav.showToast('✦ 绘制成功 ✦');
+    }
   }
 
   function setGeneratingState(generating) {
@@ -286,7 +337,6 @@
 
       if (statusText) statusText.textContent = '正在连接画师通道... (0s)';
 
-      // 实时动态进度秒数与阶段提示
       clearInterval(timerInterval);
       timerInterval = setInterval(function() {
         elapsedSeconds++;
@@ -327,7 +377,9 @@
     var promptInput = document.getElementById('aiPromptInput');
     var stage = document.getElementById('aiPreviewStage');
     var customModelInput = document.getElementById('aiCustomModelInput');
+    var debugBox = document.getElementById('aiDebugErrorBox');
 
+    if (debugBox) { debugBox.style.display = 'none'; debugBox.textContent = ''; }
     if (stage) stage.classList.remove('has-result', 'is-generating');
     if (promptInput) {
       promptInput.value = (options && options.defaultPrompt) ? options.defaultPrompt : '';
