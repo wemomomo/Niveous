@@ -115,31 +115,32 @@
 }
 
 /* =========================================================
-   顶部高定艺术图案舞台（玄月星芒圣盘导航栏）
+   顶部高定艺术图案舞台（彻底去卡片化·100% 融入底色）
 ========================================================= */
 .header-ornament-stage {
   width: 100%;
   max-width: 370px;
   position: relative;
-  padding: 12px 12px 14px;
+  padding: 4px 4px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 2px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.02);
-  overflow: hidden;
+  margin-bottom: 4px;
+  /* 彻底移除卡片背景与边框阴影，直接融入背景 */
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
   flex-shrink: 0;
 }
 
 .char-screen-bg-3 .header-ornament-stage {
-  background: rgba(18, 20, 26, 0.85);
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .ornament-artwork-layer {
@@ -151,13 +152,13 @@
 
 .celestial-crescent-emblem {
   position: absolute;
-  top: -20px;
-  left: -18px;
-  width: 115px;
-  height: 115px;
-  color: rgba(20, 22, 25, 0.14);
+  top: -18px;
+  left: -14px;
+  width: 120px;
+  height: 120px;
+  color: rgba(20, 22, 25, 0.16);
 }
-.char-screen-bg-3 .celestial-crescent-emblem { color: rgba(136, 171, 218, 0.2); }
+.char-screen-bg-3 .celestial-crescent-emblem { color: rgba(136, 171, 218, 0.22); }
 
 .celestial-crescent-emblem svg {
   width: 100%;
@@ -171,19 +172,19 @@
 .astrolabe-poly {
   position: absolute;
   top: 50%;
-  right: -30px;
+  right: -24px;
   transform: translateY(-50%) rotate(25deg);
   width: 110px;
   height: 110px;
-  border: 1px solid rgba(20, 22, 25, 0.07);
+  border: 1px solid rgba(20, 22, 25, 0.08);
   border-radius: 20px;
 }
-.char-screen-bg-3 .astrolabe-poly { border-color: rgba(136, 171, 218, 0.12); }
+.char-screen-bg-3 .astrolabe-poly { border-color: rgba(136, 171, 218, 0.15); }
 .astrolabe-poly::after {
   content: '';
   position: absolute;
   inset: 10px;
-  border: 1px dashed rgba(20, 22, 25, 0.08);
+  border: 1px dashed rgba(20, 22, 25, 0.09);
   border-radius: 14px;
   transform: rotate(45deg);
 }
@@ -195,9 +196,9 @@
   line-height: 1;
 }
 .char-screen-bg-3 .art-star { color: rgba(136, 171, 218, 0.4); }
-.art-star.s1 { top: 10px; left: 100px; font-size: 11px; }
-.art-star.s2 { top: 10px; right: 22px; font-size: 9px; }
-.art-star.s3 { bottom: 10px; left: 40%; font-size: 8px; }
+.art-star.s1 { top: 6px; left: 105px; font-size: 11px; }
+.art-star.s2 { top: 6px; right: 18px; font-size: 9px; }
+.art-star.s3 { bottom: 6px; left: 40%; font-size: 8px; }
 
 .art-crosshair {
   position: absolute;
@@ -206,8 +207,8 @@
   color: rgba(20, 22, 25, 0.25);
   font-weight: 300;
 }
-.art-crosshair.c1 { top: 40px; left: 12px; }
-.art-crosshair.c2 { top: 38px; right: 14px; }
+.art-crosshair.c1 { top: 34px; left: 8px; }
+.art-crosshair.c2 { top: 32px; right: 10px; }
 
 /* 标题区域 */
 .archive-header {
@@ -215,8 +216,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
-  padding: 0 4px;
+  margin-bottom: 12px;
+  padding: 0 2px;
   position: relative;
   z-index: 1;
 }
@@ -238,8 +239,8 @@
 .char-screen-bg-3 .arch-native-back { color: #f8fafc; }
 .arch-native-back:active { opacity: 0.5; }
 .arch-native-back svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   stroke: currentColor;
   stroke-width: 2.5;
   fill: none;
@@ -256,7 +257,7 @@
   text-transform: uppercase;
 }
 .archive-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: 1px;
   color: var(--dark-pure);
@@ -273,11 +274,13 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(20, 22, 25, 0.12);
-  padding: 4px 9px;
+  padding: 5px 10px;
   border-radius: 16px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   color: #18191c;
   cursor: pointer;
@@ -287,32 +290,32 @@
   transition: all 0.15s ease;
 }
 .char-screen-bg-3 .arch-tool-pill {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
   color: #f8fafc;
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 .arch-tool-pill:active { background: #e2e6ea; transform: scale(0.96); }
-.arch-tool-pill svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.2; fill: none; }
+.arch-tool-pill svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.2; fill: none; }
 
 /* 悬浮分段导航胶囊栏 */
 .archive-nav-capsule {
   display: flex;
   width: 100%;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.9);
+  height: 42px;
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
   padding: 3px;
-  border-radius: 14px;
+  border-radius: 15px;
   border: 1px solid rgba(20, 22, 25, 0.1);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04), inset 0 1px 1px #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04), inset 0 1px 1px #ffffff;
   position: relative;
   overflow: hidden;
   z-index: 1;
 }
 .char-screen-bg-3 .archive-nav-capsule {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .nav-glider-pill {
@@ -322,7 +325,7 @@
   left: 3px;
   width: calc(50% - 3px);
   background: linear-gradient(135deg, #22252a 0%, #111214 100%);
-  border-radius: 11px;
+  border-radius: 12px;
   box-shadow: 0 3px 10px rgba(18, 20, 23, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.15);
   transition: transform 0.35s cubic-bezier(0.25, 1, 0.3, 1);
   z-index: 1;
@@ -333,9 +336,9 @@
   flex: 1;
   height: 100%;
   border: none;
-  border-radius: 11px;
+  border-radius: 12px;
   background: transparent;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #6c757d;
   cursor: pointer;
@@ -921,11 +924,9 @@
   font-size: 11px; font-family: monospace; font-weight: 700; color: #5c6470; letter-spacing: 0.5px;
 }
 
-/* 标题放大 */
 .journal-main-title, .char-journal-title {
   font-size: 22px; font-weight: 800; letter-spacing: 2px; color: #18191c; font-family: "Didot", "Playfair Display", "Times New Roman", "PingFang SC", serif; margin-bottom: 5px;
 }
-/* 寄语放大 */
 .journal-desc-text, .char-journal-desc {
   font-size: 12.5px; color: #5c6470; line-height: 1.6; max-width: 290px; margin-bottom: 14px;
 }
@@ -938,7 +939,6 @@
   display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid rgba(24, 25, 28, 0.14); padding-bottom: 4px;
 }
 
-/* 栏目标题放大 */
 .section-name, .char-section-name {
   font-size: 15px; font-weight: 800; letter-spacing: 1.5px; color: #18191c; display: flex; align-items: center; gap: 5px;
 }
@@ -956,12 +956,10 @@
   display: flex; flex-direction: column; gap: 3px;
 }
 
-/* 字段小标签放大 */
 .ruled-label, .char-ruled-label {
   font-size: 11.5px; font-weight: 700; color: #5c6470; letter-spacing: 0.5px;
 }
 
-/* 单行输入框字体放大 */
 .ruled-input, .char-ruled-input {
   width: 100%; border: none; border-bottom: 1.2px dashed rgba(24, 25, 28, 0.25);
   padding: 4px 0; font-size: 15px; font-weight: 600; color: #18191c; background: transparent; outline: none; font-family: inherit;
@@ -969,7 +967,6 @@
 .ruled-input:focus, .char-ruled-input:focus { border-bottom-color: #18191c; border-bottom-style: solid; }
 .ruled-input::placeholder, .char-ruled-input::placeholder { color: #cbd5e1; font-weight: 400; font-size: 13px; }
 
-/* 多行信纸文本域字体与行距放大（25px 信纸刻度） */
 .ruled-textarea, .char-ruled-textarea {
   width: 100%; border: none; background: transparent; font-size: 14.5px; line-height: 25px;
   color: #18191c; font-family: inherit; outline: none; resize: none; padding: 0;
@@ -1035,7 +1032,7 @@
   fill: none;
 }
 
-/* 全屏沉浸式手写纸板弹窗（字号与行距放大） */
+/* 全屏沉浸式手写纸板弹窗 */
 .expand-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1128,7 +1125,6 @@
   display: flex;
   flex-direction: column;
 }
-/* 全屏大文本框字体与行高放大（28px 行高） */
 .expand-modal-textarea {
   width: 100%;
   height: 100%;
